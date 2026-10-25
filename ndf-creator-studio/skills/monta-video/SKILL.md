@@ -41,8 +41,12 @@ NOME = nome breve del lavoro (es. `tre-cose`); i suoi file stanno in `DATI/lavor
    seguendo `stili/<stile>/stile.md` e `regole/suoni.md`. Scene: `testo`, `capitolo` (01 02 03), `clip` (clip vere in
    `DATI/clip/`, "x" per la X rossa), `omino` (in_piedi, spallucce, braccia_su, scrivania; "chiaro", "croce",
    "numero"), `chat`, `telefono` ("storia" o "reel"), `schema`; sopra la persona `titoli`, `liste`, `parole_chiave`.
-   Ogni scena nasce da una frase detta in quel momento, con le parole dette. Le scene `clip` solo con clip
-   che ci sono davvero in `DATI/clip/`; se mancano, usa le altre scene. Esempi approvati in `esempi/`:
+   Ogni scena nasce da una frase detta in quel momento, con le parole dette.
+   Clip vere: prima guarda quelle che ci sono in `DATI/clip/`. Se manca quella giusta, cercala sul web
+   ("pexels video <cosa, in inglese> vertical"), prendi un link pexels.com/video/...-<numero>/ e scaricala con
+   `PY STUDIO/strumenti/clip.py <link> <nome>`; guarda il `.jpg` che crea e usala solo se mostra davvero quello che
+   si dice. Dai alla clip il nome dell'oggetto quando c'è (soldi, porta, festa, sveglia, ufficio, fabbrica,
+   bollette...): così prende da sola il suo suono. Esempi approvati in `esempi/`:
    un racconto (omini, clip, capitoli) e una spiegazione (chat, telefono, schema, ritmo dinamico).
 6. `PY STUDIO/strumenti/costruisci.py NOME --zone`, poi `PY STUDIO/strumenti/foto.py NOME <6-8 momenti>`
    e guarda il foglio: niente nelle zone rosse, niente sulla faccia, niente righe orfane.
