@@ -195,9 +195,13 @@ def main():
             shutil.copy2(trova(s["clip"] + ".mp4", "clip"), os.path.join(reel, "assets", f"clip-{s['clip']}.mp4"))
         size = 150 if not s.get("grande") else dimensione_titolo(dict(s, sotto=s.get("sotto")), dict(stile, titoli=dict(tt, dimensione_grande=150,
                                  dimensione_corsivo=78)), cart_stile, 1080 - 240, 600, 1350)
+        if s["tipo"] == "immagine":
+            shutil.copy2(trova(s["immagine"] + ".jpg", "immagini"), os.path.join(reel, "assets", f"img-{s['immagine']}.jpg"))
         div, anim = scene.costruisci_scena(s, n, stile["colori"], size)
         corpo.append(div)
-        tl.append(anim)
+        tl.append(anim + scene.entrata(s, n))
+    if any(s.get("entrata") == "lampo" for s in scene_piano):
+        corpo.append(scene.LAMPO)
 
     # zoom a scatti: a ogni pezzo del taglio l'inquadratura si stringe o si allarga, centrata sulla faccia
     if piano.get("zoom"):

@@ -320,7 +320,39 @@ def schema(s, n, colori, size):
     return corpo, "".join(tl)
 
 
-TIPI = {"testo": testo, "capitolo": capitolo, "clip": clip, "omino": omino, "chat": chat, "telefono": telefono, "schema": schema}
+def immagine(s, n, colori, size):
+    """Foto a tutto schermo (DATI/immagini/<nome>.jpg) che si avvicina piano, con il titolo in alto."""
+    da, a = s["da"], s["a"]
+    corpo = (f'<div class="scena" id="sc{n}"><img class="clipv" id="sc{n}v" src="assets/img-{s["immagine"]}.jpg">'
+             f'<div class="ombra-alto"></div>'
+             f'<div class="blocco alto" id="sc{n}b">{_righe(s, colori, "", min(size, 120))}</div></div>')
+    tl = [f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});',
+          f'tl.fromTo("#sc{n}v",{{scale:1.0}},{{scale:1.14,duration:{a - da:.3f},ease:"none"}},{da:.3f});',
+          f'tl.fromTo("#sc{n}b",{{opacity:0,y:40,scale:1.1}},{{opacity:1,y:0,scale:1,duration:0.32,ease:"power3.out"}},{da + 0.05:.3f});',
+          f'tl.set("#sc{n}",{{opacity:0}},{a:.3f});']
+    return corpo, "".join(tl)
+
+
+TIPI = {"testo": testo, "capitolo": capitolo, "clip": clip, "omino": omino, "chat": chat, "telefono": telefono,
+        "schema": schema, "immagine": immagine}
+
+# ---------- entrate delle scene (riprese dal vecchio kit di Michael) ----------
+# "lampo": un flash bianco quando la scena entra e quando si torna alla persona
+# "scorri": la scena nuova entra da destra spingendo via quella prima
+# "carta": la scena compare sfocata e diventa nitida, morbida
+LAMPO = '<div id="lampo" style="position:absolute;inset:0;background:white;opacity:0;z-index:45;pointer-events:none"></div>'
+
+
+def entrata(s, n):
+    tipo, da, a = s.get("entrata"), s["da"], s["a"]
+    if tipo == "lampo":
+        return (f'tl.fromTo("#lampo",{{opacity:0.75}},{{opacity:0,duration:0.14,ease:"power2.out"}},{da:.3f});'
+                f'tl.fromTo("#lampo",{{opacity:0.6}},{{opacity:0,duration:0.14,ease:"power2.out"}},{a:.3f});')
+    if tipo == "scorri":
+        return f'tl.fromTo("#sc{n}",{{x:1080}},{{x:0,duration:0.28,ease:"power3.out"}},{da:.3f});'
+    if tipo == "carta":
+        return f'tl.fromTo("#sc{n}",{{opacity:0,filter:"blur(14px)"}},{{opacity:1,filter:"blur(0px)",duration:0.35,ease:"power2.out"}},{da:.3f});'
+    return ""
 
 
 def costruisci_scena(s, n, colori, size):
