@@ -21,7 +21,7 @@ from comune import FFMPEG, cartella_lavoro, codec_video, durata, esegui, leggi, 
 
 FPS = 30
 DISSOLVENZA = 0.03  # 30 ms: niente "click" sui tagli
-# ripresi dal vecchio kit di Michael:
+# ripresi dal kit "Monta le tue Ads":
 # video girati in HDR (iPhone con HDR acceso): senza correzione i colori escono slavati
 COLORE_HDR = "eq=contrast=1.12:saturation=1.3:gamma=0.95,colorbalance=rm=0.04:bm=-0.03"
 # voce pulita: via i rumori bassi e il fruscio, volume più uniforme (il volume finale lo fa rendi.py)

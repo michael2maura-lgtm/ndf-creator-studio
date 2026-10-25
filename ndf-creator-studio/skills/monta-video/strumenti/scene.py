@@ -88,7 +88,7 @@ def clip(s, n, colori, size):
     return "".join([corpo]), "".join(tl)
 
 
-# ---------- omino in giacca (ripreso dal vecchio kit di Michael "Monta le tue Ads") ----------
+# ---------- omino in giacca (ripreso dal kit "Monta le tue Ads") ----------
 # angoli dal basso (0 = braccio giù), positivi verso l'esterno: [spalla-gomito, gomito-mano]
 POSE = {"in_piedi": ([12, 6], [12, 6]), "spallucce": ([58, 125], [58, 125]),
         "braccia_su": ([158, 172], [158, 172]), "scrivania": ([14, -35], [14, -35])}
@@ -191,7 +191,7 @@ def omino(s, n, colori, size):
     return corpo, "".join(tl)
 
 
-# ---------- chat, telefono e schema (ripresi dal vecchio kit di Michael) ----------
+# ---------- chat, telefono e schema (ripresi dal kit "Monta le tue Ads") ----------
 FONDO_CALDO = "radial-gradient(ellipse at 50% 40%, #3A2216 0%, #140E0A 62%, #050302 100%)"
 
 
@@ -336,7 +336,7 @@ def immagine(s, n, colori, size):
 TIPI = {"testo": testo, "capitolo": capitolo, "clip": clip, "omino": omino, "chat": chat, "telefono": telefono,
         "schema": schema, "immagine": immagine}
 
-# ---------- entrate delle scene (riprese dal vecchio kit di Michael) ----------
+# ---------- entrate delle scene (riprese dal kit "Monta le tue Ads") ----------
 # "lampo": un flash bianco quando la scena entra e quando si torna alla persona
 # "scorri": la scena nuova entra da destra spingendo via quella prima
 # "carta": la scena compare sfocata e diventa nitida, morbida

@@ -10,15 +10,15 @@ riprese sbagliate e pause tolte, sottotitoli in italiano, titoli, scene, suoni e
 - **Almeno 10 GB liberi** e internet per la prima installazione.
 
 ## Installazione (una volta sola)
-1. Apri l'app Claude, scheda **Code**, e scegli la cartella **Documenti**.
-2. Scrivi questi due comandi, uno alla volta:
+1. Apri l'app Claude e vai in **Impostazioni → Plugin**.
+2. Clicca **Aggiungi**, scegli di aggiungere un marketplace e incolla:
    ```
-   /plugin marketplace add michael2maura-lgtm/ndf-creator-studio
+   michael2maura-lgtm/ndf-creator-studio
    ```
-   ```
-   /plugin install ndf-creator-studio@ndf-creator-studio
-   ```
-3. Chiudi e riapri Claude Code, poi scrivi: **installa lo studio**.
+   Poi clicca **+** accanto a **NDF Creator Studio** per installarlo.
+   (Se usi Claude Code dal terminale: `/plugin marketplace add michael2maura-lgtm/ndf-creator-studio`
+   e poi `/plugin install ndf-creator-studio@ndf-creator-studio`.)
+3. Apri una nuova sessione nella scheda **Code** e scrivi: **installa lo studio**.
    Claude ti chiede il permesso una volta e installa tutto da solo (10-20 minuti la prima volta).
    - Su **Mac**, se compare la richiesta di installare gli "strumenti per sviluppatori", clicca Installa.
    - Su **Windows**, se compare la richiesta di Windows (Controllo account o firewall), clicca Sì / Consenti.
@@ -45,7 +45,7 @@ riprese sbagliate e pause tolte, sottotitoli in italiano, titoli, scene, suoni e
 
 ## Aggiornamenti
 Quando esce una versione nuova (stili nuovi, effetti, correzioni), Claude te lo dice da solo all'inizio di un
-montaggio. Per aggiornare: `/plugin update ndf-creator-studio`, poi riapri Claude Code. Il tuo stile e i tuoi video
+montaggio. Per aggiornare: Impostazioni → Plugin → NDF Creator Studio → Aggiorna (o `/plugin update ndf-creator-studio`). Il tuo stile e i tuoi video
 restano dove sono.
 
 ---

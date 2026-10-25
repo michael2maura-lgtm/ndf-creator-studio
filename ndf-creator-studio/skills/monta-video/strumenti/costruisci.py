@@ -154,7 +154,7 @@ def main():
         fine = min(fine, w["da"] + 0.9)
         if ts.get("maiuscolo"):
             testo = testo.upper()
-        # le parole chiave in arancio; ogni parola "salta" dentro (piccola, poi grande), come nel vecchio kit
+        # le parole chiave nel colore d'accento; ogni parola "salta" dentro (piccola, poi grande), come nel vecchio kit
         stile_parola = f' style="color:{stile["colori"]["accento"]}"' if testo.lower() in chiave else ""
         corpo.append(f'<div class="sub" id="w{i}"{stile_parola}>{html.escape(testo)}</div>')
         tl.append(f'tl.set("#w{i}",{{opacity:1}},{w["da"]:.3f});'
@@ -178,7 +178,7 @@ def main():
                      if t.get("sopra") else "")
                   + f'tl.to("#t{n}",{{opacity:0,duration:{tt["uscita"]}}},{uscita:.3f});')
 
-    # elenchi sopra la persona: le parole si sommano una sotto l'altra, l'ultima in arancio
+    # elenchi sopra la persona: le parole si sommano una sotto l'altra, l'ultima nel colore d'accento
     for n, l in enumerate(liste):
         voci = l["voci"]
         righe = "".join(f'<div class="grande" id="l{n}v{k}" style="font-size:{l.get("dimensione", 84)}px;opacity:0;'

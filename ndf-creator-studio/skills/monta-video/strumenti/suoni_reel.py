@@ -18,7 +18,7 @@ VOL_MUSICA = 0.2    # nelle pause; quando la persona parla scende da sola di cir
 
 
 
-# suoni degli oggetti, ripresi dal vocabolario del vecchio kit di Michael: [file in suoni/, ritardo dall'inizio, volume]
+# suoni degli oggetti, ripresi dal vocabolario del kit "Monta le tue Ads": [file in suoni/, ritardo dall'inizio, volume]
 OGGETTI = {
     "soldi": [["mixkit/cassa.mp3", 0.1, 0.5], ["mixkit/monete.mp3", 0.35, 0.45]],
     "festa": [["mixkit/festa.mp3", 0.05, 0.35]],
@@ -79,7 +79,7 @@ def prepara(piano, stile, cart_stile, reel, D):
     if cfg.get("transizione") and suoni.get("transizione"):
         scelta = suoni["transizione"]
         src = copia(scelta, "transizione" + os.path.splitext(scelta)[1])
-        # come nel vecchio kit di Michael: un suono solo, che parte quando la scena entra; niente suono al ritorno
+        # come nel kit "Monta le tue Ads": un suono solo, che parte quando la scena entra; niente suono al ritorno
         for k, s in enumerate(sorted(piano.get("scene", []), key=lambda x: x["da"])):
             audio(f"tr{k}", src, s["da"], 1.2, VOL_EFFETTI)
     if suoni.get("tastiera"):

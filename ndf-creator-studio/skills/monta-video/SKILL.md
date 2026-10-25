@@ -13,7 +13,7 @@ STUDIO = la cartella di questo file. DATI = `Documenti/NDFCreatorStudio` nella c
 suoni e clip di chi usa lo studio: gli aggiornamenti non li toccano). Lancia tutto fuori dalla sandbox.
 PY = il Python dello studio: su Mac `~/.studio-video/venv/bin/python`, su Windows
 `~/.studio-video/venv/Scripts/python.exe -X utf8`. Tutti i comandi qui sotto usano PY, mai `python3` o `python`.
-NOME = nome breve del lavoro (es. `tre-cose`); i suoi file stanno in `DATI/lavori/NOME/`.
+NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/lavori/NOME/`.
 
 ## Passo 0, ogni volta (in silenzio se va tutto bene)
 - Manca `~/.studio-video/pronto.json`, o l'utente dice "installa lo studio": chiedi il permesso una volta sola

@@ -4,10 +4,10 @@ La libreria è in `suoni/` (kit, mixkit, hyperframes). L'elenco numerato con il 
 `suoni/catalogo-suoni.txt`. I preferiti dello stile stanno in `stili/<stile>/suoni/` e vincono sulla libreria.
 
 Si sceglie in base a quello che viene detto e a quello che si vede in quel momento:
-- **Transizioni:** la transizione dello stile (per lo stile NDF "vortice"), una volta sola quando entra ogni scena
+- **Transizioni:** la transizione dello stile, una volta sola quando entra ogni scena
   a tutto schermo: mai prima, mai al ritorno sulla persona.
 - **Colpo basso:** solo nei 2-3 momenti più forti (il titolo del gancio, la frase chiave, il finale).
-- **Suono di un oggetto:** ogni scena con un oggetto ha il suo suono, come nel vecchio kit (Michael lo controlla):
+- **Suono di un oggetto:** ogni scena con un oggetto ha il suo suono, (chi guarda se ne accorge subito):
   soldi = cassa + monete, festa, porta, orologio = tic tac, ufficio/scrivania = tastiera, fabbrica, bollette = triste,
   domande e contatti = notifica, braccia in alto = "livello", X rossa = errore, schema = pop su ogni riquadro,
   elenchi = "livello" su ogni parola. Si mettono da soli (`strumenti/suoni_reel.py`); nel piano una scena può avere
