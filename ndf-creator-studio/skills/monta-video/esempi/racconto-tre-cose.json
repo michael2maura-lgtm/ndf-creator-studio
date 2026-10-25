@@ -1,0 +1,219 @@
+{
+ "stile": "ndf",
+ "correzioni": {
+  "lascio te lo dire": "lasciatelo dire",
+  "faremo allo": "fai nel modo",
+  "te prenderanno": "ti apriranno",
+  "prenderanno": "apriranno",
+  "effeccamento": "affiancamento",
+  "info": "INFO",
+  "al loro": "dal loro",
+  "si": "sì"
+ },
+ "aggiungi": [
+  {
+   "testo": "persone.",
+   "da": 50.1,
+   "a": 50.7
+  }
+ ],
+ "zoom": 1.14,
+ "suoni": {
+  "transizione": true,
+  "colpi": [
+   1.32,
+   60.7
+  ],
+  "musica": true
+ },
+ "scene": [
+  {
+   "tipo": "omino",
+   "posa": "spallucce",
+   "da": 3.98,
+   "a": 5.7,
+   "grande": "IN PARTE",
+   "sotto": "è vero"
+  },
+  {
+   "tipo": "omino",
+   "posa": "in_piedi",
+   "chiaro": true,
+   "croce": true,
+   "da": 6.68,
+   "a": 8.2,
+   "grande": "MODO",
+   "sotto": "sbagliato"
+  },
+  {
+   "tipo": "omino",
+   "posa": "braccia_su",
+   "numero": "3",
+   "da": 12.28,
+   "a": 13.4,
+   "grande": "3 COSE",
+   "sotto": "che il network ti dà"
+  },
+  {
+   "tipo": "omino",
+   "posa": "scrivania",
+   "chiaro": true,
+   "da": 13.4,
+   "a": 14.95,
+   "grande": "LAVORO NORMALE?",
+   "sotto": "non te le darà mai"
+  },
+  {
+   "tipo": "capitolo",
+   "da": 15.08,
+   "a": 16.6,
+   "numero": "01",
+   "grande": "LA PRIMA",
+   "sotto": "mentalità"
+  },
+  {
+   "tipo": "clip",
+   "clip": "festa",
+   "da": 17.6,
+   "a": 19.3,
+   "grande": "PENSANO",
+   "sotto": "in grande"
+  },
+  {
+   "tipo": "clip",
+   "clip": "ufficio",
+   "x": true,
+   "da": 24.2,
+   "a": 25.65,
+   "grande": "IN UFFICIO?"
+  },
+  {
+   "tipo": "clip",
+   "clip": "fabbrica",
+   "x": true,
+   "da": 25.65,
+   "a": 27.3,
+   "grande": "IN FABBRICA?"
+  },
+  {
+   "tipo": "testo",
+   "da": 27.3,
+   "a": 28.22,
+   "grande": "SUCCEDE",
+   "sotto": "solo qui",
+   "colore": "accento"
+  },
+  {
+   "tipo": "capitolo",
+   "da": 28.22,
+   "a": 30.1,
+   "numero": "02",
+   "grande": "LE",
+   "sotto": "persone"
+  },
+  {
+   "tipo": "clip",
+   "clip": "stretta-di-mano",
+   "da": 30.16,
+   "a": 32.1,
+   "grande": "NUOVI",
+   "sotto": "contatti"
+  },
+  {
+   "tipo": "clip",
+   "clip": "persone-felici",
+   "da": 32.14,
+   "a": 34.95,
+   "grande": "AMBIZIOSE",
+   "sotto": "positive, fuori dal comune"
+  },
+  {
+   "tipo": "clip",
+   "clip": "porta",
+   "da": 40.5,
+   "a": 42.98,
+   "grande": "PORTE",
+   "sotto": "aperte per tutta la vita"
+  },
+  {
+   "tipo": "capitolo",
+   "da": 43.22,
+   "a": 45.25,
+   "numero": "03",
+   "grande": "LA CRESCITA",
+   "sotto": "personale"
+  },
+  {
+   "tipo": "clip",
+   "clip": "relatore",
+   "da": 45.32,
+   "a": 48.9,
+   "grande": "NESSUNA INDUSTRIA",
+   "sotto": "investe così sulle persone"
+  },
+  {
+   "tipo": "clip",
+   "clip": "bollette",
+   "da": 57.54,
+   "a": 59.7,
+   "grande": "FATICHI ANCORA",
+   "sotto": "a guadagnare?"
+  },
+  {
+   "tipo": "testo",
+   "da": 60.7,
+   "a": 62.7,
+   "grande": "NON SEI TU.",
+   "sotto": "è il metodo"
+  },
+  {
+   "tipo": "omino",
+   "posa": "braccia_su",
+   "da": 62.8,
+   "a": 64.1,
+   "grande": "IL METODO",
+   "sotto": "giusto"
+  },
+  {
+   "tipo": "clip",
+   "clip": "soldi",
+   "da": 64.14,
+   "a": 67.3,
+   "grande": "I SOLDI",
+   "sotto": "diventano la conseguenza"
+  },
+  {
+   "tipo": "clip",
+   "clip": "cliente-computer",
+   "da": 70.38,
+   "a": 72.9,
+   "grande": "I NOSTRI CLIENTI",
+   "sotto": "in affiancamento"
+  },
+  {
+   "tipo": "clip",
+   "clip": "sveglia",
+   "da": 74.82,
+   "a": 77.45,
+   "grande": "SLEGATI",
+   "sotto": "dal loro tempo"
+  }
+ ],
+ "titoli": [
+  {
+   "da": 1.32,
+   "a": 3.62,
+   "sopra": "nel network",
+   "grande": "NON SI GUADAGNA",
+   "colore": "accento"
+  },
+  {
+   "da": 9.38,
+   "a": 10.8,
+   "sopra": "quasi",
+   "grande": "NESSUNO",
+   "sotto": "ci pensa"
+  }
+ ],
+ "finale_da": 75.9
+}

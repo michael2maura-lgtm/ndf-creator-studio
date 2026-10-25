@@ -1,0 +1,95 @@
+"""Cose in comune a tutti i pezzi dello studio: dove stanno i programmi e i lavori."""
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+# Il MOTORE (questa cartella) è uguale per tutti e si aggiorna. I DATI di chi lo usa (lavori, stili, suoni e clip
+# scaricati) stanno in una cartella sua, che gli aggiornamenti non toccano mai.
+STUDIO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATI = os.path.expanduser(os.environ.get("NDF_STUDIO_DATI", os.path.join("~", "Documents", "NDFCreatorStudio")))
+LAVORI = os.path.join(DATI, "lavori")
+STRUMENTI_UTENTE = os.path.join(os.path.expanduser("~"), ".studio-video")
+MODELLI = os.path.join(STRUMENTI_UTENTE, "modelli")
+_BIN = os.path.join(STRUMENTI_UTENTE, "bin")
+HYPERFRAMES = "hyperframes@0.8.34"
+
+# dove stanno i programmi: li scrive installa.py (Mac e Windows); se manca il file, si cercano nel sistema
+try:
+    with open(os.path.join(STRUMENTI_UTENTE, "percorsi.json"), encoding="utf-8") as _f:
+        _P = json.load(_f)
+except (OSError, ValueError):
+    _P = {}
+
+
+def _primo(*candidati, ripiego):
+    return next((p for p in candidati if p and os.path.exists(p)), ripiego)
+
+
+FFMPEG = _primo(_P.get("ffmpeg"), os.path.join(_BIN, "ffmpeg"), shutil.which("ffmpeg"), "/opt/homebrew/bin/ffmpeg", ripiego="ffmpeg")
+FFPROBE = _primo(_P.get("ffprobe"), os.path.join(_BIN, "ffprobe"), shutil.which("ffprobe"), "/opt/homebrew/bin/ffprobe", ripiego="ffprobe")
+NPX = _primo(_P.get("npx"), os.path.join(_BIN, "npx"), shutil.which("npx"), ripiego="npx")
+
+
+def env_node():
+    """PATH con Node e ffmpeg dello studio davanti: npx deve trovare node, e HyperFrames deve trovare ffmpeg."""
+    cartelle = [_P.get("node_dir") or os.path.dirname(os.path.realpath(NPX)), os.path.dirname(FFMPEG), _BIN]
+    return dict(os.environ, PATH=os.pathsep.join([c for c in cartelle if c] + [os.environ.get("PATH", "")]))
+
+
+def cartella_stile(nome):
+    """Prima lo stile dell'utente (DATI/stili), poi quelli pronti che arrivano con il motore (STUDIO/stili)."""
+    for base in (DATI, STUDIO):
+        c = os.path.join(base, "stili", nome)
+        if os.path.isdir(c):
+            return c
+    sys.exit(f"Non trovo lo stile '{nome}'.")
+
+
+def trova(rel, cartella="suoni"):
+    """Un file di suoni o clip: prima nei dati dell'utente (scaricati all'installazione), poi nel motore."""
+    for base in (DATI, STUDIO):
+        p = os.path.join(base, cartella, rel)
+        if os.path.exists(p):
+            return p
+    sys.exit(f"Non trovo {cartella}/{rel}. Rilancia l'installazione dello studio.")
+
+
+def cartella_lavoro(nome, crea=False):
+    c = os.path.join(LAVORI, nome)
+    if crea:
+        os.makedirs(c, exist_ok=True)
+    elif not os.path.isdir(c):
+        sys.exit(f"Non trovo il lavoro '{nome}'. Prima lancia prepara.py.")
+    return c
+
+
+def esegui(cmd):
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit("Errore:\n" + (r.stderr or r.stdout)[-2000:])
+    return r
+
+
+def leggi(percorso):
+    with open(percorso, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def scrivi(percorso, dati):
+    with open(percorso, "w", encoding="utf-8") as f:
+        json.dump(dati, f, ensure_ascii=False, indent=1)
+
+
+def codec_video():
+    """Sul Mac usa il chip video (veloce), altrimenti il codificatore standard."""
+    enc = subprocess.run([FFMPEG, "-hide_banner", "-encoders"], capture_output=True, text=True).stdout
+    if "h264_videotoolbox" in enc:
+        return ["-c:v", "h264_videotoolbox", "-b:v", "16M", "-pix_fmt", "yuv420p"]
+    return ["-c:v", "libx264", "-crf", "18", "-preset", "fast", "-pix_fmt", "yuv420p"]
+
+
+def durata(video):
+    out = esegui([FFPROBE, "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video]).stdout
+    return float(out.strip())

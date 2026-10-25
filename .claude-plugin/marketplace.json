@@ -1,0 +1,9 @@
+{
+  "name": "ndf-creator-studio",
+  "owner": {"name": "Michael Maura · Networker del Futuro"},
+  "description": "NDF Creator Studio: Claude monta i tuoi reel nel tuo stile.",
+  "plugins": [
+    {"name": "ndf-creator-studio", "source": "./ndf-creator-studio",
+     "description": "Monta i tuoi reel verticali dal girato grezzo: taglio delle riprese, sottotitoli in italiano, titoli, scene, suoni e musica nel tuo stile. Dici \"monta questo video\" e ricevi il reel finito."}
+  ]
+}

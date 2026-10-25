@@ -1,0 +1,149 @@
+{
+ "stile": "ndf",
+ "correzioni": {
+  "affecamento": "affiancamento",
+  "un metodo": "il mio metodo",
+  "affiaccamento": "affiancamento"
+ },
+ "parole_chiave": [
+  "domande",
+  "domanda"
+ ],
+ "zoom": 1.14,
+ "suoni": {
+  "transizione": true,
+  "colpi": [
+   2.46,
+   38.62
+  ],
+  "musica": true
+ },
+ "scene": [
+  {
+   "tipo": "testo",
+   "da": 0.0,
+   "a": 1.98,
+   "grande": "PUBBLICHI A CASO?"
+  },
+  {
+   "tipo": "testo",
+   "da": 6.53,
+   "a": 9.58,
+   "grande": "PIÙ SEMPLICE",
+   "sotto": "c'è un modo"
+  },
+  {
+   "tipo": "chat",
+   "da": 9.65,
+   "a": 17.1,
+   "etichetta": "apri ChatGPT e scrivi",
+   "testo": "Quali sono le domande più comuni che si fanno le persone sul mio network?",
+   "risposta": "15 DOMANDE",
+   "scrittura": 0.35
+  },
+  {
+   "tipo": "telefono",
+   "modo": "storia",
+   "da": 22.78,
+   "a": 29.02,
+   "grande": "1 · STORIE",
+   "sotto": "con l'adesivo domande",
+   "domande": [
+    "Quanto costa?",
+    "Come funziona?",
+    "Serve esperienza?"
+   ]
+  },
+  {
+   "tipo": "telefono",
+   "modo": "reel",
+   "da": 29.18,
+   "a": 34.48,
+   "grande": "2 · UN REEL",
+   "sotto": "di 60 secondi",
+   "didascalia": "1 domanda = 1 risposta"
+  },
+  {
+   "tipo": "omino",
+   "posa": "braccia_su",
+   "da": 38.62,
+   "a": 41.86,
+   "grande": "RISOLTO",
+   "sotto": "per mesi"
+  },
+  {
+   "tipo": "schema",
+   "da": 45.31,
+   "a": 49.96,
+   "titolo": "LE STESSE DOMANDE",
+   "passi": [
+    [
+     "1",
+     "domande",
+     45.65
+    ],
+    [
+     "2",
+     "contenuti",
+     47.05
+    ],
+    [
+     "3",
+     "contatti",
+     48.45
+    ]
+   ]
+  }
+ ],
+ "titoli": [
+  {
+   "da": 2.46,
+   "a": 5.93,
+   "sopra": "pubblica contenuti",
+   "grande": "A CASO",
+   "colore": "accento"
+  },
+  {
+   "da": 18.93,
+   "a": 20.87,
+   "sopra": "15 domande",
+   "grande": "15 CONTENUTI",
+   "colore": "accento"
+  },
+  {
+   "da": 53.12,
+   "a": 55.59,
+   "sopra": "ti contattano",
+   "grande": "GIÀ CONVINTE",
+   "colore": "accento"
+  },
+  {
+   "da": 61.06,
+   "a": 64.0,
+   "sopra": "dai contenuti",
+   "grande": "AI CONTATTI",
+   "colore": "accento"
+  }
+ ],
+ "liste": [
+  {
+   "da": 35.77,
+   "a": 38.06,
+   "voci": [
+    [
+     "SEMPLICE",
+     35.77
+    ],
+    [
+     "DIRETTA",
+     36.75
+    ],
+    [
+     "UTILE",
+     37.49
+    ]
+   ]
+  }
+ ],
+ "finale_da": 64.8
+}
