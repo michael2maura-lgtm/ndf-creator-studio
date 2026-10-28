@@ -20,8 +20,10 @@ def main():
     shutil.rmtree(os.path.join(reel, "snapshots"), ignore_errors=True)
     r = subprocess.run([NPX, "--yes", HYPERFRAMES, "snapshot", "--at", sys.argv[2], "--no-end", "--describe", "false"],
                        cwd=reel, capture_output=True, text=True, env=env_node())
-    foglio = os.path.join(reel, "snapshots", "contact-sheet.jpg")
-    print(foglio if os.path.exists(foglio) else "Errore:\n" + (r.stderr or r.stdout)[-1500:])
+    # con molti momenti i fogli sono più di uno (contact-sheet-1.jpg, -2.jpg...)
+    cart = os.path.join(reel, "snapshots")
+    fogli = sorted(f for f in os.listdir(cart) if f.startswith("contact-sheet")) if os.path.isdir(cart) else []
+    print("\n".join(os.path.join(cart, f) for f in fogli) if fogli else "Errore:\n" + (r.stderr or r.stdout)[-1500:])
 
 
 if __name__ == "__main__":

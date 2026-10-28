@@ -52,6 +52,10 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    immagini), `scorri` (entra da destra: per passaggi numerati in fila), `carta` (morbida, sfocata: momenti calmi).
    Senza "entrata" è un taglio netto. Varia tra un video e l'altro (registro). Esempi approvati in `esempi/`:
    un racconto (omini, clip, capitoli) e una spiegazione (chat, telefono, schema, ritmo dinamico).
+   Stile con `"motore": "grafica"` nel suo stile.json: il piano è diverso (motion graphics sopra la persona:
+   titoli che si decodificano, targhette, parola gigante, cornice, telefono, contatore). Formato in cima a
+   `strumenti/grafica.py`, quando usare cosa nello `stile.md` dello stile, esempio approvato in `esempi/grafica.json`.
+   Ogni 4-8 secondi una grafica, sempre nata da una frase detta in quel momento.
 6. `PY STUDIO/strumenti/costruisci.py NOME --zone`, poi `PY STUDIO/strumenti/foto.py NOME <6-8 momenti>`
    e guarda il foglio: niente nelle zone rosse, niente sulla faccia, niente righe orfane.
 7. `PY STUDIO/strumenti/costruisci.py NOME` (senza zone), poi `PY STUDIO/strumenti/rendi.py NOME`.

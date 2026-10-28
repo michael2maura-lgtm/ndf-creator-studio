@@ -22,6 +22,7 @@ import sys
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import STUDIO, cartella_lavoro, cartella_stile, durata, leggi, trova  # noqa: E402
+import grafica  # noqa: E402
 import scene  # noqa: E402
 import split  # noqa: E402
 import suoni_reel  # noqa: E402
@@ -96,6 +97,15 @@ def parole_corrette(parole, piano):
     return parole
 
 
+def zone_rosse(faccia):
+    """Le zone che Instagram copre (rosso) e la faccia (giallo): solo per le prove."""
+    return (f'<div class="zona" style="top:0;height:{ZONA["alto"]}px;left:0;right:0"></div>'
+            f'<div class="zona" style="top:{ZONA["basso"]}px;bottom:0;left:0;right:0"></div>'
+            f'<div class="zona" style="top:{ZONA["pulsanti_da"]}px;bottom:0;left:{ZONA["destra_pulsanti"]}px;right:0"></div>'
+            f'<div class="zona" style="top:{faccia["occhi"]}px;height:{faccia["mento"] - faccia["occhi"]}px;'
+            f'left:{faccia["sinistra"]}px;width:{faccia["destra"] - faccia["sinistra"]}px;background:rgba(255,255,0,.25)"></div>')
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not args:
@@ -108,6 +118,10 @@ def main():
     parole = parole_corrette(leggi(os.path.join(cart, "parole.json")), piano)
     video = os.path.join(cart, "tagliato.mp4")
     D = min(durata(video), piano.get("durata_max", 10 ** 6))  # durata_max: per le prove corte
+    if stile.get("motore") == "grafica":  # stili con motion graphics: tutto in strumenti/grafica.py
+        grafica.costruisci(cart, piano, stile, cart_stile, parole, faccia, D,
+                           zone_rosse(faccia) if "--zone" in sys.argv else "")
+        return
     split_on = piano.get("layout") == "split"
     if split_on:  # la persona scende: anche faccia e scritte scendono con lei
         faccia = dict(faccia, occhi=faccia["occhi"] + split.SPOSTA, mento=faccia["mento"] + split.SPOSTA)
@@ -231,13 +245,7 @@ def main():
     tl.append(f'tl.fromTo("#fin",{{opacity:0,y:50}},{{opacity:1,y:0,duration:0.4,ease:"power3.out"}},{finale_da:.3f});'
               f'tl.fromTo("#freccia",{{y:0}},{{y:24,duration:0.45,repeat:{int((D - finale_da) / 0.45)},yoyo:true,ease:"sine.inOut"}},{finale_da + 0.4:.3f});')
 
-    zone = ""
-    if "--zone" in sys.argv:
-        zone = (f'<div class="zona" style="top:0;height:{ZONA["alto"]}px;left:0;right:0"></div>'
-                f'<div class="zona" style="top:{ZONA["basso"]}px;bottom:0;left:0;right:0"></div>'
-                f'<div class="zona" style="top:{ZONA["pulsanti_da"]}px;bottom:0;left:{ZONA["destra_pulsanti"]}px;right:0"></div>'
-                f'<div class="zona" style="top:{faccia["occhi"]}px;height:{faccia["mento"] - faccia["occhi"]}px;'
-                f'left:{faccia["sinistra"]}px;width:{faccia["destra"] - faccia["sinistra"]}px;background:rgba(255,255,0,.25)"></div>')
+    zone = zone_rosse(faccia) if "--zone" in sys.argv else ""
 
     c = stile["colori"]
     ombra = "0 4px 18px rgba(0,0,0,.65), 0 1px 3px rgba(0,0,0,.8)"

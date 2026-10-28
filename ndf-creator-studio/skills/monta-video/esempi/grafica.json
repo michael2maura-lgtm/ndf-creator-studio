@@ -1,0 +1,22 @@
+{
+ "stile": "ndf-grafica",
+ "correzioni": {"affiaccamento": "affiancamento"},
+ "parole_chiave": ["domande", "caso", "15", "storie", "reel", "risposta", "convinte", "info", "contatti", "decidere", "metodo"],
+ "musica": true,
+ "apertura": {"sopra": "PUBBLICHI", "targa": "A CASO?", "a": 2.0},
+ "elementi": [
+  {"tipo": "gigante", "da": 6.6, "a": 9.6, "testo": "PIÙ SEMPLICE.", "sotto": "C'È UN MODO MIGLIORE"},
+  {"tipo": "cornice", "da": 9.65, "a": 17.1, "titoli": [["APRI", "CHATGPT", 9.75]],
+   "chat": {"etichetta": "CHATGPT", "testo": "Quali sono le domande più comuni che si fanno le persone sul mio network?", "da": 11.76, "a": 15.2}},
+  {"tipo": "contatore", "da": 17.3, "a": 20.8, "numero": 15, "conta": 17.66, "prima": ["TI DARÀ", "DOMANDE"],
+   "dopo": ["I TUOI PROSSIMI", "CONTENUTI"], "dopo_da": 19.8},
+  {"tipo": "targhette", "a": 29.25, "voci": [["①", "STORIE INSTAGRAM", 23.0], ["?", "ADESIVO DOMANDE", 28.1]]},
+  {"tipo": "telefono", "da": 29.3, "a": 37.9, "titoli": [["SECONDA COSA", "UN REEL", 29.4], ["ALMENO", "60 SECONDI", 33.0]]},
+  {"tipo": "gigante", "da": 38.25, "a": 42.0, "testo": "RISOLTO.", "sotto": "PER I PROSSIMI MESI"},
+  {"tipo": "targhette", "a": 45.3, "voci": [["✕", "SOLO CONTENUTI?", 43.0], ["✕", "SOLO POST?", 44.6]]},
+  {"tipo": "titolo", "da": 45.3, "a": 50.1, "sopra": "LE STESSE", "targa": "DOMANDE", "sotto": "PRIMA DI DECIDERE", "sotto_da": 48.6},
+  {"tipo": "cornice", "da": 55.9, "a": 64.7, "titoli": [["IL MIO", "METODO", 56.0]],
+   "passi": [["DOMANDE", 57.24], ["CONTENUTI", 61.84], ["CONTATTI", 62.58]]}
+ ],
+ "finale_da": 64.75
+}
