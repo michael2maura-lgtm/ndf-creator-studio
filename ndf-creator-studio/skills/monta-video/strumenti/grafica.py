@@ -18,7 +18,14 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "cornice", "da": 9.65, "a": 17.1, "titoli": [["APRI", "CHATGPT", 9.75]],
     "chat": {"etichetta": "CHATGPT", "testo": "Quali sono...", "da": 11.76, "a": 15.2},
     "passi": [["DOMANDE", 57.24], ["CONTENUTI", 61.84]]},           chat e passi: facoltativi, uno dei due
-   {"tipo": "telefono", "da": 29.3, "a": 37.9, "titoli": [["SECONDA COSA", "UN REEL", 29.4], ["ALMENO", "60 SECONDI", 33.0]]}],
+   {"tipo": "telefono", "da": 29.3, "a": 37.9, "titoli": [["SECONDA COSA", "UN REEL", 29.4], ["ALMENO", "60 SECONDI", 33.0]]},
+   con il ritaglio della persona (lento: mezzo minuto per secondo, solo sul pezzo che serve):
+   {"tipo": "dietro", "da": 6.54, "parola": "SEMPLICE", "quando": 8.08, "a": 9.6},     parola dietro la testa
+   {"tipo": "adesivo", "quando": 19.85, "a": 23.0, "note": [["15 contenuti", 20.3], ["*in 5 minuti*", 21.0]]},
+   {"tipo": "schermo", "da": 9.75, "a": 15.3, "file": "ragazza-computer.mp4", "lato": "destra"},
+   {"tipo": "luce", "da": 15.5, "a": 19.6, "parole": [["Il tuo settore", 16.16], ["15 domande", 17.66]]},
+   senza ritaglio:
+   {"tipo": "zoom", "mosse": [[0.3, 2.4, 1.12, "lento"], [3.6, 3.9, 1.3, "scatto"], [4.9, 5.2, 1.0, "fuori"]]}],
  "finale_da": 64.75, "finale_sopra": "TE LO INVIO IN DIRECT", "finale_testo": "COMMENTA", "finale_bottone": "INFO"}
 
 Regole: un "gigante" porta da solo le bande all'entrata e all'uscita; cornice e telefono entrano con un vortice.
@@ -36,7 +43,7 @@ import subprocess
 
 import effetti
 import sottotitoli
-from comune import FFMPEG, STUDIO, durata
+from comune import DATI, FFMPEG, STUDIO, durata, trova
 
 GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
 MIRINO_FINO = 6.2  # il mirino REC solo in apertura: per tutto il reel stanca
@@ -47,6 +54,7 @@ class Reel:
         self.stile, self.cart_stile, self.reel, self.D = stile, cart_stile, reel, D
         self.assets = os.path.join(reel, "assets")
         self.corpo, self.tl, self.audio, self.nascondi, self.transizioni = [], [], [], [], []
+        self.camera = []  # cose dentro l'inquadratura (#cam), sopra il video: si muovono con zoom e cornici
 
     # ---------- suoni ----------
     def suono(self, nome, da, vol=0.45, dur=None, se_manca=None):
@@ -225,6 +233,218 @@ class Reel:
                                f'tl.fromTo("#pk{n}_{k}",{{scale:0}},{{scale:1,duration:0.25,ease:"back.out(3)"}},{t + 0.35:.3f});')
                 self.suono("click", t + 0.35, 0.4)
 
+    # ---------- effetti con il ritaglio della persona ----------
+    def ritaglio(self, da, a):
+        """La persona ritagliata dai secondi da-a (strumenti/ritaglio.py), come video trasparente nella pagina."""
+        import ritaglio as rit
+        p = rit.ritaglia(os.path.dirname(self.reel), da, a, f"rit-{da:.2f}-{a:.2f}")
+        dest = os.path.join(self.assets, os.path.basename(p))
+        if not os.path.exists(dest):
+            shutil.copy2(p, dest)
+        n = len(self.camera)
+        self.camera.append(f'<video id="r{n}" class="rit" src="assets/{os.path.basename(p)}" muted playsinline '
+                           f'data-start="{da:.3f}" data-media-start="0" data-duration="{a - da:.3f}"></video>')
+        return f"#r{n}"
+
+    def suono_libreria(self, rel, da, vol=0.45):
+        """Un suono della libreria (DATI/suoni/<rel>), per i momenti che lo stile non ha."""
+        self.stile["suoni"].setdefault("_" + rel, trova(rel))
+        self.suono("_" + rel, da, vol)
+
+    def adesivo(self, e, faccia):
+        """Adesivo: sulla parola l'immagine si ferma e diventi un adesivo fustellato (bordo bianco, ombra, un po'
+        storto) attaccato su una pagina colorata, con le note scritte a mano attorno. La voce continua sotto.
+        e = {"quando": secondo del fermo, "a": quando torna il video (facoltativo: senza, resta fino alla fine),
+        "note": [["testo", secondo], ...] (al massimo 2, parole dette o scelte dall'utente), "pagina": "#colore"}."""
+        import numpy as np
+        from PIL import Image, ImageFilter
+        from scipy import ndimage
+        import ritaglio as rit
+        c = self.stile["colori"]
+        t, fine = e["quando"], e.get("a", self.D)
+        im = rit.fotogramma(os.path.dirname(self.reel), t)
+        taglio = int(min(faccia["mento"] + 380, 1919))   # taglio dritto sotto il petto: niente scrivania o mani in basso
+        a_px = np.array(im.getchannel("A"))
+        a_px[taglio:] = 0
+        im.putalpha(Image.fromarray(a_px))
+        al = a_px > 127
+        bordo = ndimage.binary_dilation(al, iterations=22)          # il bordo bianco della fustella
+        x0, y0, x1, y1 = Image.fromarray(bordo.astype(np.uint8) * 255).getbbox()
+        bianco = Image.new("RGBA", im.size, (255, 255, 255, 0))
+        bianco.putalpha(Image.fromarray((bordo * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2)))
+        bianco.alpha_composite(im)
+        adesivo = bianco.crop((x0, y0, x1, y1))
+        shutil.copy2(os.path.join(STUDIO, "font", "Caveat.ttf"), os.path.join(self.assets, "Caveat.ttf"))
+        n = len(self.corpo)
+        nome = f"adesivo-{n}.png"
+        adesivo.save(os.path.join(self.assets, nome))
+        w, h = adesivo.size
+        k = min(1.0, 1150 / h, 900 / w)                              # grande, ma lascia posto alle note
+        w, h = w * k, h * k
+        sx, sy = 540 - w / 2, 960 - h / 2 + 90
+        pagina = e.get("pagina", "#2346B8")
+        timbro = e.get("timbro", "")
+        tx, ty = sx + (faccia["sinistra"] - x0) * k, sy + (faccia["occhi"] - 230 - y0) * k  # vicino alla testa
+        segni = (f'<div class="segni" id="a{len(self.corpo)}g" style="left:{tx - 90:.0f}px;top:{ty:.0f}px">'
+                 '<i style="transform:rotate(-30deg)"></i><i style="transform:rotate(0deg);top:40px"></i>'
+                 '<i style="transform:rotate(30deg);top:80px"></i></div>')
+        note = []
+        for j, (testo, quando) in enumerate((e.get("note") or [])[:2]):
+            ny = 300 if j == 0 else 1520
+            testo = re.sub(r"\*(.+?)\*", lambda m: f'<span style="color:{c["accento_luce"]};text-decoration:underline">{m[1]}</span>',
+                           html.escape(testo))  # *parola* = colore d'accento
+            note.append(f'<div class="nota" id="a{n}n{j}" style="top:{ny}px;transform:rotate({-5 if j == 0 else 3}deg)">'
+                        f'{testo}</div>')
+            self.tl.append(f'tl.fromTo("#a{n}n{j}",{{opacity:1,clipPath:"inset(0 100% 0 0)"}},{{opacity:1,clipPath:"inset(0 0% 0 0)",'
+                           f'duration:0.5,ease:"none",immediateRender:false}},{max(quando, t + 0.35):.3f});')
+            self.suono_libreria("mixkit/matita.mp3", max(quando, t + 0.35), 0.35)
+        self.corpo.append(f'<div class="pagina" id="a{n}" style="background-color:{pagina}"><div class="raggi"></div>'
+                          f'<img class="adesivo" id="a{n}s" src="assets/{nome}" style="left:{sx:.0f}px;top:{sy:.0f}px;'
+                          f'width:{w:.0f}px;height:{h:.0f}px">{segni}'
+                          + (f'<div class="timbro" id="a{n}t" style="color:{c["accento_luce"]};border-color:{c["accento_luce"]}">'
+                             f'{html.escape(timbro.upper())}</div>' if timbro else "")
+                          + f'{"".join(note)}</div>')
+        self.tl.append(f'tl.fromTo("#a{n}g i",{{scaleX:0}},{{scaleX:1,duration:0.15,stagger:0.06,ease:"power2.out",immediateRender:false}},{t + 0.3:.3f});')
+        if timbro:
+            self.tl.append(f'tl.fromTo("#a{n}t",{{opacity:0,scale:2.2,rotation:-14}},{{opacity:1,scale:1,rotation:-8,duration:0.18,'
+                           f'ease:"power4.in",immediateRender:false}},{t + 0.25:.3f});')
+            self.suono("impatto", t + 0.43, 0.35)
+        self.tl.append(f'tl.set("#a{n}",{{opacity:1}},{t:.3f});'
+                       f'tl.fromTo("#a{n}s",{{scale:1.25,rotation:-12}},{{scale:1,rotation:-4,duration:0.28,ease:"back.out(2)",immediateRender:false}},{t:.3f});')
+        self.flash(t, 0.6, "#FFFFFF")
+        self.suono_libreria("mixkit/scatto-foto.mp3", t - 0.05, 0.45)
+        self.suono("pop", t + 0.12, 0.45)
+        if fine < self.D - 0.1:
+            self.tl.append(f'tl.to("#a{n}s",{{y:-1500,rotation:-25,duration:0.35,ease:"power3.in"}},{fine - 0.35:.3f});'
+                           f'tl.set("#a{n}",{{opacity:0}},{fine:.3f});')
+            self.suono("transizione", fine - 0.35, 0.35)
+        self.nascondi.append((t, fine))
+
+    def viso(self, faccia, t):
+        """Il centro degli occhi al secondo t (dai campioni di faccia.json), per mirare zoom e luce."""
+        cs = faccia.get("campioni") or []
+        if not cs:
+            return 540, faccia["occhi"]
+        c = min(cs, key=lambda x: abs(x["t"] - t))
+        return c["x"] + c["l"] / 2, c["y"] + c["h"] * 0.42
+
+    def zoom(self, e, faccia):
+        """Zoom sul viso, non sul centro: "lento" entra piano, "scatto" entra di colpo con la scia, "fuori" torna
+        indietro di scatto. e = {"mosse": [[da, arrivo, scala, "lento" | "scatto" | "fuori"], ...]}."""
+        for da, arrivo, scala, tipo in e["mosse"]:
+            x, y = self.viso(faccia, arrivo)
+            self.tl.append(f'tl.set("#cam",{{transformOrigin:"{x:.0f}px {y:.0f}px"}},{max(da - 0.01, 0):.3f});')
+            if tipo == "lento":
+                self.tl.append(f'tl.to("#cam",{{scale:{scala},duration:{arrivo - da:.3f},ease:"sine.inOut"}},{da:.3f});')
+            else:
+                dur = 0.12 if tipo == "scatto" else 0.28
+                self.tl.append(f'tl.to("#cam",{{scale:{scala},duration:{dur},ease:"{"power4.out" if tipo == "scatto" else "expo.out"}"}},{arrivo - dur:.3f});'
+                               f'tl.fromTo("#bg",{{filter:"blur(7px)"}},{{filter:"blur(0px)",duration:{dur + 0.1:.2f},ease:"power2.out",immediateRender:false}},{arrivo - dur:.3f});')
+                self.suono("transizione", arrivo - dur, 0.3)
+
+    def schermo(self, e, faccia):
+        """Schermo dietro di te: diventi piccolo in basso e dietro di te, a tutto schermo, c'è la cosa di cui parli
+        (un video o una foto). e = {"da", "a", "file": video o foto (in DATI/clip, DATI/immagini o del lavoro),
+        "lato": "destra" | "sinistra" | "centro"}."""
+        da, a = e["da"], e["a"]
+        cart = os.path.dirname(self.reel)
+        p = next((q for q in (e["file"], os.path.join(cart, e["file"]), os.path.join(DATI, "clip", e["file"]),
+                              os.path.join(DATI, "immagini", e["file"])) if os.path.isfile(q)), None)
+        if not p:
+            print(f'NOTA: non trovo {e["file"]} per lo schermo, lo salto')
+            return
+        n = len(self.camera)
+        dest = f"schermo-{n}{os.path.splitext(p)[1]}"
+        shutil.copy2(p, os.path.join(self.assets, dest))
+        if p.lower().endswith((".mp4", ".mov", ".webm")):
+            dentro = (f'<video id="sc{n}" class="schermo" src="assets/{dest}" muted playsinline data-start="{da:.3f}" '
+                      f'data-media-start="0" data-duration="{a - da:.3f}"></video>')
+        else:
+            dentro = f'<img id="sc{n}" class="schermo" src="assets/{dest}">'
+        self.camera.insert(0, dentro)
+        sel = self.ritaglio(da - 0.1, a + 0.1)
+        taglio = min(faccia["mento"] + 380, 1919)  # la persona finisce con un taglio dritto, appoggiata al bordo
+        x = {"sinistra": 300, "centro": 540}.get(e.get("lato"), 780)
+        k = 0.56
+        self.tl.append(f'tl.set("{sel}",{{opacity:1,clipPath:"inset(0 0 {1920 - taglio:.0f}px 0)",transformOrigin:"540px {taglio:.0f}px"}},{da:.3f});'
+                       f'tl.to("{sel}",{{scale:{k},x:{x - 540},y:{1920 - taglio},duration:0.45,ease:"power3.inOut"}},{da:.3f});'
+                       f'tl.fromTo("#sc{n}",{{opacity:0,scale:1.08}},{{opacity:1,scale:1,duration:0.45,ease:"power2.out",immediateRender:false}},{da:.3f});'
+                       f'tl.to("{sel}",{{scale:1,x:0,y:0,duration:0.4,ease:"power3.inOut"}},{a - 0.4:.3f});'
+                       f'tl.to("#sc{n}",{{opacity:0,duration:0.4}},{a - 0.4:.3f});'
+                       f'tl.set("{sel}",{{opacity:0}},{a:.3f});')
+        self.suono("transizione", da, 0.35)
+        self.suono("transizione", a - 0.4, 0.3)
+        self.nascondi.append((da, a))
+
+    def luce(self, e, faccia):
+        """Luce: la stanza va quasi al buio e fuori fuoco, resti tu in un cerchio di luce, e fino a tre parole
+        compaiono quando le dici. e = {"da", "a", "parole": [["TESTO", secondo], ...]}."""
+        c = self.stile["colori"]
+        da, a = e["da"], e["a"]
+        sel = self.ritaglio(da - 0.1, a + 0.1)
+        x, y = self.viso(faccia, da)
+        n = len(self.camera)
+        self.camera.insert(0, f'<div class="pozza" id="lz{n}" style="background:radial-gradient(520px 620px at {x:.0f}px {y + 120:.0f}px,'
+                              f'rgba(160,190,255,.30),rgba(120,150,230,.10) 55%,rgba(120,150,230,0) 78%)"></div>')
+        m = len(self.corpo)
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
+        posti = [max(cima - 260, 230), faccia["mento"] + 140, faccia["mento"] + 330]  # sopra la testa, poi sul petto
+        parole = "".join(f'<div class="lparola" id="l{m}p{j}" style="top:{posti[j]:.0f}px;'
+                         f'{"color:" + c["accento_luce"] if j % 2 else ""};font-size:{min(170, int(980 / (max(len(t), 3) * 0.62)))}px">'
+                         f'{html.escape(t.lower())}</div>' for j, (t, _) in enumerate(e.get("parole", [])[:3]))
+        self.corpo.append(f'<div class="lbuio" id="l{m}"></div>{parole}')
+        self.tl.append(f'tl.set("{sel}",{{opacity:1}},{da:.3f});'
+                       f'tl.to("#bg",{{filter:"brightness(0.16) blur(10px) saturate(0.5) hue-rotate(-12deg)",duration:0.6,ease:"power2.inOut"}},{da:.3f});'
+                       f'tl.to(["#lz{n}","#l{m}"],{{opacity:1,duration:0.6}},{da:.3f});'
+                       f'tl.to("#bg",{{filter:"brightness(1) blur(0px) saturate(1)",duration:0.5,ease:"power2.inOut"}},{a - 0.5:.3f});'
+                       f'tl.to(["#lz{n}","#l{m}","#l{m}p0","#l{m}p1","#l{m}p2"],{{opacity:0,duration:0.5}},{a - 0.5:.3f});'
+                       f'tl.set("{sel}",{{opacity:0}},{a:.3f});tl.set("#bg",{{filter:"none"}},{a:.3f});')
+        for j, (t, quando) in enumerate(e.get("parole", [])[:3]):
+            self.tl.append(f'tl.fromTo("#l{m}p{j}",{{opacity:0,y:30,filter:"blur(10px)"}},{{opacity:1,y:0,filter:"blur(0px)",duration:0.3,ease:"power3.out",immediateRender:false}},{quando:.3f});')
+            self.suono("pop", quando, 0.3)
+        self.suono("attesa", da, 0.25)
+        self.nascondi.append((da, a))
+
+    def flash(self, da, forza, colore="#FFF4E8"):
+        n = len(self.corpo)
+        self.corpo.append(f'<div class="lampo" id="f{n}" style="background:{colore}"></div>')
+        self.tl.append(f'tl.fromTo("#f{n}",{{opacity:{forza}}},{{opacity:0,duration:0.28,ease:"power2.out",immediateRender:false}},{da:.3f});')
+
+    def dietro(self, e, faccia):
+        """Parola dietro la testa: la stanza si spegne mentre tu resti illuminato, la parola forte sbatte dietro la
+        tua testa con un lampo e un colpo di camera, le luci tornano di scatto. e = {"da": inizio della frase,
+        "parola": "SEMPLICE", "quando": secondo in cui la dici, "a": quando le luci tornano}."""
+        c = self.stile["colori"]
+        da, quando, a = e["da"], e["quando"], e["a"]
+        sel = self.ritaglio(da - 0.1, a + 0.1)
+        testo = e["parola"].upper()
+        dim = min(320, int(980 / (max(len(testo), 3) * 0.88)))
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95  # dove finisce la testa
+        y = max(cima - dim * 0.3, 230)  # la testa copre la parte bassa della parola
+        n = len(self.camera)
+        self.camera.insert(0, f'<div class="pdietro" id="p{n}" style="top:{y:.0f}px;font-size:{dim}px;color:{c["accento"]};'
+                              f'text-shadow:0 0 50px {c["accento_luce"]}99">{html.escape(testo)}</div>')
+        m = len(self.corpo)
+        self.corpo.append(f'<div class="buio" id="v{m}"></div>')
+        stanza = "brightness(0.46) contrast(1.1) saturate(0.62)"
+        self.tl.append(f'tl.set("{sel}",{{opacity:1}},{da:.3f});'
+                       f'tl.to("#bg",{{filter:"{stanza}",duration:{min(0.8, quando - da):.3f},ease:"power2.inOut"}},{da:.3f});'
+                       f'tl.to("#v{m}",{{opacity:1,duration:{min(0.8, quando - da):.3f}}},{da:.3f});'
+                       f'tl.fromTo("#cam",{{scale:1}},{{scale:1.05,duration:{quando - da:.3f},ease:"power1.in",immediateRender:false}},{da:.3f});'
+                       f'tl.set("#p{n}",{{opacity:1}},{quando:.3f});'
+                       f'tl.fromTo("#p{n}",{{scale:1.9,filter:"blur(14px)"}},{{scale:1,filter:"blur(0px)",duration:0.2,ease:"expo.out",immediateRender:false}},{quando:.3f});'
+                       f'tl.fromTo("#cam",{{scale:1.1}},{{scale:1.065,duration:0.34,ease:"power3.out",immediateRender:false}},{quando:.3f});'
+                       f'tl.fromTo("#cam",{{x:0,y:0}},{{keyframes:[{{x:-6,y:4,duration:.033}},{{x:5,y:-4,duration:.033}},{{x:-3,y:2,duration:.033}},{{x:0,y:0,duration:.033}}],immediateRender:false}},{quando:.3f});'
+                       f'tl.to("#p{n}",{{scale:1.035,duration:{max(a - quando - 0.22, 0.05):.3f},ease:"none"}},{quando + 0.21:.3f});'
+                       f'tl.set("#bg",{{filter:"none"}},{a:.3f});tl.set(["{sel}","#p{n}","#v{m}"],{{opacity:0}},{a:.3f});'
+                       f'tl.fromTo("#cam",{{scale:1.065}},{{scale:1,duration:0.34,ease:"power2.out",immediateRender:false}},{a:.3f});')
+        self.flash(quando, 0.28)
+        self.flash(a, 0.5, "#FFFFFF")
+        self.suono("attesa", max(da, quando - 1.6), 0.3)
+        self.suono("impatto", quando, 0.5)
+        self.suono("transizione", a, 0.35)
+        self.nascondi.append((quando, a))
+
     def finale(self, piano, da):
         self.bande(da)
         self.scuro(da, self.D)
@@ -312,6 +532,16 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.contatore(e, faccia["mento"] + 40)
         elif tipo in ("cornice", "telefono"):
             r.cornice(e, telefono=tipo == "telefono")
+        elif tipo == "dietro":
+            r.dietro(e, faccia)
+        elif tipo == "adesivo":
+            r.adesivo(e, faccia)
+        elif tipo == "zoom":
+            r.zoom(e, faccia)
+        elif tipo == "schermo":
+            r.schermo(e, faccia)
+        elif tipo == "luce":
+            r.luce(e, faccia)
     finale_da = piano.get("finale_da", D - 2.3)
     r.finale(piano, finale_da)
     if piano.get("musica", True):
@@ -406,6 +636,30 @@ html,body{{margin:0;background:{scuro}}}
 .freccia{{margin:30px auto 0;width:110px;height:110px;border-radius:50%;background:{acc};color:#fff;font-size:70px;font-weight:900;
  display:flex;align-items:center;justify-content:center}}
 .zona{{position:absolute;background:rgba(255,0,0,.35);z-index:50}}
+.rit{{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;opacity:0;z-index:3}}
+.pdietro{{position:absolute;left:0;right:0;text-align:center;{W};line-height:1;white-space:nowrap;opacity:0;z-index:2;
+ transform-origin:50% 60%}}
+.buio{{position:absolute;inset:0;z-index:7;opacity:0;pointer-events:none;
+ background:radial-gradient(900px 1100px at 540px 900px,rgba(2,4,10,0) 45%,rgba(2,4,10,.35) 78%,rgba(2,4,10,.6) 100%)}}
+.lampo{{position:absolute;inset:0;z-index:60;opacity:0;pointer-events:none}}
+.schermo{{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;opacity:0;z-index:2}}
+.pozza{{position:absolute;inset:0;z-index:2;opacity:0;mix-blend-mode:screen}}
+.lbuio{{position:absolute;inset:0;z-index:7;opacity:0;pointer-events:none;
+ background:radial-gradient(640px 860px at 540px 820px,rgba(0,0,0,0) 35%,rgba(0,0,8,.75) 100%)}}
+.lparola{{position:absolute;left:40px;right:40px;text-align:center;z-index:31;font-family:'{ft["famiglia"]}';font-weight:900;
+ letter-spacing:-4px;line-height:1;color:#fff;opacity:0;text-shadow:0 10px 40px rgba(0,0,0,.5)}}
+@font-face{{font-family:'Caveat';src:url('assets/Caveat.ttf');font-weight:400 700}}
+.pagina{{position:absolute;inset:0;z-index:36;opacity:0;overflow:hidden}}
+.raggi{{position:absolute;left:-600px;top:-500px;width:2280px;height:2920px;
+ background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(255,255,255,.10) 0deg 7deg,rgba(255,255,255,0) 7deg 18deg);
+ -webkit-mask:radial-gradient(circle at 50% 50%,#000 20%,rgba(0,0,0,.35) 60%);mask:radial-gradient(circle at 50% 50%,#000 20%,rgba(0,0,0,.35) 60%)}}
+.segni{{position:absolute;width:70px;height:120px}}
+.segni i{{position:absolute;left:0;width:64px;height:9px;border-radius:5px;background:#fff;transform-origin:100% 50%}}
+.timbro{{position:absolute;left:90px;top:200px;font-family:'Archivo';font-weight:900;font-stretch:110%;font-size:54px;letter-spacing:2px;
+ padding:6px 20px;border:6px solid;border-radius:12px;opacity:0;background:rgba(255,255,255,.06)}}
+.adesivo{{position:absolute;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}}
+.nota{{position:absolute;left:90px;right:120px;text-align:center;font-family:'Caveat';font-weight:700;font-size:118px;line-height:1;
+ color:#fff;opacity:0;text-shadow:0 3px 0 rgba(0,0,0,.25)}}
 {css_sott}
 </style>
 <script src="{GSAP}"></script>
@@ -413,7 +667,8 @@ html,body{{margin:0;background:{scuro}}}
 <div id="root" data-composition-id="main" data-start="0" data-duration="{D:.3f}" data-width="1080" data-height="1920">
 <audio id="voce" src="assets/tagliato.mp4" data-start="0" data-media-start="0" data-duration="{D:.3f}" data-volume="1"></audio>
 {chr(10).join(r.audio)}
-<div id="cam" class="cam"><video id="bg" src="assets/tagliato.mp4" muted playsinline data-start="0" data-media-start="0" data-duration="{D:.3f}"></video></div>
+<div id="cam" class="cam"><video id="bg" src="assets/tagliato.mp4" muted playsinline data-start="0" data-media-start="0" data-duration="{D:.3f}"></video>
+{chr(10).join(r.camera)}</div>
 <div class="mirino" id="mir"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i>
 <div class="mir-lab" style="left:150px"><span class="rosso">●</span> REC <span id="tc">00:00:00</span></div>
 <div class="mir-lab" style="right:200px">4K · 30FPS</div></div>

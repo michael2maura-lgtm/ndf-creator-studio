@@ -52,17 +52,13 @@ def pulisci(a, duro):
     return a
 
 
-def main():
+def ritaglia(cart, da, a, nome="ritaglio", duro=False):
+    """Ritaglia i secondi da-a del tagliato del lavoro in <cart>/<nome>.webm. Se c'è già, non lo rifà."""
     import numpy as np
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if not args:
-        sys.exit(__doc__)
-    opz = lambda k, d=None: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d  # noqa: E731
-    cart = cartella_lavoro(args[0])
     sorgente = os.path.join(cart, "tagliato.mp4")
-    da, a = float(opz("--da", 0)), float(opz("--a", durata(sorgente)))
-    nome = opz("--nome", "ritaglio")
-    duro = "--duro" in sys.argv
+    uscita = os.path.join(cart, f"{nome}.webm")
+    if os.path.exists(uscita) and os.path.getmtime(uscita) > os.path.getmtime(sorgente):
+        return uscita
     n_fot = int(round((a - da) * FPS))
     # i tagli del video, in fotogrammi dall'inizio del pezzo
     tagli = set()
@@ -75,7 +71,6 @@ def main():
     leggi_v = subprocess.Popen([FFMPEG, "-v", "error", "-ss", f"{da:.3f}", "-i", sorgente, "-t", f"{a - da:.3f}",
                                 "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS}",
                                 "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
-    uscita = os.path.join(cart, f"{nome}.webm")
     scrivi_v = subprocess.Popen([FFMPEG, "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{W}x{H}",
                                  "-r", str(FPS), "-i", "-", "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-crf", "28",
                                  "-b:v", "0", "-auto-alt-ref", "0", "-row-mt", "1", uscita], stdin=subprocess.PIPE)
@@ -124,7 +119,42 @@ def main():
             foglio.paste(f, (360 * k, 0))
         os.makedirs(os.path.join(cart, "controllo"), exist_ok=True)
         foglio.save(os.path.join(cart, "controllo", f"{nome}.jpg"), quality=85)
-    print(f"FATTO {uscita} ({(time.time() - inizio) / 60:.1f} minuti)")
+    print(f"Ritaglio fatto in {(time.time() - inizio) / 60:.1f} minuti", flush=True)
+    return uscita
+
+
+def fotogramma(cart, t, duro=True):
+    """Un solo fotogramma ritagliato al secondo t (per l'adesivo): immagine RGBA di PIL. Il modello si scalda sui
+    fotogrammi del mezzo secondo prima, così la sagoma è stabile come nel video."""
+    import numpy as np
+    from PIL import Image
+    sess = prepara_modello()
+    da = max(0.0, t - 0.4)
+    n = max(1, int(round((t - da) * FPS)) + 1)
+    r = subprocess.run([FFMPEG, "-v", "error", "-ss", f"{da:.3f}", "-i", os.path.join(cart, "tagliato.mp4"), "-frames:v", str(n),
+                        "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}", "-f", "rawvideo",
+                        "-pix_fmt", "rgb24", "-"], capture_output=True)
+    quadri = np.frombuffer(r.stdout, np.uint8).reshape(-1, H, W, 3)
+    zero = np.zeros((1, 1, 1, 1), np.float32)
+    stato, pha = [zero] * 4, None
+    for i, rgb in enumerate(quadri):
+        src = (rgb.astype(np.float32) / 255).transpose(2, 0, 1)[None]
+        for _ in range(RISCALDA if i == 0 else 1):
+            _, pha, *stato = sess.run(None, {"src": src, "r1i": stato[0], "r2i": stato[1], "r3i": stato[2],
+                                             "r4i": stato[3], "downsample_ratio": np.array([RIDUZIONE], np.float32)})
+    alfa = pulisci(pha[0, 0], duro)
+    return Image.fromarray(np.dstack([quadri[-1], (alfa * 255).astype(np.uint8)]), "RGBA")
+
+
+def main():
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if not args:
+        sys.exit(__doc__)
+    opz = lambda k, d=None: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d  # noqa: E731
+    cart = cartella_lavoro(args[0])
+    da = float(opz("--da", 0))
+    a = float(opz("--a", durata(os.path.join(cart, "tagliato.mp4"))))
+    print("FATTO", ritaglia(cart, da, a, opz("--nome", "ritaglio"), "--duro" in sys.argv))
 
 
 if __name__ == "__main__":
