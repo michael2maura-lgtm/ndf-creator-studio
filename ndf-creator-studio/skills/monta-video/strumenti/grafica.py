@@ -37,6 +37,7 @@ import re
 import shutil
 import subprocess
 
+import effetti
 import sottotitoli
 from comune import DATI, FFMPEG, STUDIO, durata, trova
 
@@ -367,6 +368,9 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     petto = min(faccia["mento"] + 70, 1180)  # titoli e targhette sul petto, sotto il mento
     y_sub = min(faccia["mento"] + 160, 1300)
     ap = piano.get("apertura")
+    if ap and stile.get("effetti_scelti") is not None and "titolo" not in stile["effetti_scelti"]:
+        print('NOTA: "Titolo" non è tra gli effetti scelti, niente titolo d\'apertura')
+        ap = None
     if ap:
         r.titolo(ap["sopra"], ap["targa"], 0.0, ap.get("a", 2.0), petto - 20)
         r.nascondi.append((0.0, ap.get("a", 2.0)))
@@ -374,6 +378,9 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     for e in sorted(piano.get("elementi", []), key=lambda x: x.get("da", x["voci"][0]["appare"] if x["tipo"] == "classifica"
                                                                     else x.get("voci", [[0, 0, 0]])[0][2])):
         tipo = e["tipo"]
+        if stile.get("effetti_scelti") is not None and effetti.chiave_di(e) not in stile["effetti_scelti"]:
+            print(f'NOTA: "{effetti.CATALOGO[effetti.chiave_di(e)]["nome"]}" non è tra gli effetti scelti, lo salto')
+            continue
         if tipo == "gigante":
             r.gigante(e)
             r.bande(e["a"])

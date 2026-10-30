@@ -69,6 +69,8 @@ def con_le_scelte(nome_stile, stile):
     nuovo = dict(stile, suoni=suoni)
     if sc.get("sottotitoli"):
         nuovo["sottotitoli_scelti"] = sc["sottotitoli"]
+    if sc.get("effetti") is not None:  # None = tutti; [] = nessuno
+        nuovo["effetti_scelti"] = sc["effetti"]
     return nuovo
 
 
