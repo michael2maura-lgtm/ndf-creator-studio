@@ -69,9 +69,20 @@ def con_le_scelte(nome_stile, stile):
     nuovo = dict(stile, suoni=suoni)
     if sc.get("sottotitoli"):
         nuovo["sottotitoli_scelti"] = sc["sottotitoli"]
+    if sc.get("colore"):
+        nuovo["colore_scelto"] = sc["colore"]
     if sc.get("effetti") is not None:  # None = tutti; [] = nessuno
         nuovo["effetti_scelti"] = sc["effetti"]
     return nuovo
+
+
+def girato(cart):
+    """Il video su cui si monta: quello con il colore (colore.py) se c'è, se no il tagliato."""
+    c = os.path.join(cart, "tagliato-colore.mp4")
+    if os.path.exists(c) and os.path.exists(os.path.join(cart, "colore.json")) \
+            and os.path.getmtime(c) > os.path.getmtime(os.path.join(cart, "tagliato.mp4")):
+        return c
+    return os.path.join(cart, "tagliato.mp4")
 
 
 def trova(rel, cartella="suoni"):

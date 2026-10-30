@@ -8,6 +8,7 @@ Legge da lavori/<nome>/: tagliato.mp4, parole.json, faccia.json, piano.json
   {"stile": "ndf",
    "correzioni": {"effeccamento": "affiancamento"},        sostituzioni nel testo dei sottotitoli
    "aggiungi": [{"testo": "persone.", "da": 50.1, "a": 50.7}],  parole che Whisper ha saltato
+   "colore": "argento",                                     facoltativo: look del girato (strumenti/colore.py)
    "titoli": [{"da": 1.3, "a": 3.6, "sopra": "nel network", "grande": "NON SI GUADAGNA", "sotto": "", "colore": "accento"}],
    "finale_da": 76.0, "finale_testo": "COMMENTA INFO", "finale_sotto": "qui sotto"}   (testo e sotto: facoltativi)
 Scrive lavori/<nome>/reel/ (index.html + file), pronta per hyperframes render.
@@ -22,6 +23,7 @@ import sys
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import STUDIO, cartella_lavoro, cartella_stile, con_le_scelte, durata, leggi, trova  # noqa: E402
+import colore as look_girato  # noqa: E402
 import grafica  # noqa: E402
 import scene  # noqa: E402
 import sottotitoli  # noqa: E402
@@ -117,7 +119,8 @@ def main():
     stile = con_le_scelte(piano.get("stile", "ndf"), leggi(os.path.join(cart_stile, "stile.json")))
     faccia = leggi(os.path.join(cart, "faccia.json"))
     parole = parole_corrette(leggi(os.path.join(cart, "parole.json")), piano)
-    video = os.path.join(cart, "tagliato.mp4")
+    # colore del girato: quello del piano ("colore": "argento"), se no quello scelto nella pagina, se no l'originale
+    video = look_girato.applica(cart, piano.get("colore", stile.get("colore_scelto")))
     D = min(durata(video), piano.get("durata_max", 10 ** 6))  # durata_max: per le prove corte
     if stile.get("motore") == "grafica":  # stili con motion graphics: tutto in strumenti/grafica.py
         grafica.costruisci(cart, piano, stile, cart_stile, parole, faccia, D,

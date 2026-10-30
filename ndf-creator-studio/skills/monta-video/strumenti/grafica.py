@@ -43,7 +43,7 @@ import subprocess
 
 import effetti
 import sottotitoli
-from comune import DATI, FFMPEG, STUDIO, durata, trova
+from comune import DATI, FFMPEG, STUDIO, durata, girato, trova
 
 GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
 MIRINO_FINO = 6.2  # il mirino REC solo in apertura: per tutto il reel stanca
@@ -496,9 +496,9 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     if os.path.exists(dest):
         os.remove(dest)
     try:
-        os.link(os.path.join(cart, "tagliato.mp4"), dest)
+        os.link(girato(cart), dest)
     except OSError:
-        shutil.copy2(os.path.join(cart, "tagliato.mp4"), dest)
+        shutil.copy2(girato(cart), dest)
     ft, fm = stile["font"]["titoli"], stile["font"]["mono"]
     for f in (ft, fm):
         shutil.copy2(os.path.join(cart_stile, f["file"]), os.path.join(r.assets, os.path.basename(f["file"])))

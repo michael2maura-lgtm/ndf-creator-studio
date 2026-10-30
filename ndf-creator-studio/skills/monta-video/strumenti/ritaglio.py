@@ -18,7 +18,7 @@ import time
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import FFMPEG, MODELLI, cartella_lavoro, durata, leggi  # noqa: E402
+from comune import FFMPEG, MODELLI, cartella_lavoro, durata, girato, leggi  # noqa: E402
 
 MODELLO = os.path.join(MODELLI, "rvm_resnet50_fp32.onnx")
 URL = "https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0.0/rvm_resnet50_fp32.onnx"
@@ -55,7 +55,7 @@ def pulisci(a, duro):
 def ritaglia(cart, da, a, nome="ritaglio", duro=False):
     """Ritaglia i secondi da-a del tagliato del lavoro in <cart>/<nome>.webm. Se c'è già, non lo rifà."""
     import numpy as np
-    sorgente = os.path.join(cart, "tagliato.mp4")
+    sorgente = girato(cart)  # con il colore, se c'è: la persona ritagliata deve avere gli stessi colori del video
     uscita = os.path.join(cart, f"{nome}.webm")
     if os.path.exists(uscita) and os.path.getmtime(uscita) > os.path.getmtime(sorgente):
         return uscita
@@ -131,7 +131,7 @@ def fotogramma(cart, t, duro=True):
     sess = prepara_modello()
     da = max(0.0, t - 0.4)
     n = max(1, int(round((t - da) * FPS)) + 1)
-    r = subprocess.run([FFMPEG, "-v", "error", "-ss", f"{da:.3f}", "-i", os.path.join(cart, "tagliato.mp4"), "-frames:v", str(n),
+    r = subprocess.run([FFMPEG, "-v", "error", "-ss", f"{da:.3f}", "-i", girato(cart), "-frames:v", str(n),
                         "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}", "-f", "rawvideo",
                         "-pix_fmt", "rgb24", "-"], capture_output=True)
     quadri = np.frombuffer(r.stdout, np.uint8).reshape(-1, H, W, 3)

@@ -56,6 +56,8 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    titoli che si decodificano, targhette, parola gigante, cornice, telefono, contatore). Formato in cima a
    `strumenti/grafica.py`, quando usare cosa nello `stile.md` dello stile, esempio approvato in `esempi/grafica.json`.
    Ogni 4-8 secondi una grafica, sempre nata da una frase detta in quel momento.
+   **Poche cose fatte bene**: una grafica alla volta, mai lampi, adesivi o pillole su ogni parola. Se un elemento non
+   aiuta a capire o a sentire, toglilo.
 6. `PY STUDIO/strumenti/costruisci.py NOME --zone`, poi `PY STUDIO/strumenti/foto.py NOME <6-8 momenti>`
    e guarda il foglio: niente nelle zone rosse, niente sulla faccia, niente righe orfane.
 7. `PY STUDIO/strumenti/costruisci.py NOME` (senza zone), poi `PY STUDIO/strumenti/rendi.py NOME`.
@@ -75,6 +77,9 @@ Tre strade: stile pronto, replica un reel (l'utente ti manda il link in chat: lo
 e ne fai uno stile nuovo, che poi compare nella pagina), crea il tuo (parte da uno stile e cambia suoni e musica).
 Quando scrive `SCELTE SALVATE`, di' in una riga cosa ha scelto. I 20 sottotitoli a scelta stanno in
 `strumenti/sottotitoli.py`; le loro anteprime le rifà `anteprima_sottotitoli.py` (solo se ne cambi o aggiungi uno).
+Colore del girato: `strumenti/colore.py` (6 look, la pelle resta naturale). Quello scelto nella pagina lo applica
+`costruisci.py` da solo; per un video solo scrivi "colore" nel piano. Se l'utente chiede "che colore ci sta?",
+`PY STUDIO/strumenti/colore.py proposte NOME` e mostragli `controllo/look.jpg`.
 Effetti (motion graphics del motore grafica): catalogo in `strumenti/effetti.py`. Se `DATI/scelte.json` ha "effetti",
 nel piano usa solo quelli (grafica.py salta gli altri con una NOTA). Gli effetti li scegli TU per ogni reel, da
 quello che si dice (lo stile.md dice quando): l'utente non sceglie niente reel per reel, nella pagina toglie solo

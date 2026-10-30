@@ -22,6 +22,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import DATI, SCELTE, STUDIO, leggi, scrivi  # noqa: E402
 import libreria_suoni  # noqa: E402
+import colore  # noqa: E402
 import effetti  # noqa: E402
 import sottotitoli  # noqa: E402
 
@@ -104,6 +105,13 @@ def raccogli():
             file["eff-" + k] = p
         eff.append(dict(e, chiave=k, anteprima=os.path.exists(p)))
 
+    looks = []
+    for k, (nome, per, _, _, _) in colore.LOOK.items():
+        p = os.path.join(STUDIO, "colore", "anteprime", k + ".jpg")
+        if os.path.exists(p):
+            file["look-" + k] = p
+        looks.append({"chiave": k, "nome": nome, "per": per, "anteprima": os.path.exists(p)})
+
     # le scelte salvate l'ultima volta, rimesse come id
     per_percorso = {os.path.realpath(p): h for h, p in file.items()}
     scelte = None
@@ -112,12 +120,12 @@ def raccogli():
         scelte = {"strada": sc.get("strada", "pronto"), "stile": sc.get("stile"),
                   "suoni": {m: ("" if v == "" else per_percorso.get(os.path.realpath(v)))
                             for m, v in sc.get("suoni", {}).items()},
-                  "sottotitoli": sc.get("sottotitoli"), "effetti": sc.get("effetti"),
+                  "sottotitoli": sc.get("sottotitoli"), "effetti": sc.get("effetti"), "colore": sc.get("colore"),
                   "musica": "nessuna" if sc.get("musica") == "nessuna" else per_percorso.get(os.path.realpath(sc["musica"]))
                   if sc.get("musica") else None}
     except (OSError, ValueError):
         pass
-    return {"stili": stili, "suoni": suoni, "sottotitoli": sott, "effetti": eff, "scelte": scelte}, file
+    return {"stili": stili, "suoni": suoni, "sottotitoli": sott, "effetti": eff, "colori": looks, "scelte": scelte}, file
 
 
 class Pagina(BaseHTTPRequestHandler):
@@ -182,10 +190,12 @@ class Pagina(BaseHTTPRequestHandler):
                 eff = [k for k in eff if k in effetti.CATALOGO]
                 if len(eff) == len(effetti.CATALOGO):
                     eff = None  # tutti
-            scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "sottotitoli": sott, "effetti": eff,
+            look = corpo.get("colore") if crea and corpo.get("colore") in colore.LOOK and corpo.get("colore") != "originale" else None
+            scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "colore": look,
+                            "sottotitoli": sott, "effetti": eff,
                             "suoni": suoni,
                             "musica": musica, "aggiornato": datetime.datetime.now().isoformat(timespec="seconds")})
-            print(f"SCELTE SALVATE stile={corpo['stile']} sottotitoli={sott or 'dello stile'} effetti={'tutti' if eff is None else len(eff)} suoni cambiati={len(suoni)} "
+            print(f"SCELTE SALVATE stile={corpo['stile']} colore={look or 'originale'} sottotitoli={sott or 'dello stile'} effetti={'tutti' if eff is None else len(eff)} suoni cambiati={len(suoni)} "
                   f"musica={'nessuna' if musica == 'nessuna' else ('cambiata' if musica else 'di serie')}", flush=True)
             return self._manda(200, b"{}")
         self._manda(404, b"{}")
