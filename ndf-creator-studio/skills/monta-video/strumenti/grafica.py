@@ -25,6 +25,13 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "schermo", "da": 9.75, "a": 15.3, "file": "ragazza-computer.mp4", "lato": "destra"},
    {"tipo": "luce", "da": 15.5, "a": 19.6, "parole": [["Il tuo settore", 16.16], ["15 domande", 17.66]]},
    senza ritaglio:
+   {"tipo": "commento", "da": 64.6, "parola": "INFO", "scrivi": 65.24, "risposta": "Te lo invio in direct",
+    "risposta_da": 66.5, "chip": "Il metodo"},                                      il commento che si scrive
+   {"tipo": "numero", "da": 17.66, "a": 20.8, "numero": "15", "righe": [["DOMANDE", 18.1], ["CONTENUTI", 19.8]]},
+   {"tipo": "etichette", "quando": 43.5, "a": 45.3, "voci": [["solo contenuti?", 43.78], ["solo post?", 44.72]]},
+   {"tipo": "neon", "da": 7.3, "quando": 8.08, "a": 9.6, "testo": "più semplice"},  insegna sopra la testa
+   {"tipo": "percorso", "da": 55.9, "a": 64.6, "etichetta": "IL MIO METODO", "titolo": "dalle domande ai contatti",
+    "passi": [["Domande", 57.24], ["Contenuti", 61.84], ["Contatti", 62.58]]},
    {"tipo": "zoom", "mosse": [[0.3, 2.4, 1.12, "lento"], [3.6, 3.9, 1.3, "scatto"], [4.9, 5.2, 1.0, "fuori"]]}],
  "finale_da": 64.75, "finale_sopra": "TE LO INVIO IN DIRECT", "finale_testo": "COMMENTA", "finale_bottone": "INFO"}
 
@@ -445,6 +452,170 @@ class Reel:
         self.suono("transizione", a, 0.35)
         self.nascondi.append((quando, a))
 
+    def commento(self, e, faccia):
+        """Commento: sotto il mento sale il campo dei commenti, la parola si scrive da sola, parte il commento con il
+        cuore, poi arriva la tua risposta con il bottone. e = {"da": quando sale il campo, "parola": "INFO",
+        "scrivi": quando dici la parola, "invia": (facoltativo), "risposta": "Te lo invio in direct",
+        "risposta_da": secondo, "chip": "Il metodo" (facoltativo), "a": quando sparisce}."""
+        da, a, parola = e["da"], e.get("a", self.D), e["parola"].upper()
+        scrivi = e.get("scrivi", da + 0.4)
+        invia = e.get("invia", scrivi + 0.12 * len(parola) + 0.35)
+        risp = e.get("risposta_da", invia + 0.9)
+        n = len(self.corpo)
+        # la tua faccia nel tondo della risposta, dal fotogramma del video
+        volto = f"volto-{n}.jpg"
+        lato = faccia["destra"] - faccia["sinistra"]
+        subprocess.run([FFMPEG, "-v", "error", "-y", "-ss", f"{da:.2f}", "-i", os.path.join(self.assets, "tagliato.mp4"),
+                        "-frames:v", "1", "-vf", f"crop={lato}:{lato}:{faccia['sinistra']}:{max(faccia['occhi'] - lato // 2, 0)},scale=120:120",
+                        os.path.join(self.assets, volto)], check=True)
+        y = min(faccia["mento"] + 70, 1240)
+        chip = f'<span class="cm-chip" id="cm{n}k">↗ {html.escape(e["chip"])}</span>' if e.get("chip") else ""
+        self.corpo.append(
+            f'<div class="cm" id="cm{n}" style="top:{y}px">'
+            f'<div class="cm-campo" id="cm{n}f"><span class="cm-av"></span><span class="cm-ph" id="cm{n}h">Aggiungi un commento...</span>'
+            f'<span class="cm-tx" id="cm{n}t"></span><span class="cm-car" id="cm{n}c"></span><span class="cm-in" id="cm{n}i">↑</span></div>'
+            f'<div class="cm-riga" id="cm{n}p"><span class="cm-av"></span><div class="cm-bol"><small>tu</small><b>{html.escape(parola)}</b>'
+            f'<i class="cm-cuore" id="cm{n}u">♥</i></div></div>'
+            f'<div class="cm-riga cm-r" id="cm{n}r"><img class="cm-av" src="assets/{volto}"><div class="cm-bol scuro2">'
+            f'<span class="cm-pt" id="cm{n}d"><i></i><i></i><i></i></span><span id="cm{n}rt" class="cm-rt">{html.escape(e["risposta"])}</span>{chip}</div></div></div>')
+        T = self.tl.append
+        T(f'tl.set("#cm{n}",{{opacity:1}},{da:.3f});'
+          f'tl.fromTo("#cm{n}f",{{y:90,opacity:0}},{{y:0,opacity:1,duration:0.35,ease:"power3.out",immediateRender:false}},{da:.3f});'
+          f'tl.set("#cm{n}h",{{opacity:0,display:"none"}},{scrivi:.3f});tl.set("#cm{n}f",{{borderColor:"{self.stile["colori"]["accento"]}"}},{scrivi:.3f});'
+          f'tl.fromTo("#cm{n}c",{{opacity:1}},{{opacity:0,duration:0.25,repeat:{int((invia - scrivi) / 0.5) * 2 + 1},yoyo:true,immediateRender:false}},{scrivi:.3f});'
+          f'tl.fromTo("#cm{n}i",{{scale:1}},{{keyframes:[{{scale:0.8,duration:0.07}},{{scale:1.15,duration:0.1}},{{scale:1,duration:0.1}}],immediateRender:false}},{invia - 0.1:.3f});'
+          f'tl.to("#cm{n}f",{{y:-30,opacity:0,scale:0.92,duration:0.22,ease:"power2.in"}},{invia:.3f});'
+          f'tl.fromTo("#cm{n}p",{{opacity:0,scale:0.6,y:20}},{{opacity:1,scale:1,y:0,duration:0.32,ease:"back.out(2)",immediateRender:false}},{invia + 0.12:.3f});'
+          f'tl.fromTo("#cm{n}u",{{scale:0,opacity:0}},{{scale:1,opacity:1,duration:0.3,ease:"back.out(3)",immediateRender:false}},{invia + 0.45:.3f});'
+          f'tl.fromTo("#cm{n}r",{{opacity:0,y:24}},{{opacity:1,y:0,duration:0.28,ease:"power3.out",immediateRender:false}},{min(invia + 0.6, risp - 0.35):.3f});'
+          f'tl.set("#cm{n}d",{{display:"none"}},{risp:.3f});tl.set("#cm{n}rt",{{display:"inline"}},{risp:.3f});'
+          f'tl.to("#cm{n}",{{opacity:0,duration:0.25}},{a - 0.25:.3f});')
+        for j in range(3):  # i tre puntini mentre scrivi la risposta
+            T(f'tl.fromTo("#cm{n}d i:nth-child({j + 1})",{{y:0}},{{y:-8,duration:0.18,repeat:{max(int((risp - invia - 0.6) / 0.36), 1)},yoyo:true,immediateRender:false}},{invia + 0.6 + j * 0.09:.3f});')
+        if e.get("chip"):
+            T(f'tl.fromTo("#cm{n}k",{{scale:0,opacity:0}},{{scale:1,opacity:1,duration:0.3,ease:"back.out(2.5)",immediateRender:false}},{risp + 0.35:.3f});')
+            self.suono("pop", risp + 0.35, 0.35)
+        self.tl.append(f'scrivi("#cm{n}t",{json.dumps(parola)},{scrivi:.3f},{scrivi + 0.12 * len(parola):.3f});')
+        self.suono("tastiera", scrivi, 0.35, dur=0.12 * len(parola) + 0.05)
+        self.suono("click", invia - 0.1, 0.45)
+        self.suono("pop", invia + 0.12, 0.4)
+        self.suono("ding", risp, 0.35)
+        self.nascondi.append((da, a))
+
+    def numero(self, e, faccia):
+        """Numero gigante: il numero che dici atterra enorme sul petto, sotto una riga piccola che cambia con le
+        parole dopo. e = {"da": quando lo dici, "a": fine, "numero": "15", "righe": [["DOMANDE", secondo], ...]}."""
+        da, a = e["da"], e["a"]
+        n = len(self.corpo)
+        testo = str(e["numero"])
+        dim = min(330, int(900 / (max(len(testo), 2) * 0.72)))
+        y = min(faccia["mento"] + 40, 1180)
+        self.corpo.append(f'<div class="nm" id="nm{n}" style="top:{y}px"><div class="nm-n" id="nm{n}n" style="font-size:{dim}px">'
+                          f'{html.escape(testo)}</div><div class="nm-r" id="nm{n}r"></div></div>')
+        self.tl.append(f'tl.set("#nm{n}",{{opacity:1}},{da:.3f});'
+                       f'tl.fromTo("#nm{n}n",{{scale:1.35,opacity:0,filter:"blur(18px)"}},{{scale:1,opacity:1,filter:"blur(0px)",duration:0.3,ease:"expo.out",immediateRender:false}},{da:.3f});'
+                       f'tl.to("#nm{n}n",{{scale:1.04,duration:{max(a - da - 0.5, 0.1):.2f},ease:"none"}},{da + 0.3:.3f});'
+                       f'tl.to("#nm{n}",{{opacity:0,scale:0.96,duration:0.2}},{a - 0.2:.3f});')
+        for testo_r, quando in e.get("righe", [])[:3]:
+            self.decodifica(f"#nm{n}r", testo_r.upper(), quando, 0.35)
+            self.suono("pop", quando, 0.3)
+        self.suono("impatto", da, 0.4)
+        self.nascondi.append((da, a))
+
+    def etichette(self, e, faccia):
+        """Fermo con etichette: l'immagine si ferma (la voce continua) e delle etichette numerate ti indicano con una
+        linea. e = {"quando": secondo del fermo, "a": quando riparte, "voci": [["testo", secondo], ...] (al massimo 3)}."""
+        t, a = e["quando"], e["a"]
+        n = len(self.corpo)
+        nome = f"fermo-{n}.jpg"
+        subprocess.run([FFMPEG, "-v", "error", "-y", "-ss", f"{t:.3f}", "-i", os.path.join(self.assets, "tagliato.mp4"), "-frames:v", "1",
+                        "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920", "-q:v", "3",
+                        os.path.join(self.assets, nome)], check=True)
+        self.camera.append(f'<img class="fermo" id="fe{n}c" src="assets/{nome}">')
+        cx = (faccia["sinistra"] + faccia["destra"]) / 2
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
+        # punto indicato -> dove sta l'etichetta (in alto a sinistra, sul petto a destra, in basso a sinistra)
+        posti = [((cx, cima + 30), (80, max(cima - 190, 170))),
+                 ((cx + 110, faccia["mento"] + 170), (560, faccia["mento"] + 330)),
+                 ((faccia["sinistra"] - 10, faccia["mento"] + 120), (80, faccia["mento"] + 470))]
+        linee, carte = [], []
+        for j, (testo, quando) in enumerate(e["voci"][:3]):
+            (px, py), (lx, ly) = posti[j]
+            ax, ay = (lx + 200, ly + 92) if py > ly else (lx + 200, ly)   # attacco della linea sulla carta
+            lung = math.hypot(px - ax, py - ay)
+            linee.append(f'<line id="fe{n}l{j}" x1="{px:.0f}" y1="{py:.0f}" x2="{ax:.0f}" y2="{ay:.0f}" stroke-dasharray="{lung:.0f}" '
+                         f'stroke-dashoffset="{lung:.0f}"/><circle id="fe{n}o{j}" cx="{px:.0f}" cy="{py:.0f}" r="11" opacity="0"/>')
+            carte.append(f'<div class="et" id="fe{n}k{j}" style="left:{lx}px;top:{ly}px"><span class="et-n">0{j + 1}</span>{html.escape(testo)}</div>')
+            self.tl.append(f'tl.fromTo("#fe{n}o{j}",{{opacity:0,scale:0,transformOrigin:"50% 50%"}},{{opacity:1,scale:1,duration:0.2,ease:"back.out(3)",immediateRender:false}},{quando:.3f});'
+                           f'tl.fromTo("#fe{n}l{j}",{{strokeDashoffset:{lung:.0f}}},{{strokeDashoffset:0,duration:0.25,ease:"power2.out",immediateRender:false}},{quando + 0.05:.3f});'
+                           f'tl.fromTo("#fe{n}k{j}",{{opacity:0,scale:0.7}},{{opacity:1,scale:1,duration:0.28,ease:"back.out(2)",immediateRender:false}},{quando + 0.2:.3f});')
+            self.suono("pop", quando + 0.2, 0.4)
+        self.corpo.append(f'<div class="fe" id="fe{n}"><svg width="1080" height="1920" class="fe-svg">{"".join(linee)}</svg>{"".join(carte)}</div>')
+        self.tl.append(f'tl.set(["#fe{n}","#fe{n}c"],{{opacity:1}},{t:.3f});tl.set(["#fe{n}","#fe{n}c"],{{opacity:0}},{a:.3f});')
+        self.flash(t, 0.35, "#FFFFFF")
+        self.suono("click", t, 0.5)
+        self.nascondi.append((t, a))
+
+    def neon(self, e, faccia):
+        """Insegna al neon: la frase si accende sul muro sopra la tua testa, sfarfalla, la stanza si abbassa e la luce
+        dell'insegna colora il muro. e = {"da": quando compare spenta, "quando": quando si accende (facoltativo),
+        "a": quando si spegne, "testo": "più semplice"}."""
+        c = self.stile["colori"]
+        da, a, testo = e["da"], e["a"], e["testo"]
+        quando = e.get("quando", da + 0.3)
+        shutil.copy2(os.path.join(STUDIO, "font", "Caveat.ttf"), os.path.join(self.assets, "Caveat.ttf"))
+        cx = (faccia["sinistra"] + faccia["destra"]) / 2
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
+        dim = min(180, int(1700 / max(len(testo), 4)))
+        y = max(cima - dim * 1.25 - 30, 120)            # sopra la testa: il neon non copre mai la faccia
+        n = len(self.camera)
+        self.camera.append(
+            f'<div class="neon-alone" id="ne{n}a" style="left:{cx - 450:.0f}px;top:{y - 220:.0f}px;'
+            f'background:radial-gradient(closest-side,{c["accento"]}88,{c["accento"]}00)"></div>'
+            f'<div class="neon spento" id="ne{n}s" style="top:{y:.0f}px;font-size:{dim}px">{html.escape(testo)}</div>'
+            f'<div class="neon" id="ne{n}" style="top:{y:.0f}px;font-size:{dim}px;color:#FFF1E6;text-shadow:0 0 4px #fff,0 0 14px {c["accento_luce"]},'
+            f'0 0 34px {c["accento"]},0 0 80px {c["accento"]},0 0 140px {c["accento"]}">{html.escape(testo)}</div>')
+        stanza = "brightness(0.68) saturate(0.85)"
+        self.tl.append(f'tl.fromTo("#ne{n}s",{{opacity:0}},{{opacity:1,duration:0.2,immediateRender:false}},{da:.3f});'
+                       f'tl.fromTo("#ne{n}",{{opacity:0}},{{keyframes:[{{opacity:1,duration:0.04}},{{opacity:0.15,duration:0.06}},{{opacity:1,duration:0.04}},'
+                       f'{{opacity:0.35,duration:0.08}},{{opacity:1,duration:0.05}}],immediateRender:false}},{quando:.3f});'
+                       f'tl.fromTo("#ne{n}a",{{opacity:0}},{{opacity:0.75,duration:0.3,immediateRender:false}},{quando:.3f});'
+                       f'tl.to("#bg",{{filter:"{stanza}",duration:0.35}},{quando:.3f});'
+                       f'tl.to(["#ne{n}","#ne{n}a","#ne{n}s"],{{opacity:0,duration:0.25}},{a - 0.25:.3f});'
+                       f'tl.to("#bg",{{filter:"brightness(1) saturate(1)",duration:0.3}},{a - 0.25:.3f});')
+        self.suono("glitch", quando, 0.3)
+
+    def percorso(self, e):
+        """Percorso su carta: si passa a un foglio scuro e il metodo si costruisce dall'alto in basso: un'etichetta,
+        un titolo in corsivo, poi i passi uniti da linee sottili. e = {"da", "a", "etichetta": "IL MIO METODO",
+        "titolo": "dalle domande ai contatti", "passi": [["Domande", secondo], ...] (al massimo 4)}."""
+        da, a = e["da"], e["a"]
+        shutil.copy2(os.path.join(STUDIO, "font", "InstrumentSerif-Italic.ttf"), os.path.join(self.assets, "InstrumentSerif-Italic.ttf"))
+        n = len(self.corpo)
+        passi = e.get("passi", [])[:4]
+        righe_tit = math.ceil(len(e.get("titolo", "")) * 0.42 * 110 / 940) if e.get("titolo") else 0  # righe del titolo, a occhio
+        alto = (520 if len(passi) > 3 else 600) - (righe_tit - 1) * 50
+        righe = [f'<div class="pc-lab" id="pc{n}e" style="top:{alto}px"></div>',
+                 f'<div class="pc-tit" id="pc{n}t" style="top:{alto + 50}px">{html.escape(e.get("titolo", ""))}</div>']
+        y = alto + 90 + righe_tit * 112
+        for j, (testo, quando) in enumerate(passi):
+            righe.append(f'<div class="pc-filo" id="pc{n}f{j}" style="top:{y}px"></div>'
+                         f'<div class="pc-passo" id="pc{n}p{j}" style="top:{y + 90}px">{html.escape(testo)}</div>')
+            self.tl.append(f'tl.fromTo("#pc{n}f{j}",{{scaleY:0}},{{scaleY:1,duration:0.25,ease:"power2.out",immediateRender:false}},{quando - 0.15:.3f});'
+                           f'tl.fromTo("#pc{n}p{j}",{{opacity:0,y:24,filter:"blur(8px)"}},{{opacity:1,y:0,filter:"blur(0px)",duration:0.3,ease:"power3.out",immediateRender:false}},{quando + 0.05:.3f});')
+            self.suono("pop", quando + 0.05, 0.35)
+            y += 190
+        self.corpo.append(f'<div class="pc" id="pc{n}">{"".join(righe)}</div>')
+        self.tl.append(f'tl.set("#pc{n}",{{opacity:1}},{da:.3f});'
+                       f'tl.fromTo("#pc{n}t",{{opacity:0,filter:"blur(14px)",letterSpacing:"0.08em"}},{{opacity:1,filter:"blur(0px)",letterSpacing:"0em",duration:0.6,ease:"power2.out",immediateRender:false}},{da + 0.25:.3f});'
+                       f'tl.set("#pc{n}",{{opacity:0}},{a:.3f});')
+        self.decodifica(f"#pc{n}e", "[ " + e.get("etichetta", "IL METODO").upper() + " ]", da + 0.1, 0.4)
+        self.flash(da, 0.4)
+        self.suono("transizione", da - 0.1, 0.35)
+        self.suono("transizione", a, 0.3)
+        self.nascondi.append((da, a))
+
+
     def finale(self, piano, da):
         self.bande(da)
         self.scuro(da, self.D)
@@ -506,17 +677,20 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     petto = min(faccia["mento"] + 70, 1180)  # titoli e targhette sul petto, sotto il mento
     y_sub = min(faccia["mento"] + 160, 1300)
     ap = piano.get("apertura")
-    if ap and stile.get("effetti_scelti") is not None and "titolo" not in stile["effetti_scelti"]:
+    # effetti accesi: quelli scelti nella pagina, se no quelli dello stile (stile.json "effetti"), se no tutti
+    accesi = stile.get("effetti_scelti", stile.get("effetti"))
+    commento = False
+    if ap and accesi is not None and "titolo" not in accesi:
         print('NOTA: "Titolo" non è tra gli effetti scelti, niente titolo d\'apertura')
         ap = None
     if ap:
         r.titolo(ap["sopra"], ap["targa"], 0.0, ap.get("a", 2.0), petto - 20)
         r.nascondi.append((0.0, ap.get("a", 2.0)))
         r.suono("apertura", 0.0, 0.4)
-    for e in sorted(piano.get("elementi", []), key=lambda x: x.get("da", x.get("voci", [[0, 0, 0]])[0][2])):
+    for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][2] if x.get("voci") else 0):
         tipo = e["tipo"]
-        if stile.get("effetti_scelti") is not None and effetti.chiave_di(e) not in stile["effetti_scelti"]:
-            print(f'NOTA: "{effetti.CATALOGO[effetti.chiave_di(e)]["nome"]}" non è tra gli effetti scelti, lo salto')
+        if accesi is not None and effetti.chiave_di(e) not in accesi:
+            print(f'NOTA: "{effetti.CATALOGO[effetti.chiave_di(e)]["nome"]}" non è tra gli effetti accesi, lo salto')
             continue
         if tipo == "gigante":
             r.gigante(e)
@@ -542,8 +716,21 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.schermo(e, faccia)
         elif tipo == "luce":
             r.luce(e, faccia)
-    finale_da = piano.get("finale_da", D - 2.3)
-    r.finale(piano, finale_da)
+        elif tipo == "commento":
+            r.commento(e, faccia)
+            commento = True
+        elif tipo == "numero":
+            r.numero(e, faccia)
+        elif tipo == "etichette":
+            r.etichette(e, faccia)
+        elif tipo == "neon":
+            r.neon(e, faccia)
+        elif tipo == "percorso":
+            r.percorso(e)
+    # il commento fa da chiusura: senza "finale_da" nel piano, niente finale scuro sopra
+    finale_da = piano.get("finale_da", D + 1 if commento else D - 2.3)
+    if finale_da < D:
+        r.finale(piano, finale_da)
     if piano.get("musica", True):
         r.musica()
     chiave = {p.lower() for p in piano.get("parole_chiave", [])}
@@ -660,6 +847,49 @@ html,body{{margin:0;background:{scuro}}}
 .adesivo{{position:absolute;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}}
 .nota{{position:absolute;left:90px;right:120px;text-align:center;font-family:'Caveat';font-weight:700;font-size:118px;line-height:1;
  color:#fff;opacity:0;text-shadow:0 3px 0 rgba(0,0,0,.25)}}
+.cm{{position:absolute;left:120px;right:150px;z-index:33;opacity:0;font-family:'{ft["famiglia"]}'}}
+.cm-campo{{position:relative;display:flex;align-items:center;gap:18px;height:104px;padding:0 18px;border-radius:52px;background:rgba(20,14,10,.82);
+ border:3px solid rgba(255,255,255,.22);box-shadow:0 14px 40px rgba(0,0,0,.45)}}
+.cm-av{{width:68px;height:68px;border-radius:50%;background:#8a8580;flex:none;object-fit:cover}}
+.cm-ph{{color:rgba(255,255,255,.5);font-weight:500;font-size:36px}}
+.cm-tx{{color:#fff;font-weight:900;font-stretch:110%;font-size:52px}}
+.cm-car{{width:5px;height:54px;background:{acc};margin-left:-12px}}
+.cm-in{{margin-left:auto;width:68px;height:68px;border-radius:50%;background:{acc};color:#fff;font-weight:900;font-size:40px;
+ display:flex;align-items:center;justify-content:center}}
+.cm-riga{{position:absolute;left:0;top:0;display:flex;align-items:center;gap:16px;opacity:0;transform-origin:0 50%}}
+.cm-r{{top:130px;left:70px}}
+.cm-bol{{position:relative;display:flex;align-items:center;gap:16px;padding:16px 30px;border-radius:40px;background:#fff;color:#141414;
+ box-shadow:0 12px 34px rgba(0,0,0,.4)}}
+.cm-bol small{{font-size:28px;color:#777;font-weight:600}}
+.cm-bol b{{font-weight:900;font-stretch:110%;font-size:52px}}
+.cm-cuore{{position:absolute;right:-16px;top:-16px;width:46px;height:46px;border-radius:50%;background:{acc};color:#fff;font-style:normal;
+ font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3)}}
+.cm-bol.scuro2{{background:rgba(20,14,10,.9);color:#fff;border:2px solid rgba(255,255,255,.18)}}
+.cm-rt{{display:none;font-weight:700;font-size:40px}}
+.cm-pt{{display:flex;gap:8px;padding:10px 4px}}
+.cm-pt i{{width:13px;height:13px;border-radius:50%;background:#fff;display:block}}
+.cm-chip{{display:inline-block;background:{acc};color:#fff;font-weight:900;font-size:30px;padding:8px 20px;border-radius:24px;white-space:nowrap}}
+.nm{{position:absolute;left:0;right:0;text-align:center;z-index:33;opacity:0;transform-origin:50% 40%}}
+.nm-n{{{W};line-height:0.9;color:#fff;letter-spacing:-6px;text-shadow:0 14px 50px rgba(0,0,0,.55)}}
+.nm-r{{margin-top:14px;{M};font-size:46px;letter-spacing:6px;color:{luce};text-shadow:0 2px 12px rgba(0,0,0,.8)}}
+.fermo{{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;opacity:0;z-index:4;filter:brightness(.8) saturate(.9)}}
+.fe{{position:absolute;inset:0;z-index:33;opacity:0}}
+.fe-svg{{position:absolute;inset:0}}
+.fe-svg line{{stroke:#fff;stroke-width:4}}
+.fe-svg circle{{fill:{acc};stroke:#fff;stroke-width:4}}
+.et{{position:absolute;opacity:0;display:flex;align-items:center;gap:14px;padding:16px 26px 16px 16px;border-radius:20px;background:#fff;color:#141414;
+ font-family:'{ft["famiglia"]}';font-weight:800;font-size:48px;white-space:nowrap;box-shadow:0 12px 34px rgba(0,0,0,.4);transform-origin:50% 50%}}
+.et-n{{{M};font-size:28px;background:{acc};color:#fff;border-radius:10px;padding:6px 10px}}
+.neon{{position:absolute;left:0;right:0;text-align:center;font-family:'Caveat';font-weight:700;line-height:1;white-space:nowrap;opacity:0;z-index:4;
+ transform:rotate(-4deg)}}
+.neon.spento{{color:rgba(255,255,255,.16);text-shadow:0 2px 2px rgba(0,0,0,.25)}}
+.neon-alone{{position:absolute;width:900px;height:600px;opacity:0;z-index:3;mix-blend-mode:screen}}
+@font-face{{font-family:'Instrument Serif';src:url('assets/InstrumentSerif-Italic.ttf');font-style:italic}}
+.pc{{position:absolute;inset:0;z-index:36;opacity:0;background:radial-gradient(ellipse at 50% 45%,{banda} 0%,{scuro} 72%),{scuro}}}
+.pc-lab{{position:absolute;left:0;right:0;text-align:center;{M};font-size:34px;letter-spacing:5px;color:{luce}}}
+.pc-tit{{position:absolute;left:70px;right:70px;text-align:center;font-family:'Instrument Serif';font-style:italic;font-size:110px;line-height:1;color:#fff}}
+.pc-filo{{position:absolute;left:539px;width:3px;height:70px;background:{luce};transform-origin:50% 0}}
+.pc-passo{{position:absolute;left:0;right:0;text-align:center;{W};font-size:76px;line-height:1;color:#fff;text-transform:uppercase}}
 {css_sott}
 </style>
 <script src="{GSAP}"></script>

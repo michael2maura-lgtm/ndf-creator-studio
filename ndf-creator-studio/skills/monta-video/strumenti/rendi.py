@@ -14,7 +14,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import FFMPEG, HYPERFRAMES, NPX, cartella_lavoro, env_node, esegui  # noqa: E402
+from comune import FFMPEG, HYPERFRAMES, NPX, cartella_lavoro, durata, env_node, esegui  # noqa: E402
 
 OBIETTIVO = "I=-14:TP=-2:LRA=11"
 
@@ -92,10 +92,22 @@ def main():
 
     qualita = "draft" if "--bozza" in sys.argv else "high"
     print(f"Creo il video (qualità {qualita}): qualche minuto...")
+    # i fotogrammi in attesa occupano circa 8.5 MB l'uno sul disco: se lo spazio è poco, li manda via uno alla volta
+    import shutil
+    fotogrammi = durata(os.path.join(reel, "assets", "tagliato.mp4")) * 30 if os.path.exists(os.path.join(reel, "assets", "tagliato.mp4")) else 0
+    poco_spazio = shutil.disk_usage(fin).free < fotogrammi * 8.5e6 * 1.3
+    if poco_spazio:
+        print("Poco spazio libero sul disco: creo il video un fotogramma alla volta (un po' più lento).")
     # a volte il browser che crea i fotogrammi si inceppa: si riprova una volta, con meno lavoro in parallelo
     for workers in ("4", "2"):
         r = subprocess.run([NPX, "--yes", HYPERFRAMES, "render", reel, "-o", grezzo, "-q", qualita, "-f", "30",
-                            "-w", workers], capture_output=True, text=True, env=env_node())
+                            "-w", "1" if poco_spazio else workers], capture_output=True, text=True,
+                           env=env_node() | ({"PRODUCER_ENABLE_STREAMING_ENCODE": "true",
+                                             "PRODUCER_STREAMING_ENCODE_MAX_DURATION_SECONDS": "900"} if poco_spazio else {}))
+        if r.returncode != 0 and "temporary frame storage" in (r.stderr or r.stdout) and not poco_spazio:
+            poco_spazio = True  # la stima era bassa: si riprova senza tenere i fotogrammi sul disco
+            print("Poco spazio libero sul disco: creo il video un fotogramma alla volta (un po' più lento).")
+            continue
         if r.returncode == 0 and os.path.exists(grezzo):
             break
         print("Il video si è bloccato a metà: riprovo...")

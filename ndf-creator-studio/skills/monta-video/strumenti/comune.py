@@ -71,7 +71,7 @@ def con_le_scelte(nome_stile, stile):
         nuovo["sottotitoli_scelti"] = sc["sottotitoli"]
     if sc.get("colore"):
         nuovo["colore_scelto"] = sc["colore"]
-    if sc.get("effetti") is not None:  # None = tutti; [] = nessuno
+    if sc.get("effetti") is not None:  # None = quelli dello stile; [] = nessuno
         nuovo["effetti_scelti"] = sc["effetti"]
     return nuovo
 

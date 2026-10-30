@@ -378,6 +378,9 @@ function disegnaSott() {
   });
 }
 
+// quando si sceglie, gli effetti partono tutti spenti: li accende l'utente (lo stile pronto usa i suoi, senza passare di qui)
+const diSerie = s => [];
+
 function disegnaEff() {
   const s = stile();
   if (!s) { $("#eff").innerHTML = ""; $("#eff-tutti").hidden = true; $("#eff-avviso").hidden = true; return; }
@@ -393,7 +396,7 @@ function disegnaEff() {
   }
   $("#aiuto-eff").textContent = "Metti la spunta a quelli che vuoi nei tuoi video. Li uso solo quando c'entrano con quello che dici.";
   $("#eff-tutti").hidden = spento;
-  const presi = stato.effetti || D.effetti.map(x => x.chiave);
+  const presi = stato.effetti || diSerie(s);
   $("#eff").innerHTML = D.effetti.map(x => `
     <button class="scheda${spento ? " spento" : ""}" data-eff="${x.chiave}" aria-pressed="${!spento && presi.includes(x.chiave)}">
       <span class="spunta quadro"></span>
@@ -404,7 +407,7 @@ function disegnaEff() {
         <div class="tag">${esc(x.per)}</div>
         <p class="desc">${esc(x.descrizione)}</p></div>
     </button>`).join("");
-  const tutti = () => (stato.effetti || D.effetti.map(x => x.chiave)).length === D.effetti.length;
+  const tutti = () => (stato.effetti || diSerie(s)).length === D.effetti.length;
   $("#eff-tutti").textContent = tutti() ? "Togli tutti" : "Seleziona tutti";
   document.querySelectorAll("#eff .scheda").forEach(b => {
     const v = b.querySelector("video");
@@ -412,7 +415,7 @@ function disegnaEff() {
     b.onclick = e => {
       if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
       if (b.classList.contains("spento")) return;
-      const set = new Set(stato.effetti || D.effetti.map(x => x.chiave));
+      const set = new Set(stato.effetti || diSerie(s));
       set.has(b.dataset.eff) ? set.delete(b.dataset.eff) : set.add(b.dataset.eff);
       stato.effetti = D.effetti.map(x => x.chiave).filter(k => set.has(k));
       b.setAttribute("aria-pressed", set.has(b.dataset.eff));
@@ -477,9 +480,9 @@ function aggiorna() {
     const mus = stato.musica === "nessuna" ? "senza musica" : (stato.musica && stato.musica !== s.di_serie.musica ? "musica cambiata" : "musica di serie");
     const st = stato.sottotitoli && stato.sottotitoli !== s.di_serie.sottotitoli
       ? (D.sottotitoli.find(x => x.chiave === stato.sottotitoli) || {}).nome : null;
-    const ne = stato.effetti && s.grafiche ? stato.effetti.length : null;
+    const ne = s.grafiche && modifica() ? (stato.effetti || []).length : null;  // null = quelli dello stile
     const co = stato.colore ? (D.colori.find(x => x.chiave === stato.colore) || {}).nome : null;
-    t = `${s.nome}${co ? " · look " + co : ""}${st ? " · sottotitoli " + st : ""}${ne !== null && ne < D.effetti.length ? " · " + ne + " effetti" : ""} · ${cambiati ? cambiati + (cambiati === 1 ? " suono cambiato" : " suoni cambiati") : "suoni di serie"} · ${mus}`;
+    t = `${s.nome}${co ? " · look " + co : ""}${st ? " · sottotitoli " + st : ""}${ne === null ? "" : ne === 0 ? " · nessun effetto" : " · " + ne + (ne === 1 ? " effetto" : " effetti")} · ${cambiati ? cambiati + (cambiati === 1 ? " suono cambiato" : " suoni cambiati") : "suoni di serie"} · ${mus}`;
     ok = true;
   }
   $("#riass").textContent = t;
@@ -488,15 +491,15 @@ function aggiorna() {
 
 $("#salva").onclick = async () => {
   const r = await fetch("/salva", {method: "POST", headers: {"Content-Type": "application/json"},
-                                   body: JSON.stringify({...stato, strada: modifica() ? "crea" : "pronto"})});
+                                   body: JSON.stringify({...stato, effetti: stato.effetti || [], strada: modifica() ? "crea" : "pronto"})});
   if (r.ok) { $("#fatto-scelte").textContent = $("#riass").textContent; $("#fatto").hidden = false; } else { avviso((await r.json()).errore || "Non sono riuscito a salvare"); }
 };
 $("#continua").onclick = () => { $("#fatto").hidden = true; };
 $("#copia-frase").onclick = () => { navigator.clipboard.writeText("Replica questo reel: ").then(() => avviso("Frase copiata"), () => avviso("Scrivi: Replica questo reel")); };
 document.querySelectorAll(".strada").forEach(b => b.onclick = () => strada(b.dataset.strada));
 $("#eff-tutti").onclick = () => {
-  const tutti = (stato.effetti || D.effetti.map(x => x.chiave)).length === D.effetti.length;
-  stato.effetti = tutti ? [] : null; disegnaEff(); aggiorna();
+  const tutti = (stato.effetti || diSerie(stile())).length === D.effetti.length;
+  stato.effetti = tutti ? [] : D.effetti.map(x => x.chiave); disegnaEff(); aggiorna();
 };
 $("#cambia").onclick = () => {
   stato.cambia = !stato.cambia; mostraModifica(); aggiorna();

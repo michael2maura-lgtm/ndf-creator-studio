@@ -84,6 +84,7 @@ def raccogli():
                 di_serie["sottotitoli"] = st["sottotitoli_nome"]
             momenti = [m for m in MOMENTI_MOTORE.get(motore, MOMENTI_MOTORE[""])]
             stili.append({"chiave": k, "nome": st.get("nome", k), "descrizione": st.get("descrizione", ""),
+                          "effetti": st.get("effetti"),
                           "grafiche": motore == "grafica", "anteprima": os.path.exists(anteprima),
                           "di_serie": di_serie,
                           "momenti": [{"chiave": m, "titolo": MOMENTI[m][0], "quando": MOMENTI[m][1],
@@ -193,15 +194,16 @@ class Pagina(BaseHTTPRequestHandler):
                 sott = None  # quelli dello stile
             eff = corpo.get("effetti") if crea and stili[corpo["stile"]]["grafiche"] else None
             if eff is not None:
-                eff = [k for k in eff if k in effetti.CATALOGO]
-                if len(eff) == len(effetti.CATALOGO):
-                    eff = None  # tutti
+                eff = [k for k in effetti.CATALOGO if k in eff]
+                di_serie = stili[corpo["stile"]]["effetti"]
+                if di_serie is not None and sorted(eff) == sorted(di_serie):
+                    eff = None  # quelli dello stile
             look = corpo.get("colore") if crea and corpo.get("colore") in colore.LOOK and corpo.get("colore") != "originale" else None
             scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "colore": look,
                             "sottotitoli": sott, "effetti": eff,
                             "suoni": suoni,
                             "musica": musica, "aggiornato": datetime.datetime.now().isoformat(timespec="seconds")})
-            print(f"SCELTE SALVATE stile={corpo['stile']} colore={look or 'originale'} sottotitoli={sott or 'dello stile'} effetti={'tutti' if eff is None else len(eff)} suoni cambiati={len(suoni)} "
+            print(f"SCELTE SALVATE stile={corpo['stile']} colore={look or 'originale'} sottotitoli={sott or 'dello stile'} effetti={'dello stile' if eff is None else len(eff)} suoni cambiati={len(suoni)} "
                   f"musica={'nessuna' if musica == 'nessuna' else ('cambiata' if musica else 'di serie')}", flush=True)
             return self._manda(200, b"{}")
         self._manda(404, b"{}")
