@@ -916,6 +916,191 @@ class Reel:
         self.tl.append(f'tl.fromTo("#tb{n}",{{opacity:0,y:12}},{{opacity:1,y:0,duration:0.25,ease:"power2.out",immediateRender:false}},{da:.3f});'
                        f'tl.to("#tb{n}",{{opacity:0,duration:0.2}},{a - 0.2:.3f});')
 
+    # ---------- scene a tutto schermo (stile dal reel di esempio 04) ----------
+    def scena(self, e, faccia):
+        """Scena a tutto schermo: fondo scuro o carta, in alto un'etichetta piccola e un titolo che arriva riga per riga
+        (una riga può stare su una targa d'accento), al centro un pezzo animato (e["modulo"]). La persona non si vede.
+        e = {"da", "a", "fondo": "scuro"|"carta", "etichetta": "NEL PRIMO MESE",
+             "titolo": [{"testo": "PER MONTARE", "da": s}, {"testo": "UN REEL", "da": s, "targa": true}],
+             "modulo": {...} (riempi, esplodi, righe, play, pellicola: vedi i metodi m_*)}."""
+        da, a = e["da"], e["a"]
+        n = len(self.corpo)
+        carta = e.get("fondo", "scuro") == "carta"
+        righe_t = []
+        for j, r in enumerate(e.get("titolo", [])):
+            righe_t.append(f'<div class="sc-r{" targa-sc" if r.get("targa") else ""}" id="sc{n}t{j}">{html.escape(r["testo"])}</div>')
+            self.tl.append(f'tl.fromTo("#sc{n}t{j}",{{opacity:0,y:14}},{{opacity:1,y:0,duration:0.18,ease:"power2.out",immediateRender:false}},{r.get("da", da):.3f});')
+        lab = f'<div class="sc-lab">{html.escape(e["etichetta"].upper())}</div>' if e.get("etichetta") else ""
+        mod = e.get("modulo", {})
+        dentro = getattr(self, "m_" + mod["tipo"])(mod, n, da, a, carta) if mod else ""
+        self.corpo.append(f'<div class="scn{" carta" if carta else ""}" id="sc{n}">{lab}<div class="sc-tit">{"".join(righe_t)}</div>{dentro}</div>')
+        self.tl.append(f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});tl.set("#sc{n}",{{opacity:0}},{a:.3f});')
+        self.suono("transizione", da - 0.05, 0.25)
+        self.nascondi.append((da, a))
+
+    def _barretta(self, id_, x, y, w=40, h=120, rot=0, spenta=False):
+        """Una barretta arancio. Spenta = grigia, con dentro quella accesa nascosta: si accende con tl.set(id + " b", opacity 1)."""
+        dentro = '<b class="bar-on"></b>' if spenta else ""
+        return (f'<i class="bar{" spenta" if spenta else ""}" id="{id_}" style="left:{x:.0f}px;top:{y:.0f}px;width:{w}px;height:{h}px;'
+                f'transform:rotate({rot:.0f}deg)">{dentro}</i>')
+
+    def m_riempi(self, m, n, da, a, carta):
+        """Barrette che riempiono un telefono vuoto (cadono e si ammucchiano) o una griglia (cella dopo cella), con il
+        contatore sotto; alla fine può sbattere un timbro. m = {"tipo": "riempi", "contenitore": "telefono"|"griglia",
+        "unita": "MINUTI", "passi": [[15, s], [39, s]], "timbro": ["1 ORA", s], "segno": "+"}."""
+        passi, unita = m["passi"], m.get("unita", "")
+        totale = passi[-1][0]
+        pezzi, T = [], self.tl.append
+        if m.get("contenitore", "griglia") == "telefono":
+            pezzi.append('<div class="sc-tel"></div>')
+            k_max = min(totale, 36)
+            prima, t0 = 0, da + 0.3
+            for valore, quando in passi:
+                quanti = round(k_max * valore / totale)
+                for k in range(prima, quanti):   # cadono nell'intervallo prima del numero detto
+                    riga, col = divmod(k, 3)
+                    x = 420 + col * 120 + (riga % 2) * 30
+                    y = 1300 - riga * 34
+                    rot = 86 + ((k * 37) % 17) - 8
+                    pezzi.append(self._barretta(f"sc{n}b{k}", x, y - 40, 34, 110, rot))
+                    t = t0 + (quando - t0) * (k - prima + 1) / max(quanti - prima, 1)
+                    T(f'tl.fromTo("#sc{n}b{k}",{{y:-760,opacity:1,rotate:{rot - 40}}},{{y:0,rotate:{rot},duration:0.35,ease:"bounce.out",immediateRender:false}},{t - 0.35:.3f});')
+                prima, t0 = quanti, quando
+            y_conta = 1450
+        else:
+            cols, rows = 10, 6
+            celle = cols * rows
+            for k in range(celle):
+                riga, col = divmod(k, cols)
+                pezzi.append(self._barretta(f"sc{n}b{k}", 150 + col * 80, 560 + riga * 150, 42, 120, 0, True))
+            prima, t0 = 0, da + 0.2
+            for valore, quando in passi:
+                quante = round(celle * valore / totale) if not m.get("celle_per_unita") else valore
+                for k in range(prima, min(quante, celle)):
+                    t = t0 + (quando - t0) * (k - prima + 1) / max(quante - prima, 1)
+                    T(f'tl.set("#sc{n}b{k} b",{{opacity:1}},{t:.3f});')
+                prima, t0 = quante, quando
+            y_conta = 1540
+        segno = m.get("segno", "")
+        pezzi.append(f'<div class="sc-conta" style="top:{y_conta}px"><b id="sc{n}c">{segno}0</b><span>{html.escape(unita.upper())}</span></div>')
+        prec = 0
+        for valore, quando in passi:
+            T(f'contaCon("#sc{n}c",{json.dumps(segno)},{prec},{valore},{max(quando - 0.6, da):.3f},0.6);')
+            prec = valore
+        self.suono("livello", passi[-1][1], 0.3)
+        if m.get("timbro"):
+            testo, quando = m["timbro"]
+            pezzi.append(f'<div class="sc-timbro" id="sc{n}x">{html.escape(testo)}</div>')
+            T(f'tl.fromTo("#sc{n}x",{{opacity:0,scale:2.4,rotate:-4}},{{opacity:1,scale:1,rotate:-12,duration:0.22,ease:"power4.in",immediateRender:false}},{quando - 0.2:.3f});')
+            self.suono("impatto", quando, 0.45)
+        return "".join(pezzi)
+
+    def m_esplodi(self, m, n, da, a, carta):
+        """Tante barrette in griglia: sul secondo detto volano via tutte tranne poche, che si mettono in fila al centro;
+        poi arriva un numero grande con l'unità. m = {"tipo": "esplodi", "quando": s, "resta": 5, "numero": "5",
+        "unita": "MINUTI", "numero_da": s}."""
+        resta, q = m.get("resta", 5), m["quando"]
+        pezzi, T = [], self.tl.append
+        cols, rows = 10, 6
+        for k in range(cols * rows):
+            riga, col = divmod(k, cols)
+            x, y = 150 + col * 80, 560 + riga * 150
+            pezzi.append(self._barretta(f"sc{n}b{k}", x, y))
+            if k < resta:   # quelle che restano vanno in fila al centro
+                fx = 540 - (resta * 90) / 2 + k * 90 + 25 - x
+                T(f'tl.to("#sc{n}b{k}",{{x:{fx:.0f},y:{760 - y:.0f},duration:0.45,ease:"power3.inOut"}},{q + 0.15:.3f});')
+            else:
+                ang = (k * 2.399) % (2 * math.pi)
+                d = 700 + (k * 53) % 500
+                T(f'tl.to("#sc{n}b{k}",{{x:{math.cos(ang) * d:.0f},y:{math.sin(ang) * d + 300:.0f},rotate:{(k * 77) % 540 - 270},opacity:0,'
+                  f'duration:0.7,ease:"power2.out"}},{q:.3f});')
+        pezzi.append(f'<div class="sc-num" id="sc{n}n"><b>{html.escape(str(m.get("numero", resta)))}</b><span>{html.escape(m.get("unita", "").upper())}</span></div>')
+        T(f'tl.fromTo("#sc{n}n",{{opacity:0,scale:1.6}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(2)",immediateRender:false}},{m.get("numero_da", q + 0.7):.3f});')
+        self.suono("impatto", q, 0.4)
+        return "".join(pezzi)
+
+    def m_righe(self, m, n, da, a, carta):
+        """Scritta che si costruisce riga per riga, grande, a sinistra; una riga può essere barrata e sotto sbatte un timbro
+        con un'etichetta piccola sopra. m = {"tipo": "righe", "righe": [["NON", s], ["L'ABBIAMO", s], ...],
+        "barra": [indice_riga, s], "timbro": ["L'AI.", s], "sopra_timbro": "L'HA MONTATO"}."""
+        pezzi, T = [], self.tl.append
+        for j, (testo, quando) in enumerate(m["righe"]):
+            pezzi.append(f'<div class="sc-riga" id="sc{n}r{j}" style="top:{560 + j * 150}px">{html.escape(testo)}<i class="sc-barra" id="sc{n}r{j}b"></i></div>')
+            T(f'tl.fromTo("#sc{n}r{j}",{{opacity:0,x:-30}},{{opacity:1,x:0,duration:0.2,ease:"power3.out",immediateRender:false}},{quando:.3f});')
+            self.suono("pop", quando, 0.25)
+        if m.get("barra"):
+            j, quando = m["barra"]
+            T(f'tl.fromTo("#sc{n}r{j}b",{{scaleX:0}},{{scaleX:1,duration:0.25,ease:"power2.out",immediateRender:false}},{quando:.3f});'
+              f'tl.to("#sc{n}r{j}",{{opacity:0.45,duration:0.2}},{quando + 0.2:.3f});')
+        if m.get("timbro"):
+            testo, quando = m["timbro"]
+            y = 560 + len(m["righe"]) * 150 + 40
+            sopra = f'<div class="sc-lab sx" style="top:{y - 50}px">{html.escape(m.get("sopra_timbro", "").upper())}</div>' if m.get("sopra_timbro") else ""
+            pezzi.append(f'{sopra}<div class="sc-timbro sx" id="sc{n}x" style="top:{y}px">{html.escape(testo)}</div>')
+            T(f'tl.fromTo("#sc{n}x",{{opacity:0,scale:2.4,rotate:-2}},{{opacity:1,scale:1,rotate:-6,duration:0.22,ease:"power4.in",immediateRender:false}},{quando - 0.2:.3f});')
+            self.suono("impatto", quando, 0.45)
+        return "".join(pezzi)
+
+    def m_play(self, m, n, da, a, carta):
+        """Un telefono bianco con il tasto play arancio e un'etichetta in alto; sotto si accendono delle barrette; sul
+        secondo "pronto" lo schermo diventa scuro con la spunta e la scritta. m = {"tipo": "play", "etichetta": "IL TUO VIDEO",
+        "barre": [s, s, s, s, s], "pronto": s, "scritta": "PRONTO"}."""
+        pezzi, T = [], self.tl.append
+        pezzi.append(f'<div class="sc-play" id="sc{n}p"><span class="sc-pl">{html.escape(m.get("etichetta", "IL TUO VIDEO").upper())}</span>'
+                     f'<i class="sc-tasto"></i><div class="sc-pronto" id="sc{n}k"><b>✓</b>{html.escape(m.get("scritta", "PRONTO").upper())}</div></div>')
+        barre = m.get("barre", [])
+        for k, quando in enumerate(barre):
+            pezzi.append(self._barretta(f"sc{n}b{k}", 540 - len(barre) * 30 + k * 60, 1480, 34, 90, 0, True))
+            T(f'tl.set("#sc{n}b{k} b",{{opacity:1}},{quando:.3f});')
+            self.suono("pop", quando, 0.2)
+        if m.get("pronto"):
+            T(f'tl.fromTo("#sc{n}k",{{opacity:0}},{{opacity:1,duration:0.25,immediateRender:false}},{m["pronto"]:.3f});'
+              f'tl.fromTo("#sc{n}k b",{{scale:0}},{{scale:1,duration:0.3,ease:"back.out(3)",immediateRender:false}},{m["pronto"] + 0.1:.3f});')
+            self.suono("ding", m["pronto"], 0.35)
+        return "".join(pezzi)
+
+    def m_pellicola(self, m, n, da, a, carta):
+        """Una pellicola con i fotogrammi di questo stesso video scorre verso sinistra; una linea arancio ferma al
+        centro è "adesso". m = {"tipo": "pellicola", "adesso": s (quando compare la scritta), "scritta": "ADESSO"}."""
+        D = durata(os.path.join(self.assets, "tagliato.mp4"))
+        foto = []
+        for k in range(10):   # fotogrammi del video, dal primo fino a questo momento
+            t = min(da, D - 0.1) * k / 9
+            nome = f"pell-{n}-{k}.jpg"
+            subprocess.run([FFMPEG, "-v", "error", "-y", "-ss", f"{t:.2f}", "-i", os.path.join(self.assets, "tagliato.mp4"), "-frames:v", "1",
+                            "-vf", "scale=170:302:force_original_aspect_ratio=increase,crop=170:302", "-q:v", "4", os.path.join(self.assets, nome)], check=True)
+            foto.append(f'<img src="assets/{nome}">')
+        larg = 10 * 200
+        self.tl.append(f'tl.fromTo("#sc{n}f",{{x:{200}}},{{x:{540 - larg + 100},duration:{max(a - da, 0.5):.2f},ease:"none",immediateRender:false}},{da:.3f});')
+        pez = (f'<div class="sc-pell"><div class="sc-film" id="sc{n}f">{"".join(foto)}</div></div><i class="sc-adesso-l"></i>'
+               f'<span class="sc-adesso" id="sc{n}d">{html.escape(m.get("scritta", "ADESSO").upper())}</span>')
+        if m.get("adesso"):
+            self.tl.append(f'tl.fromTo("#sc{n}d",{{opacity:0,scale:0.6}},{{opacity:1,scale:1,duration:0.25,ease:"back.out(2)",immediateRender:false}},{m["adesso"]:.3f});')
+        return pez
+
+    def finale_clicca(self, piano, da):
+        """Finale del Reel 04: fondo scuro, il marchio in alto, il titolo con una parola barrata e quella giusta in
+        arancio, le barrette, "CLICCA QUI SOTTO" e una freccia tonda che salta. piano["finale_clicca"] = {
+        "marchio": "Networker del Futuro", "righe": [["DA", "1 ORA", "barrata"], ["A", "5 MINUTI."]], "barre": 5,
+        "scritta": "CLICCA QUI SOTTO"}."""
+        f = piano["finale_clicca"]
+        n = len(self.corpo)
+        righe = []
+        lunga = max((len(" ".join(r[:2])) for r in f.get("righe", [])), default=8)
+        dim = min(96, int(900 / (lunga * 0.82)))   # ogni riga sta su una riga sola
+        for j, r in enumerate(f.get("righe", [])):
+            parte2 = f'<span class="{"fc-barrata" if len(r) > 2 and r[2] == "barrata" else "fc-acc"}">{html.escape(r[1])}</span>' if len(r) > 1 else ""
+            righe.append(f'<div class="fc-r" style="font-size:{dim}px">{html.escape(r[0])} {parte2}</div>')
+        barre = "".join('<i class="bar" style="position:relative;width:30px;height:76px"></i>' for _ in range(f.get("barre", 5)))
+        self.corpo.append(f'<div class="scn" id="fc{n}"><div class="fc-marchio"><i>NDF</i>{html.escape(f.get("marchio", ""))}</div>'
+                          f'<div class="fc-tit">{"".join(righe)}<div class="fc-barre">{barre}</div></div>'
+                          f'<div class="fc-sc">{html.escape(f.get("scritta", "CLICCA QUI SOTTO").upper())}</div><div class="fc-freccia" id="fc{n}a">↓</div></div>')
+        self.tl.append(f'tl.set("#fc{n}",{{opacity:1}},{da:.3f});'
+                       f'tl.fromTo("#fc{n} .fc-barrata",{{"--b":0}},{{"--b":1,duration:0.3,immediateRender:false}},{da + 0.6:.3f});'
+                       f'tl.fromTo("#fc{n}a",{{y:0}},{{y:18,duration:0.4,repeat:{int((self.D - da) / 0.4)},yoyo:true,ease:"sine.inOut",immediateRender:false}},{da + 0.4:.3f});')
+        self.nascondi.append((da, self.D + 1))
+        self.suono("transizione", da - 0.05, 0.25)
+
     def finale(self, piano, da):
         self.bande(da)
         self.scuro(da, self.D)
@@ -993,7 +1178,7 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         r.suono("apertura", 0.0, 0.4)
     for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][-1] if x.get("voci") else 0):
         tipo = e["tipo"]
-        if accesi is not None and effetti.chiave_di(e) not in accesi:
+        if tipo != "scena" and accesi is not None and effetti.chiave_di(e) not in accesi:   # le scene sono lo stile, non un effetto
             print(f'NOTA: "{effetti.CATALOGO[effetti.chiave_di(e)]["nome"]}" non è tra gli effetti accesi, lo salto')
             continue
         if tipo == "gigante":
@@ -1043,11 +1228,15 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.telefono3d(e, faccia)
         elif tipo == "orbita":
             r.orbita(e, faccia)
+        elif tipo == "scena":
+            r.scena(e, faccia)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude
         r.transizione(t)
     # il commento fa da chiusura: senza "finale_da" nel piano, niente finale scuro sopra
     finale_da = piano.get("finale_da", D + 1 if commento or stile.get("finale") is False else D - 2.3)
-    if finale_da < D:
+    if piano.get("finale_clicca"):
+        r.finale_clicca(piano, piano.get("finale_da", D - 3.0))
+    elif finale_da < D:
         r.finale(piano, finale_da)
     if piano.get("musica", True):
         r.musica()
@@ -1308,6 +1497,62 @@ html,body{{margin:0;background:{scuro}}}
 .tbox{{position:absolute;left:0;right:0;text-align:center;z-index:34;opacity:0}}
 .tbox span{{display:inline-block;max-width:820px;padding:16px 30px 18px;background:#fff;color:#111;border-radius:6px;
  font-family:'{ft["famiglia"]}';font-weight:800;font-size:48px;line-height:1.15;box-shadow:0 8px 24px rgba(0,0,0,.25)}}
+.scn{{position:absolute;inset:0;z-index:37;opacity:0;overflow:hidden;
+ background:radial-gradient(ellipse 90% 70% at 50% 40%,{banda} 0%,{scuro} 75%);color:#fff}}
+.scn.carta{{background:#F2EEE6;color:{scuro};
+ background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1.2px),radial-gradient(rgba(0,0,0,.025) 1px,transparent 1.2px);
+ background-size:7px 7px,11px 11px;background-position:0 0,3px 5px}}
+.sc-lab{{position:absolute;left:0;right:0;top:200px;text-align:center;{M};font-size:22px;letter-spacing:4px;color:{acc}}}
+.sc-lab.sx{{left:90px;text-align:left}}
+.sc-tit{{position:absolute;left:60px;right:60px;top:240px;text-align:center}}
+.sc-r{{{W};font-size:84px;line-height:1.02;opacity:0}}
+.sc-r.targa-sc{{display:inline-block;background:{acc};color:#fff;padding:2px 18px 6px;border-radius:8px;margin-top:6px}}
+.bar{{position:absolute;border-radius:18px;background:linear-gradient(90deg,#C94A12 0%,{acc} 35%,{luce} 60%,{acc} 100%);
+ box-shadow:0 4px 10px rgba(0,0,0,.25)}}
+.bar.spenta{{background:rgba(255,255,255,.08);box-shadow:none}}
+.bar-on{{position:absolute;inset:0;border-radius:inherit;opacity:0;background:linear-gradient(90deg,#C94A12 0%,{acc} 35%,{luce} 60%,{acc} 100%);
+ box-shadow:0 4px 10px rgba(0,0,0,.25)}}
+.carta .bar.spenta{{background:rgba(0,0,0,.08)}}
+.sc-tel{{position:absolute;left:300px;top:480px;width:480px;height:900px;border:4px solid rgba(255,255,255,.45);border-radius:56px}}
+.carta .sc-tel{{border-color:rgba(0,0,0,.35)}}
+.sc-conta{{position:absolute;left:0;right:0;text-align:center;display:flex;align-items:baseline;justify-content:center;gap:14px}}
+.sc-conta b{{{W};font-size:70px;color:{acc}}}
+.sc-conta span{{{M};font-size:24px;letter-spacing:3px}}
+.sc-timbro{{position:absolute;left:0;right:0;margin:0 auto;top:880px;transform-origin:50% 50%;width:max-content;padding:0 40px 10px;text-align:center;{W};font-size:120px;
+ color:{scuro};background:{acc};border:8px solid {scuro};border-radius:22px;padding:0 0 10px;opacity:0;box-shadow:0 14px 40px rgba(0,0,0,.35)}}
+.sc-timbro.sx{{left:90px;right:auto;margin:0;padding:0 34px 10px}}
+.sc-num{{position:absolute;left:0;right:0;top:980px;text-align:center;opacity:0}}
+.sc-num b{{display:block;{W};font-size:300px;line-height:1;color:{acc}}}
+.sc-num span{{{W};font-size:70px}}
+.sc-riga{{position:absolute;left:90px;right:60px;{W};font-size:118px;line-height:1;opacity:0;white-space:nowrap}}
+.sc-barra{{position:absolute;left:-10px;top:52%;height:14px;width:calc(100% - 50px);max-width:520px;background:{acc};transform:scaleX(0);transform-origin:0 50%}}
+.sc-play{{position:absolute;left:330px;top:560px;width:420px;height:780px;border-radius:50px;background:#fff;border:4px solid rgba(0,0,0,.12);
+ box-shadow:0 20px 50px rgba(0,0,0,.18);overflow:hidden}}
+.sc-pl{{position:absolute;left:34px;top:40px;{M};font-size:18px;letter-spacing:2px;color:rgba(0,0,0,.4)}}
+.sc-tasto{{position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:{acc}}}
+.sc-tasto:after{{content:"";position:absolute;left:44px;top:32px;border-left:34px solid #fff;border-top:23px solid transparent;border-bottom:23px solid transparent}}
+.sc-pronto{{position:absolute;inset:0;background:{scuro};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+ {W};font-size:56px;opacity:0}}
+.sc-pronto b{{width:120px;height:120px;border-radius:50%;background:{acc};color:#fff;font-size:70px;display:flex;align-items:center;justify-content:center}}
+.sc-pell{{position:absolute;left:0;right:0;top:820px;height:400px;background:#0b0b0b;overflow:hidden;
+ border-top:28px dashed #0b0b0b;border-bottom:28px dashed #0b0b0b;
+ background-image:repeating-linear-gradient(90deg,transparent 0 24px,rgba(255,255,255,.25) 24px 40px);background-size:100% 18px;background-repeat:repeat-x}}
+.sc-film{{position:absolute;left:0;top:44px;display:flex;gap:30px}}
+.sc-film img{{width:170px;height:302px;object-fit:cover;border-radius:8px}}
+.sc-adesso-l{{position:absolute;left:538px;top:790px;width:5px;height:460px;background:{acc}}}
+.sc-adesso{{position:absolute;left:50%;top:1280px;transform:translateX(-50%);background:{acc};color:#fff;{M};font-size:28px;letter-spacing:3px;
+ padding:10px 26px;border-radius:30px;opacity:0}}
+.fc-marchio{{position:absolute;left:90px;top:300px;display:flex;align-items:center;gap:18px;{W};font-size:40px;font-stretch:100%}}
+.fc-marchio i{{font-style:normal;{M};font-size:24px;background:#fff;color:{scuro};border-radius:10px;padding:10px 12px}}
+.fc-tit{{position:absolute;left:90px;right:60px;top:430px}}
+.fc-r{{{W};line-height:1.08;white-space:nowrap}}
+.fc-acc{{color:{acc}}}
+.fc-barrata{{position:relative;display:inline-block;--b:0}}
+.fc-barrata:after{{content:"";position:absolute;left:-6px;right:-6px;top:52%;height:12px;background:{acc};transform:scaleX(var(--b));transform-origin:0 50%}}
+.fc-barre{{display:flex;gap:18px;margin-top:40px}}
+.fc-sc{{position:absolute;left:0;right:0;top:1150px;text-align:center;{M};font-size:24px;letter-spacing:4px;color:rgba(255,255,255,.75)}}
+.fc-freccia{{position:absolute;left:50%;top:1210px;width:110px;height:110px;margin-left:-55px;border-radius:50%;background:{acc};color:#fff;
+ font-size:64px;font-weight:900;display:flex;align-items:center;justify-content:center}}
 {css_sott}
 </style>
 <script src="{GSAP}"></script>
@@ -1369,6 +1614,10 @@ function orbita(sel, cx, cy, da, a, giri) {{
   }};
   posa();
   tl.to(o, {{t: a - da, duration: a - da, ease: "none", onUpdate: posa}}, da);
+}}
+function contaCon(sel, segno, da_n, a_n, da, dur) {{
+  const el = document.querySelector(sel); const o = {{v: da_n}};
+  tl.to(o, {{v: a_n, duration: dur, ease: "power1.out", onUpdate: () => {{ el.textContent = segno + Math.round(o.v); }}}}, da);
 }}
 cronometro("#tc", 0, {D:.3f});
 tl.to("#mir", {{opacity: 0, duration: 0.25}}, {MIRINO_FINO if stile.get("mirino", True) else 0});

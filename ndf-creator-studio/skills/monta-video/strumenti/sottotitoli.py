@@ -55,6 +55,13 @@ CATALOGO = {
                "text-shadow:0 2px 12px rgba(0,0,0,.55)}"
                ".st .k{display:block;font-weight:800;font-size:80px;letter-spacing:.2em;line-height:1.05}",
     },
+    "targhetta-piccola": {
+        "nome": "Targhetta piccola", "per": "Racconti con scene grafiche",
+        "descrizione": "Una o due parole piccole in maiuscolo, la parola chiave su una targhetta arancio.",
+        "modo": "gruppo", "parole": 2, "lettere": 14, "maiuscolo": True, "entra": ENTRA_SALTO, "font": ["archivo"],
+        "css": ".st{font-family:%f-archivo%;font-weight:900;font-stretch:125%;font-size:44px;line-height:1.2;color:#fff;"
+               "text-shadow:0 3px 12px rgba(0,0,0,.6)}.st .k{background:%acc%;padding:2px 12px 4px;border-radius:6px;text-shadow:none}",
+    },
     "ndf-targhetta": {
         "nome": "NDF Targhetta", "per": "Motion graphics, video dinamici",
         "descrizione": "Due o tre parole in maiuscolo, la parola importante su una targhetta arancione.",
