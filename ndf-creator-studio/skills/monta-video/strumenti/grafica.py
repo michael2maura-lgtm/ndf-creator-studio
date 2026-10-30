@@ -18,10 +18,7 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "cornice", "da": 9.65, "a": 17.1, "titoli": [["APRI", "CHATGPT", 9.75]],
     "chat": {"etichetta": "CHATGPT", "testo": "Quali sono...", "da": 11.76, "a": 15.2},
     "passi": [["DOMANDE", 57.24], ["CONTENUTI", 61.84]]},           chat e passi: facoltativi, uno dei due
-   {"tipo": "telefono", "da": 29.3, "a": 37.9, "titoli": [["SECONDA COSA", "UN REEL", 29.4], ["ALMENO", "60 SECONDI", 33.0]]},
-   {"tipo": "classifica", "titoli": ["Fa bene", "Fa male"], "voci": [                 quando giudichi delle cose:
-     {"nome": "Gancio forte", "lato": "sinistra", "appare": 5.2, "vola": 7.3, "foto": "gancio.jpg"},   la carta
-     {"nome": "Hashtag a caso", "lato": "destra", "appare": 10.2, "vola": 12.8}]}],   compare al nome, vola al giudizio
+   {"tipo": "telefono", "da": 29.3, "a": 37.9, "titoli": [["SECONDA COSA", "UN REEL", 29.4], ["ALMENO", "60 SECONDI", 33.0]]}],
  "finale_da": 64.75, "finale_sopra": "TE LO INVIO IN DIRECT", "finale_testo": "COMMENTA", "finale_bottone": "INFO"}
 
 Regole: un "gigante" porta da solo le bande all'entrata e all'uscita; cornice e telefono entrano con un vortice.
@@ -39,7 +36,7 @@ import subprocess
 
 import effetti
 import sottotitoli
-from comune import DATI, FFMPEG, STUDIO, durata, trova
+from comune import FFMPEG, STUDIO, durata
 
 GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
 MIRINO_FINO = 6.2  # il mirino REC solo in apertura: per tutto il reel stanca
@@ -52,12 +49,6 @@ class Reel:
         self.corpo, self.tl, self.audio, self.nascondi, self.transizioni = [], [], [], [], []
 
     # ---------- suoni ----------
-    def suono_libreria(self, rel, da, vol=0.45):
-        """Un suono della libreria (DATI/suoni/<rel>), per i momenti che lo stile non ha."""
-        p = trova(rel)
-        self.stile["suoni"].setdefault("_" + rel, p)
-        self.suono("_" + rel, da, vol)
-
     def suono(self, nome, da, vol=0.45, dur=None, se_manca=None):
         """Un suono dello stile al secondo `da`, a -16 LUFS come tutti gli altri (i suoni scelti nella pagina sono già
         dentro lo stile: comune.con_le_scelte). Se lo stile non ha `nome`, suona `se_manca` (o niente)."""
@@ -234,79 +225,6 @@ class Reel:
                                f'tl.fromTo("#pk{n}_{k}",{{scale:0}},{{scale:1,duration:0.25,ease:"back.out(3)"}},{t + 0.35:.3f});')
                 self.suono("click", t + 0.35, 0.4)
 
-    def classifica(self, e, faccia, cart):
-        """Classifica a due colonne: mentre nomini una cosa la sua carta compare, quando dai il giudizio vola nella
-        colonna giusta con una spunta o una croce. e = {"titoli": [positivo, negativo], "voci": [{"nome", "lato",
-        "appare", "vola", "foto"?}], "fine"?: secondo in cui sparisce}. Suoni: pop, vortice, ding o errore."""
-        c = self.stile["colori"]
-        verde, rosso = e.get("colore_sinistra", "#21B361"), e.get("colore_destra", "#EB383D")
-        titoli = (list(e.get("titoli") or []) + ["Fa bene", "Fa male"])[:2]
-        voci = sorted([dict(v) for v in e["voci"]], key=lambda v: v["appare"])
-        for v in voci:  # tempi: la carta vola via prima che arrivi la successiva
-            v["vola"] = max(v.get("vola", v["appare"] + 1.5), v["appare"] + 0.75)
-        for a, b in zip(voci, voci[1:]):
-            if b["appare"] < a["vola"] + 0.15:
-                a["vola"] = max(a["appare"] + 0.75, b["appare"] - 0.15)
-                b["appare"] = max(b["appare"], a["vola"] + 0.15)
-                b["vola"] = max(b["vola"], b["appare"] + 0.75)
-        for v in voci:
-            v["arriva"] = v["vola"] + 0.45
-        X, Y0, PASSO, SCALA = (170, 830), 470, 165, 0.58
-        # dove compare la carta: sopra la testa se c'è spazio, se no sul petto (e lì i sottotitoli si spostano via)
-        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.9
-        sopra = cima - 300 >= 230
-        yp = cima - 170 if sopra else min(faccia["mento"] + 230, 1250)
-        da0 = voci[0]["appare"] - 0.3
-        fine = e.get("fine", min(voci[-1]["arriva"] + 2.0, self.D))
-        n = len(self.corpo)
-        posti = [0, 0]
-        n_col = max(1, max(sum(1 for v in voci if (v["lato"] == "sinistra") == (k == 0)) for k in (0, 1)))
-        for k in (0, 1):
-            col = verde if k == 0 else rosso
-            alt = (n_col - 1) * PASSO + 170
-            self.corpo.append(f'<div class="cl-col" id="cl{n}c{k}" style="left:{X[k] - 120}px;top:{Y0 - 95}px;height:{alt}px"></div>'
-                              f'<div class="cl-tit" id="cl{n}t{k}" style="left:{X[k]}px;top:{Y0 - 150}px;background:{col}">'
-                              f'<span class="cl-seg">{"✓" if k == 0 else "✕"}</span>{html.escape(titoli[k].upper())}</div>')
-            for sel in (f"#cl{n}c{k}", f"#cl{n}t{k}"):
-                self.tl.append(f'tl.fromTo("{sel}",{{opacity:0,y:-50}},{{opacity:1,y:0,duration:0.3,ease:"power2.out"}},{da0 + 0.08 * k:.3f});'
-                               f'tl.to("{sel}",{{opacity:0,duration:0.2}},{fine - 0.2:.3f});')
-        for j, v in enumerate(voci):
-            si = v["lato"] == "sinistra"
-            k = 0 if si else 1
-            x, y = X[k], Y0 + posti[k] * PASSO
-            posti[k] += 1
-            rot = 4 if si else -4
-            foto = ""
-            if v.get("foto"):
-                p = v["foto"] if os.path.isabs(v["foto"]) else next((q for q in (os.path.join(cart, v["foto"]),
-                                                                             os.path.join(DATI, "immagini", v["foto"])) if os.path.exists(q)), "")
-                if p:
-                    dest = f"cl-{j}{os.path.splitext(p)[1]}"
-                    shutil.copy2(p, os.path.join(self.assets, dest))
-                    foto = f'<img src="assets/{dest}">'
-            nome = html.escape(v["nome"])
-            lunga = max(len(p) for p in v["nome"].split())  # la parola più lunga deve stare in una riga sola
-            dim = min(50, int(205 / (max(lunga, 4) * 0.82)))
-            dentro = (f'{foto}<span class="cl-nome foto">{nome}</span>' if foto
-                      else f'<span class="cl-nome" style="font-size:{dim}px">{nome}</span>')
-            id_ = f"cl{n}v{j}"
-            self.corpo.append(f'<div class="cl-carta" id="{id_}" style="left:540px;top:{yp}px">{dentro}'
-                              f'<span class="cl-bol" id="{id_}b" style="background:{verde if si else rosso}">{"✓" if si else "✕"}</span></div>')
-            t0, tv, ta = v["appare"], v["vola"], v["arriva"]
-            self.tl.append(f'tl.fromTo("#{id_}",{{opacity:0,scale:0.3,top:{yp + 40}}},{{opacity:1,scale:1,top:{yp},duration:0.3,ease:"back.out(1.8)"}},{t0:.3f});'
-                           f'tl.to("#{id_}",{{left:{(540 + x) / 2},top:{yp - 60},scale:0.8,rotation:{rot * 2.4},duration:0.2,ease:"power2.in"}},{tv:.3f});'
-                           f'tl.to("#{id_}",{{left:{x},top:{y},scale:{SCALA},rotation:{rot},duration:0.25,ease:"power2.out"}},{tv + 0.2:.3f});'
-                           f'tl.fromTo("#{id_}b",{{scale:0}},{{scale:1,duration:0.18,ease:"back.out(3)"}},{ta:.3f});'
-                           f'tl.to("#{id_}",{{opacity:0,duration:0.2}},{fine - 0.2:.3f});')
-            self.suono("pop", t0, 0.4)
-            self.suono("transizione", tv, 0.35)
-            if si:
-                self.suono("ding", ta, 0.4)
-            else:
-                self.suono_libreria("hyperframes/error.mp3", ta, 0.35)
-            if not sopra:
-                self.nascondi.append((t0, ta))
-
     def finale(self, piano, da):
         self.bande(da)
         self.scuro(da, self.D)
@@ -375,8 +293,7 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         r.titolo(ap["sopra"], ap["targa"], 0.0, ap.get("a", 2.0), petto - 20)
         r.nascondi.append((0.0, ap.get("a", 2.0)))
         r.suono("apertura", 0.0, 0.4)
-    for e in sorted(piano.get("elementi", []), key=lambda x: x.get("da", x["voci"][0]["appare"] if x["tipo"] == "classifica"
-                                                                    else x.get("voci", [[0, 0, 0]])[0][2])):
+    for e in sorted(piano.get("elementi", []), key=lambda x: x.get("da", x.get("voci", [[0, 0, 0]])[0][2])):
         tipo = e["tipo"]
         if stile.get("effetti_scelti") is not None and effetti.chiave_di(e) not in stile["effetti_scelti"]:
             print(f'NOTA: "{effetti.CATALOGO[effetti.chiave_di(e)]["nome"]}" non è tra gli effetti scelti, lo salto')
@@ -395,8 +312,6 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.contatore(e, faccia["mento"] + 40)
         elif tipo in ("cornice", "telefono"):
             r.cornice(e, telefono=tipo == "telefono")
-        elif tipo == "classifica":
-            r.classifica(e, faccia, cart)
     finale_da = piano.get("finale_da", D - 2.3)
     r.finale(piano, finale_da)
     if piano.get("musica", True):
@@ -491,18 +406,6 @@ html,body{{margin:0;background:{scuro}}}
 .freccia{{margin:30px auto 0;width:110px;height:110px;border-radius:50%;background:{acc};color:#fff;font-size:70px;font-weight:900;
  display:flex;align-items:center;justify-content:center}}
 .zona{{position:absolute;background:rgba(255,0,0,.35);z-index:50}}
-.cl-col{{position:absolute;width:240px;border-radius:30px;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.22);z-index:33;opacity:0}}
-.cl-tit{{position:absolute;transform:translateX(-50%);height:60px;padding:0 26px 0 14px;border-radius:30px;display:flex;align-items:center;gap:10px;
- {W};font-size:30px;color:#fff;white-space:nowrap;z-index:34;opacity:0;box-shadow:0 8px 24px rgba(0,0,0,.3)}}
-.cl-seg{{width:36px;height:36px;border-radius:50%;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900}}
-.cl-carta{{position:absolute;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:34px;background:#FDF1EF;z-index:35;opacity:0;
- display:flex;align-items:center;justify-content:center;box-shadow:0 14px 40px rgba(0,0,0,.45);overflow:visible}}
-.cl-carta img{{position:absolute;inset:16px;width:218px;height:218px;object-fit:cover;border-radius:24px}}
-.cl-nome{{{W};font-size:44px;line-height:1.02;color:#2A0C23;text-align:center;padding:0 18px;text-transform:uppercase}}
-.cl-nome.foto{{position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);white-space:nowrap;font-size:26px;color:#FDF1EF;
- background:#2A0C23;padding:8px 18px;border-radius:24px}}
-.cl-bol{{position:absolute;right:-22px;top:-22px;width:76px;height:76px;border-radius:50%;color:#fff;font-size:44px;font-weight:900;
- display:flex;align-items:center;justify-content:center;border:5px solid #fff;transform:scale(0)}}
 {css_sott}
 </style>
 <script src="{GSAP}"></script>

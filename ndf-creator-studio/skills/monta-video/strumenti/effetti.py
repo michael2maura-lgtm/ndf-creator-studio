@@ -20,8 +20,6 @@ CATALOGO = {
                   "descrizione": "Etichette con un'icona che entrano una sotto l'altra mentre le nomini."},
     "telefono": {"nome": "Telefono", "per": "Instagram, storie, reel, app",
                  "descrizione": "Ti rimpicciolisci dentro lo schermo di un telefono, con i titoli sopra."},
-    "classifica": {"nome": "Classifica", "per": "Fa bene / fa male, migliore / peggiore",
-                   "descrizione": "Mentre nomini una cosa compare la sua carta, al giudizio vola nella colonna giusta."},
 }
 
 

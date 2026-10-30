@@ -34,7 +34,7 @@ MODELLI = os.path.join(CASA, "modelli")
 DATI = os.path.expanduser(os.environ.get("NDF_STUDIO_DATI", os.path.join("~", "Documents", "NDFCreatorStudio")))
 HYPERFRAMES = "hyperframes@0.8.34"
 NODE = "v22.11.0"
-PACCHETTI = ["faster-whisper", "mediapipe", "opencv-python-headless", "Pillow", "numpy", "av>=12,<17", "static-ffmpeg"]
+PACCHETTI = ["faster-whisper", "mediapipe", "opencv-python-headless", "Pillow", "numpy", "scipy", "av>=12,<17", "static-ffmpeg"]
 FACCIA = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
 percorsi = {"python": PY}
 
@@ -75,7 +75,7 @@ def uv():
 
 def python_studio(uv_bin):
     def sano():
-        return gira([PY, "-c", "import faster_whisper, mediapipe, cv2, PIL, numpy, av, static_ffmpeg;"
+        return gira([PY, "-c", "import faster_whisper, mediapipe, cv2, PIL, numpy, scipy, onnxruntime, av, static_ffmpeg;"
                                "assert int(av.__version__.split('.')[0]) < 17"]).returncode == 0
     if not (os.path.exists(PY) and sano()):
         if os.path.exists(VENV):
