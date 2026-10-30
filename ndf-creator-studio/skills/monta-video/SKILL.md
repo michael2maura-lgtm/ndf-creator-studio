@@ -73,7 +73,8 @@ L'utente dice "scegli il look", "apri la pagina", "voglio cambiare suoni / music
 lancia `PY STUDIO/strumenti/scegli.py` in sottofondo e di' in una riga che si è aperta nel browser.
 Tre strade: stile pronto, replica un reel (l'utente ti manda il link in chat: lo studi con l'abilità `crea-stile`
 e ne fai uno stile nuovo, che poi compare nella pagina), crea il tuo (parte da uno stile e cambia suoni e musica).
-Quando scrive `SCELTE SALVATE`, di' in una riga cosa ha scelto. Le scelte le usa `costruisci.py` da solo: tu nel piano
+Quando scrive `SCELTE SALVATE`, di' in una riga cosa ha scelto. I 20 sottotitoli a scelta stanno in
+`strumenti/sottotitoli.py`; le loro anteprime le rifà `anteprima_sottotitoli.py` (solo se ne cambi o aggiungi uno). Le scelte le usa `costruisci.py` da solo: tu nel piano
 scrivi lo stile scelto e basta. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio)
 nella sua cartella: falla quando crei uno stile nuovo, dal primo video approvato.
 

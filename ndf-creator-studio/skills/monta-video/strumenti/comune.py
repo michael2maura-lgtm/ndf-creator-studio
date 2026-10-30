@@ -51,7 +51,8 @@ SCELTE = os.path.join(DATI, "scelte.json")  # quello che l'utente ha scelto nell
 
 
 def con_le_scelte(nome_stile, stile):
-    """Lo stile con dentro i suoni e la musica scelti nella pagina, se li ha scelti per questo stile.
+    """Lo stile con dentro i sottotitoli, i suoni e la musica scelti nella pagina, se li ha scelti per questo stile.
+    I sottotitoli scelti finiscono in stile["sottotitoli_scelti"] (un nome di sottotitoli.CATALOGO).
     I suoni scelti sono percorsi interi: os.path.join(cartella_stile, percorso intero) dà il percorso intero."""
     try:
         sc = leggi(SCELTE)
@@ -65,7 +66,10 @@ def con_le_scelte(nome_stile, stile):
         suoni.pop("musica", None)
     elif sc.get("musica") and os.path.exists(sc["musica"]):
         suoni["musica"] = sc["musica"]
-    return dict(stile, suoni=suoni)
+    nuovo = dict(stile, suoni=suoni)
+    if sc.get("sottotitoli"):
+        nuovo["sottotitoli_scelti"] = sc["sottotitoli"]
+    return nuovo
 
 
 def trova(rel, cartella="suoni"):

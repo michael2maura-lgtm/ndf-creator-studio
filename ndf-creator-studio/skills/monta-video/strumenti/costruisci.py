@@ -24,6 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import STUDIO, cartella_lavoro, cartella_stile, con_le_scelte, durata, leggi, trova  # noqa: E402
 import grafica  # noqa: E402
 import scene  # noqa: E402
+import sottotitoli  # noqa: E402
 import split  # noqa: E402
 import suoni_reel  # noqa: E402
 
@@ -159,8 +160,18 @@ def main():
     larghezza = 1080 - 2 * margine - 10
     limite = ZONA["basso"] - 10
     corpo, tl = [], []
-    # sottotitoli: una parola alla volta, nascosta sotto i titoli e nel finale
-    for i, w in enumerate(parole):
+    css_sott = ""
+    if stile.get("sottotitoli_scelti"):  # sottotitoli scelti nella pagina (strumenti/sottotitoli.py)
+        nascondi = [(x["da"], x["a"]) for x in titoli + scene_piano + liste
+                    + [p for p in piano.get("pannelli", []) if p.get("frase") or p.get("pieno")]] + [(finale_da, D + 1)]
+        css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile["sottotitoli_scelti"], parole, chiave, y_sub + 40,
+                                                            nascondi, stile["colori"])
+        corpo += c_sott
+        tl += tl_sott
+        for f in f_sott:
+            shutil.copy2(os.path.join(STUDIO, "font", f), os.path.join(reel, "assets", f))
+    # sottotitoli dello stile: una parola alla volta, nascosta sotto i titoli e nel finale
+    for i, w in enumerate(parole if not css_sott else []):
         testo = re.sub(r"[.,;:!?\"«»]", "", w["testo"]).strip()
         if not testo or coperto(w["da"]):
             continue
@@ -271,6 +282,7 @@ html,body{{margin:0;background:#000}}
 .tit,.sub{{z-index:30}}
 {scene.CSS}
 {split.CSS if split_on else ''}
+{css_sott}
 </style>
 <script src="{GSAP}"></script>
 </head><body>
@@ -283,6 +295,7 @@ html,body{{margin:0;background:#000}}
 </div>
 <script>
 const tl = gsap.timeline({{paused: true}});
+{sottotitoli.JS}
 {chr(10).join(tl)}
 tl.set({{}}, {{}}, {D:.3f});
 window.__timelines = window.__timelines || {{}};
@@ -294,7 +307,7 @@ window.__timelines["main"] = tl;
         f.write(pagina)
     with open(os.path.join(reel, "hyperframes.json"), "w", encoding="utf-8") as f:
         json.dump({"paths": {"assets": "assets"}}, f)
-    n_sub = sum(1 for x in corpo if 'class="sub"' in x)
+    n_sub = sum(1 for x in corpo if 'class="sub"' in x or 'class="st"' in x)
     print(f"Reel costruito: {n_sub} sottotitoli, {len(titoli)} titoli, {len(scene_piano)} scene, "
           f"{len(audio_extra)} suoni, finale da {finale_da:.1f} s, durata {D:.1f} s")
     print(f"Sottotitoli a y {y_sub}, titoli da y {y_tit} (mento a y {faccia['mento']})")

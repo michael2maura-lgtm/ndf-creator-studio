@@ -22,6 +22,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import DATI, SCELTE, STUDIO, leggi, scrivi  # noqa: E402
 import libreria_suoni  # noqa: E402
+import sottotitoli  # noqa: E402
 
 PAGINA = os.path.join(STUDIO, "pagina", "scegli.html")
 TIPI = {".mp3": "audio/mpeg", ".wav": "audio/wav", ".m4a": "audio/mp4", ".mp4": "video/mp4", ".ttf": "font/ttf",
@@ -75,6 +76,8 @@ def raccogli():
             anteprima = os.path.join(cart, k, "anteprima.mp4")
             if os.path.exists(anteprima):
                 file["anteprima-" + k] = anteprima
+            if st.get("sottotitoli_nome") in sottotitoli.CATALOGO:
+                di_serie["sottotitoli"] = st["sottotitoli_nome"]
             momenti = [m for m in MOMENTI_MOTORE.get(motore, MOMENTI_MOTORE[""])]
             stili.append({"chiave": k, "nome": st.get("nome", k), "descrizione": st.get("descrizione", ""),
                           "grafiche": motore == "grafica", "anteprima": os.path.exists(anteprima),
@@ -85,6 +88,14 @@ def raccogli():
             if os.path.exists(font):
                 file.setdefault("font-titoli", font)
 
+    sott = []
+    for k, s in sottotitoli.CATALOGO.items():
+        p = os.path.join(STUDIO, "sottotitoli", "anteprime", k + ".mp4")
+        if os.path.exists(p):
+            file["sott-" + k] = p
+        sott.append({"chiave": k, "nome": s["nome"], "per": s["per"], "descrizione": s["descrizione"],
+                     "anteprima": os.path.exists(p)})
+
     # le scelte salvate l'ultima volta, rimesse come id
     per_percorso = {os.path.realpath(p): h for h, p in file.items()}
     scelte = None
@@ -93,11 +104,12 @@ def raccogli():
         scelte = {"strada": sc.get("strada", "pronto"), "stile": sc.get("stile"),
                   "suoni": {m: ("" if v == "" else per_percorso.get(os.path.realpath(v)))
                             for m, v in sc.get("suoni", {}).items()},
+                  "sottotitoli": sc.get("sottotitoli"),
                   "musica": "nessuna" if sc.get("musica") == "nessuna" else per_percorso.get(os.path.realpath(sc["musica"]))
                   if sc.get("musica") else None}
     except (OSError, ValueError):
         pass
-    return {"stili": stili, "suoni": suoni, "scelte": scelte}, file
+    return {"stili": stili, "suoni": suoni, "sottotitoli": sott, "scelte": scelte}, file
 
 
 class Pagina(BaseHTTPRequestHandler):
@@ -154,9 +166,12 @@ class Pagina(BaseHTTPRequestHandler):
             musica = corpo.get("musica") if crea else None
             if musica and musica != "nessuna":
                 musica = Pagina.file.get(musica) if musica != stili[corpo["stile"]]["di_serie"].get("musica") else None
-            scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "suoni": suoni,
+            sott = corpo.get("sottotitoli") if crea else None
+            if sott not in sottotitoli.CATALOGO or sott == stili[corpo["stile"]]["di_serie"].get("sottotitoli"):
+                sott = None  # quelli dello stile
+            scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "sottotitoli": sott, "suoni": suoni,
                             "musica": musica, "aggiornato": datetime.datetime.now().isoformat(timespec="seconds")})
-            print(f"SCELTE SALVATE stile={corpo['stile']} suoni cambiati={len(suoni)} "
+            print(f"SCELTE SALVATE stile={corpo['stile']} sottotitoli={sott or 'dello stile'} suoni cambiati={len(suoni)} "
                   f"musica={'nessuna' if musica == 'nessuna' else ('cambiata' if musica else 'di serie')}", flush=True)
             return self._manda(200, b"{}")
         self._manda(404, b"{}")

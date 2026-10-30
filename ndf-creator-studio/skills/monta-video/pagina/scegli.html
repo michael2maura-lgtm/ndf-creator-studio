@@ -160,7 +160,7 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
     <button class="strada" role="tab" data-strada="replica"><div class="t"><span class="tondo"></span>Replica un reel</div>
       <p>Hai visto un reel che ti piace? Lo copio io.</p></button>
     <button class="strada" role="tab" data-strada="crea"><div class="t"><span class="tondo"></span>Crea il tuo</div>
-      <p>Parti da uno stile e cambia suoni e musica.</p></button>
+      <p>Parti da uno stile e cambia sottotitoli, suoni e musica.</p></button>
   </div>
 </section>
 
@@ -169,7 +169,7 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
   <h2 class="t" id="tit-stili">Scegli uno stile.</h2>
   <p class="aiuto" id="aiuto-stili">Ogni stile ha già le sue grafiche, i suoi suoni e la sua musica.</p>
   <div class="griglia" id="stili"></div>
-  <button class="cambia" id="cambia" hidden>Cambia i suoi suoni o la musica</button>
+  <button class="cambia" id="cambia" hidden>Cambia sottotitoli, suoni o musica</button>
 </section>
 
 <section class="sez wrap" id="sez-replica" hidden>
@@ -184,8 +184,15 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
   <div class="frase"><code>Replica questo reel:</code><button class="salva" id="copia-frase" style="padding:10px 18px;font-size:14px">Copia la frase</button></div>
 </section>
 
+<section class="sez wrap" id="sez-sott" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 02</b> · Sottotitoli</span><span class="etic">Scegline uno</span></div>
+  <h2 class="t">I tuoi sottotitoli.</h2>
+  <p class="aiuto">Premi ▶ per vederli sul video. Quello con scritto <b style="color:var(--luce)">di serie</b> è quello dello stile.</p>
+  <div class="griglia" id="sott"></div>
+</section>
+
 <section class="sez wrap" id="sez-suoni" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 02</b> · Suoni</span><span class="etic">Uno per riga</span></div>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 03</b> · Suoni</span><span class="etic">Uno per riga</span></div>
   <h2 class="t">I tuoi suoni.</h2>
   <p class="aiuto">Scegli i suoni che danno il carattere al video. Quello con scritto <b style="color:var(--luce)">di serie</b> è quello dello stile.
     Gli altri (tastiera, click, spunte) li metto io quando servono.</p>
@@ -193,20 +200,20 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
 </section>
 
 <section class="sez wrap" id="sez-musica" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 03</b> · Musica</span><span class="etic">Scegline una</span></div>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 04</b> · Musica</span><span class="etic">Scegline una</span></div>
   <h2 class="t">La tua musica.</h2>
   <p class="aiuto">Va sotto tutto il video e si abbassa da sola quando parli.</p>
   <div class="fila" id="musiche"></div>
 </section>
 
 <section class="sez wrap" id="sez-presto" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 04</b> · In arrivo</span><span class="etic">Presto qui</span></div>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 05</b> · In arrivo</span><span class="etic">Presto qui</span></div>
   <h2 class="t">Presto qui.</h2>
   <p class="aiuto">Per ora questi vengono dallo stile che hai scelto.</p>
   <div class="presto">
-    <div><b>Sottotitoli</b>Scegli come appaiono le parole.</div>
     <div><b>Grafiche</b>Titoli, parola gigante, cornice, telefono.</div>
     <div><b>Transizioni</b>Come si passa da una scena all'altra, anche col fuoco.</div>
+    <div><b>Caratteri e colori</b>Le scritte e i colori del tuo stile.</div>
   </div>
 </section>
 
@@ -228,7 +235,7 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let D, stato = {strada: null, stile: null, suoni: {}, musica: null, cambia: false};
+let D, stato = {strada: null, stile: null, sottotitoli: null, suoni: {}, musica: null, cambia: false};
 const modifica = () => stato.strada === "crea" || (stato.strada === "pronto" && stato.cambia);  // si vedono suoni e musica
 const MOSTRA = 24; // suoni visibili per momento prima di "mostra tutti"
 
@@ -252,7 +259,7 @@ function strada(k, scorri) {
   $("#sez-replica").hidden = k !== "replica";
   mostraModifica();
   $("#tit-stili").textContent = k === "crea" ? "Parti da uno stile." : "Scegli uno stile.";
-  $("#aiuto-stili").textContent = k === "crea" ? "Le grafiche vengono da qui. Suoni e musica li cambi sotto."
+  $("#aiuto-stili").textContent = k === "crea" ? "Le grafiche vengono da qui. Sottotitoli, suoni e musica li cambi sotto."
                                                : "Ogni stile ha già le sue grafiche, i suoi suoni e la sua musica.";
   aggiorna();
   if (scorri !== false) $(k === "replica" ? "#sez-replica" : "#sez-stili").scrollIntoView({behavior: "smooth"});
@@ -260,10 +267,10 @@ function strada(k, scorri) {
 
 function mostraModifica() {
   const k = stato.strada, on = modifica();
-  $("#sez-suoni").hidden = $("#sez-musica").hidden = $("#sez-presto").hidden = !on;
+  $("#sez-sott").hidden = $("#sez-suoni").hidden = $("#sez-musica").hidden = $("#sez-presto").hidden = !on;
   $("#cambia").hidden = k !== "pronto" || !stato.stile;
-  $("#cambia").textContent = stato.cambia ? "Nascondi suoni e musica" : "Cambia i suoi suoni o la musica";
-  if (on) disegnaSuoni();
+  $("#cambia").textContent = stato.cambia ? "Nascondi sottotitoli, suoni e musica" : "Cambia sottotitoli, suoni o musica";
+  if (on) { disegnaSott(); disegnaSuoni(); }
 }
 
 function disegnaStili() {
@@ -277,14 +284,14 @@ function disegnaStili() {
         <div class="tag">${s.grafiche ? "Grafiche animate" : "Scene e omini"}</div>
         <p class="desc">${esc(s.descrizione)}</p></div>
     </button>`).join("");
-  document.querySelectorAll(".scheda").forEach(b => {
+  document.querySelectorAll("#stili .scheda").forEach(b => {
     const v = b.querySelector("video");
     if (v) v.onended = () => fermaVideo();
     b.onclick = e => {
       if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
-      if (stato.stile !== b.dataset.stile) { stato.suoni = {}; stato.musica = null; }
+      if (stato.stile !== b.dataset.stile) { stato.suoni = {}; stato.musica = null; stato.sottotitoli = null; }
       stato.stile = b.dataset.stile;
-      document.querySelectorAll(".scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
+      document.querySelectorAll("#stili .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
       mostraModifica();
       aggiorna();
     };
@@ -303,6 +310,32 @@ function guardaVideo(btn, v) {
     if (suona) { audio.pause(); suona.classList.remove("on"); suona.textContent = "▶"; }
     v.play().catch(() => {}); btn.classList.add("on"); btn.textContent = "❚❚";
   }
+}
+
+function disegnaSott() {
+  const s = stile(); if (!s) { $("#sott").innerHTML = ""; return; }
+  const serie = s.di_serie.sottotitoli || null, scelto = stato.sottotitoli || serie;
+  const lista = [...D.sottotitoli].sort((a, b) => (b.chiave === serie) - (a.chiave === serie));
+  $("#sott").innerHTML = lista.map(x => `
+    <button class="scheda" data-sott="${x.chiave}" aria-pressed="${x.chiave === scelto}">
+      <span class="spunta"></span>
+      ${x.anteprima ? `<span class="media"><video class="vid" src="/file/sott-${x.chiave}#t=1.5" playsinline preload="metadata"></video>
+                      <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
+                    : `<div class="vuoto t">${esc(x.nome)}</div>`}
+      <div class="corpo"><div class="t">${esc(x.nome)}</div>
+        <div class="tag">${x.chiave === serie ? "di serie · " : ""}${esc(x.per)}</div>
+        <p class="desc">${esc(x.descrizione)}</p></div>
+    </button>`).join("");
+  document.querySelectorAll("#sott .scheda").forEach(b => {
+    const v = b.querySelector("video");
+    if (v) v.onended = () => fermaVideo();
+    b.onclick = e => {
+      if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
+      stato.sottotitoli = b.dataset.sott;
+      document.querySelectorAll("#sott .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
+      aggiorna();
+    };
+  });
 }
 
 function carta(id, nome, sotto, scelto, serie) {
@@ -358,7 +391,9 @@ function aggiorna() {
   else if (s) {
     const cambiati = Object.entries(stato.suoni).filter(([m, id]) => id !== (s.di_serie[m] || "")).length;
     const mus = stato.musica === "nessuna" ? "senza musica" : (stato.musica && stato.musica !== s.di_serie.musica ? "musica cambiata" : "musica di serie");
-    t = `${s.nome} · ${cambiati ? cambiati + (cambiati === 1 ? " suono cambiato" : " suoni cambiati") : "suoni di serie"} · ${mus}`;
+    const st = stato.sottotitoli && stato.sottotitoli !== s.di_serie.sottotitoli
+      ? (D.sottotitoli.find(x => x.chiave === stato.sottotitoli) || {}).nome : null;
+    t = `${s.nome}${st ? " · sottotitoli " + st : ""} · ${cambiati ? cambiati + (cambiati === 1 ? " suono cambiato" : " suoni cambiati") : "suoni di serie"} · ${mus}`;
     ok = true;
   }
   $("#riass").textContent = t;
@@ -375,7 +410,7 @@ $("#copia-frase").onclick = () => { navigator.clipboard.writeText("Replica quest
 document.querySelectorAll(".strada").forEach(b => b.onclick = () => strada(b.dataset.strada));
 $("#cambia").onclick = () => {
   stato.cambia = !stato.cambia; mostraModifica(); aggiorna();
-  if (stato.cambia) $("#sez-suoni").scrollIntoView({behavior: "smooth"});
+  if (stato.cambia) $("#sez-sott").scrollIntoView({behavior: "smooth"});
 };
 
 setInterval(() => fetch("/ping", {method: "POST", body: "{}"}).catch(() => {}), 5000);
@@ -388,6 +423,7 @@ fetch("/dati").then(r => r.json()).then(d => {
     stato.stile = sc.stile;
     stato.suoni = Object.fromEntries(Object.entries(sc.suoni || {}).filter(([, v]) => v !== null && v !== undefined));
     stato.musica = sc.musica;
+    stato.sottotitoli = sc.sottotitoli || null;
   }
   disegnaStili();
   strada(sc && sc.strada ? sc.strada : "pronto", false);
