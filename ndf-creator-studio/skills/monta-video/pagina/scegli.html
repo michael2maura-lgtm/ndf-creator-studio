@@ -75,6 +75,11 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
 .scheda .tag{font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;color:var(--arancio);text-transform:uppercase;margin:8px 0}
 .scheda .desc{font-size:13px;color:#5B4A3E;margin:0}
 .eff-barra{display:flex;justify-content:flex-end;margin:-8px 0 16px}
+.eff-avviso{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px;padding:14px 18px;
+  border:1px solid var(--arancio);border-radius:12px;background:#2B1A10}
+.eff-avviso[hidden]{display:none}
+.eff-avviso .salva{padding:10px 18px;font-size:14px}
+.scheda.spento .corpo,.scheda.spento .spunta{opacity:.45}
 .eff-barra .cambia{margin-top:0}
 .quadro{border-radius:7px}
 .spunta{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);
@@ -205,6 +210,7 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
   <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 04</b> · Effetti</span><span class="etic">Quanti vuoi</span></div>
   <h2 class="t">I tuoi effetti.</h2>
   <p class="aiuto" id="aiuto-eff">Metti la spunta a quelli che vuoi nei tuoi video. Li uso solo quando c'entrano con quello che dici.</p>
+  <div class="eff-avviso" id="eff-avviso" hidden><span id="eff-avviso-testo"></span><button class="salva" id="eff-passa"></button></div>
   <div class="eff-barra"><button class="cambia" id="eff-tutti">Seleziona tutti</button></div>
   <div class="griglia" id="eff"></div>
 </section>
@@ -374,15 +380,22 @@ function disegnaSott() {
 
 function disegnaEff() {
   const s = stile();
-  if (!s || !s.grafiche) {
-    $("#aiuto-eff").textContent = s ? "Questo stile usa scene e omini al posto degli effetti: scegli uno stile con le grafiche animate per vederli." : "";
-    $("#eff").innerHTML = ""; $("#eff-tutti").hidden = true; return;
+  if (!s) { $("#eff").innerHTML = ""; $("#eff-tutti").hidden = true; $("#eff-avviso").hidden = true; return; }
+  const spento = !s.grafiche;  // stile con scene e omini: gli effetti si vedono ma non si usano
+  const altro = D.stili.find(x => x.grafiche);
+  $("#eff-avviso").hidden = !spento;
+  if (spento) {
+    $("#eff-avviso-testo").textContent = `Lo stile "${s.nome}" usa scene e omini, non questi effetti.` +
+      (altro ? ` Funzionano con lo stile "${altro.nome}".` : "");
+    $("#eff-passa").hidden = !altro;
+    if (altro) { $("#eff-passa").textContent = `Passa a ${altro.nome}`;
+                 $("#eff-passa").onclick = () => document.querySelector(`#stili [data-stile="${altro.chiave}"]`).click(); }
   }
   $("#aiuto-eff").textContent = "Metti la spunta a quelli che vuoi nei tuoi video. Li uso solo quando c'entrano con quello che dici.";
-  $("#eff-tutti").hidden = false;
+  $("#eff-tutti").hidden = spento;
   const presi = stato.effetti || D.effetti.map(x => x.chiave);
   $("#eff").innerHTML = D.effetti.map(x => `
-    <button class="scheda" data-eff="${x.chiave}" aria-pressed="${presi.includes(x.chiave)}">
+    <button class="scheda${spento ? " spento" : ""}" data-eff="${x.chiave}" aria-pressed="${!spento && presi.includes(x.chiave)}">
       <span class="spunta quadro"></span>
       ${x.anteprima ? `<span class="media"><video class="vid" src="/file/eff-${x.chiave}" poster="/file/eff-${x.chiave}-jpg" playsinline preload="none"></video>
                       <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
@@ -398,6 +411,7 @@ function disegnaEff() {
     if (v) v.onended = () => fermaVideo();
     b.onclick = e => {
       if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
+      if (b.classList.contains("spento")) return;
       const set = new Set(stato.effetti || D.effetti.map(x => x.chiave));
       set.has(b.dataset.eff) ? set.delete(b.dataset.eff) : set.add(b.dataset.eff);
       stato.effetti = D.effetti.map(x => x.chiave).filter(k => set.has(k));
