@@ -29,7 +29,7 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
     "risposta_da": 66.5, "chip": "Il metodo"},                                      il commento che si scrive
    {"tipo": "numero", "da": 17.66, "a": 20.8, "numero": "15", "righe": [["DOMANDE", 18.1], ["CONTENUTI", 19.8]]},
    {"tipo": "etichette", "quando": 43.5, "a": 45.3, "voci": [["solo contenuti?", 43.78], ["solo post?", 44.72]]},
-   {"tipo": "neon", "da": 7.3, "quando": 8.08, "a": 9.6, "testo": "più semplice"},  insegna sopra la testa
+   {"tipo": "neon", "da": 7.0, "quando": 8.08, "a": 9.6, "testo": "più semplice"},  insegna sul muro (con ritaglio)
    {"tipo": "percorso", "da": 55.9, "a": 64.6, "etichetta": "IL MIO METODO", "titolo": "dalle domande ai contatti",
     "passi": [["Domande", 57.24], ["Contenuti", 61.84], ["Contatti", 62.58]]},
    {"tipo": "zoom", "mosse": [[0.3, 2.4, 1.12, "lento"], [3.6, 3.9, 1.3, "scatto"], [4.9, 5.2, 1.0, "fuori"]]}],
@@ -401,7 +401,7 @@ class Reel:
                          f'{html.escape(t.lower())}</div>' for j, (t, _) in enumerate(e.get("parole", [])[:3]))
         self.corpo.append(f'<div class="lbuio" id="l{m}"></div>{parole}')
         self.tl.append(f'tl.set("{sel}",{{opacity:1}},{da:.3f});'
-                       f'tl.to("#bg",{{filter:"brightness(0.16) blur(10px) saturate(0.5) hue-rotate(-12deg)",duration:0.6,ease:"power2.inOut"}},{da:.3f});'
+                       f'tl.fromTo("#bg",{{filter:"brightness(1) blur(0px) saturate(1) hue-rotate(0deg)"}},{{filter:"brightness(0.16) blur(10px) saturate(0.5) hue-rotate(-12deg)",duration:0.6,ease:"power2.inOut",immediateRender:false}},{da:.3f});'
                        f'tl.to(["#lz{n}","#l{m}"],{{opacity:1,duration:0.6}},{da:.3f});'
                        f'tl.to("#bg",{{filter:"brightness(1) blur(0px) saturate(1)",duration:0.5,ease:"power2.inOut"}},{a - 0.5:.3f});'
                        f'tl.to(["#lz{n}","#l{m}","#l{m}p0","#l{m}p1","#l{m}p2"],{{opacity:0,duration:0.5}},{a - 0.5:.3f});'
@@ -435,7 +435,7 @@ class Reel:
         self.corpo.append(f'<div class="buio" id="v{m}"></div>')
         stanza = "brightness(0.46) contrast(1.1) saturate(0.62)"
         self.tl.append(f'tl.set("{sel}",{{opacity:1}},{da:.3f});'
-                       f'tl.to("#bg",{{filter:"{stanza}",duration:{min(0.8, quando - da):.3f},ease:"power2.inOut"}},{da:.3f});'
+                       f'tl.fromTo("#bg",{{filter:"brightness(1) contrast(1) saturate(1)"}},{{filter:"{stanza}",duration:{min(0.8, quando - da):.3f},ease:"power2.inOut",immediateRender:false}},{da:.3f});'
                        f'tl.to("#v{m}",{{opacity:1,duration:{min(0.8, quando - da):.3f}}},{da:.3f});'
                        f'tl.fromTo("#cam",{{scale:1}},{{scale:1.05,duration:{quando - da:.3f},ease:"power1.in",immediateRender:false}},{da:.3f});'
                        f'tl.set("#p{n}",{{opacity:1}},{quando:.3f});'
@@ -557,33 +557,48 @@ class Reel:
         self.nascondi.append((t, a))
 
     def neon(self, e, faccia):
-        """Insegna al neon: la frase si accende sul muro sopra la tua testa, sfarfalla, la stanza si abbassa e la luce
-        dell'insegna colora il muro. e = {"da": quando compare spenta, "quando": quando si accende (facoltativo),
-        "a": quando si spegne, "testo": "più semplice"}."""
-        c = self.stile["colori"]
-        da, a, testo = e["da"], e["a"], e["testo"]
-        quando = e.get("quando", da + 0.3)
-        shutil.copy2(os.path.join(STUDIO, "font", "Caveat.ttf"), os.path.join(self.assets, "Caveat.ttf"))
-        cx = (faccia["sinistra"] + faccia["destra"]) / 2
+        """Insegna al neon: la frase, scritta a mano come un tubo di vetro, è appesa al muro accanto alla tua testa.
+        All'inizio è spenta, poi si accende sfarfallando, la stanza si abbassa e il muro attorno prende la sua luce.
+        Tu resti davanti (ritaglio): se muovi le mani passano sopra la scritta.
+        e = {"da": quando compare spenta, "quando": quando si accende (facoltativo), "a": quando si spegne,
+        "testo": "più semplice" (2-3 parole: l'ultima va sulla seconda riga, sottolineata), "colore": "#FFD84A"}."""
+        da, a, testo = e["da"], e["a"], e["testo"].strip()
+        quando = e.get("quando", da + 0.8)
+        col = e.get("colore", "#FFD84A")
+        shutil.copy2(os.path.join(STUDIO, "font", "IndieFlower.ttf"), os.path.join(self.assets, "IndieFlower.ttf"))
+        sel = self.ritaglio(da, a)
+        parole = testo.split()
+        righe = [" ".join(parole[:-1]), parole[-1]] if len(parole) > 1 else [testo]
+        # dalla parte del muro con più spazio, accanto alla testa: grande quanto c'è posto (al massimo 60 px dietro la testa)
+        sinistra = faccia["sinistra"] > 1080 - faccia["destra"]
+        posto = (faccia["sinistra"] if sinistra else 1080 - faccia["destra"]) - 40 + 60
+        lungo = max(max(len(r) for r in righe), 3)
+        dim = max(min(118, int(posto / (lungo * 0.46 + 0.6))), 64)
+        larg = lungo * dim * 0.46 + dim * 0.6
+        x = max(faccia["sinistra"] + 60 - larg - 10, 30) if sinistra else min(faccia["destra"] - 60 + 10, 1080 - larg - 30)
         cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
-        dim = min(180, int(1700 / max(len(testo), 4)))
-        y = max(cima - dim * 1.25 - 30, 120)            # sopra la testa: il neon non copre mai la faccia
+        y = cima + 10
+        def insegna(classe, stile=""):
+            r2 = (f'<br><span class="ne-r2">{html.escape(righe[1])}<i class="ne-sott"></i></span>' if len(righe) > 1 else "")
+            return f'<div class="{classe}"{stile}>{html.escape(righe[0])}{r2}</div>'
+        luce = f' style="color:#FFF6CF;text-shadow:0 0 3px #FFF8DC,0 0 9px {col},0 0 22px {col},0 0 46px {col}cc,0 0 90px {col}88"'
         n = len(self.camera)
-        self.camera.append(
-            f'<div class="neon-alone" id="ne{n}a" style="left:{cx - 450:.0f}px;top:{y - 220:.0f}px;'
-            f'background:radial-gradient(closest-side,{c["accento"]}88,{c["accento"]}00)"></div>'
-            f'<div class="neon spento" id="ne{n}s" style="top:{y:.0f}px;font-size:{dim}px">{html.escape(testo)}</div>'
-            f'<div class="neon" id="ne{n}" style="top:{y:.0f}px;font-size:{dim}px;color:#FFF1E6;text-shadow:0 0 4px #fff,0 0 14px {c["accento_luce"]},'
-            f'0 0 34px {c["accento"]},0 0 80px {c["accento"]},0 0 140px {c["accento"]}">{html.escape(testo)}</div>')
-        stanza = "brightness(0.68) saturate(0.85)"
-        self.tl.append(f'tl.fromTo("#ne{n}s",{{opacity:0}},{{opacity:1,duration:0.2,immediateRender:false}},{da:.3f});'
-                       f'tl.fromTo("#ne{n}",{{opacity:0}},{{keyframes:[{{opacity:1,duration:0.04}},{{opacity:0.15,duration:0.06}},{{opacity:1,duration:0.04}},'
-                       f'{{opacity:0.35,duration:0.08}},{{opacity:1,duration:0.05}}],immediateRender:false}},{quando:.3f});'
-                       f'tl.fromTo("#ne{n}a",{{opacity:0}},{{opacity:0.75,duration:0.3,immediateRender:false}},{quando:.3f});'
-                       f'tl.to("#bg",{{filter:"{stanza}",duration:0.35}},{quando:.3f});'
-                       f'tl.to(["#ne{n}","#ne{n}a","#ne{n}s"],{{opacity:0,duration:0.25}},{a - 0.25:.3f});'
-                       f'tl.to("#bg",{{filter:"brightness(1) saturate(1)",duration:0.3}},{a - 0.25:.3f});')
-        self.suono("glitch", quando, 0.3)
+        self.camera.insert(0,
+            f'<div class="ne-alone" id="ne{n}a" style="left:{x + larg / 2 - 420:.0f}px;top:{y + dim - 380:.0f}px;'
+            f'background:radial-gradient(closest-side,{col}99,{col}33 55%,{col}00)"></div>'
+            f'<div class="neon" id="ne{n}" style="left:{x:.0f}px;top:{y:.0f}px;font-size:{dim}px">'
+            + insegna("ne-spento") + f'<div class="ne-acceso" id="ne{n}o">' + insegna("", luce) + '</div></div>')
+        stanza = "brightness(0.74) saturate(0.92)"
+        T = self.tl.append
+        T(f'tl.set("{sel}",{{opacity:1}},{da:.3f});tl.set("{sel}",{{opacity:0}},{a:.3f});'
+          f'tl.fromTo("#ne{n}",{{opacity:0}},{{opacity:1,duration:0.2,immediateRender:false}},{da:.3f});'
+          f'tl.fromTo("#ne{n}o",{{opacity:0}},{{keyframes:[{{opacity:0.85,duration:0.04}},{{opacity:0.2,duration:0.07}},{{opacity:0.95,duration:0.05}},'
+          f'{{opacity:0.4,duration:0.1}},{{opacity:1,duration:0.06}},{{opacity:0.75,duration:0.06}},{{opacity:1,duration:0.1}}],immediateRender:false}},{quando:.3f});'
+          f'tl.fromTo("#ne{n}a",{{opacity:0}},{{opacity:0.6,duration:0.5,immediateRender:false}},{quando + 0.1:.3f});'
+          f'tl.fromTo(["#bg","{sel}"],{{filter:"brightness(1) saturate(1)"}},{{filter:"{stanza}",duration:0.55,ease:"power1.inOut",immediateRender:false}},{quando + 0.2:.3f});'
+          f'tl.to(["#ne{n}","#ne{n}a"],{{opacity:0,duration:0.25}},{a - 0.25:.3f});'
+          f'tl.to(["#bg","{sel}"],{{filter:"brightness(1) saturate(1)",duration:0.25}},{a - 0.25:.3f});')
+        self.suono("glitch", quando, 0.25)
 
     def percorso(self, e):
         """Percorso su carta: si passa a un foglio scuro e il metodo si costruisce dall'alto in basso: un'etichetta,
@@ -880,10 +895,15 @@ html,body{{margin:0;background:{scuro}}}
 .et{{position:absolute;opacity:0;display:flex;align-items:center;gap:14px;padding:16px 26px 16px 16px;border-radius:20px;background:#fff;color:#141414;
  font-family:'{ft["famiglia"]}';font-weight:800;font-size:48px;white-space:nowrap;box-shadow:0 12px 34px rgba(0,0,0,.4);transform-origin:50% 50%}}
 .et-n{{{M};font-size:28px;background:{acc};color:#fff;border-radius:10px;padding:6px 10px}}
-.neon{{position:absolute;left:0;right:0;text-align:center;font-family:'Caveat';font-weight:700;line-height:1;white-space:nowrap;opacity:0;z-index:4;
- transform:rotate(-4deg)}}
-.neon.spento{{color:rgba(255,255,255,.16);text-shadow:0 2px 2px rgba(0,0,0,.25)}}
-.neon-alone{{position:absolute;width:900px;height:600px;opacity:0;z-index:3;mix-blend-mode:screen}}
+@font-face{{font-family:'Indie Flower';src:url('assets/IndieFlower.ttf')}}
+.neon{{position:absolute;font-family:'Indie Flower';line-height:1.02;white-space:nowrap;opacity:0;z-index:2;transform:rotate(-3deg)}}
+.ne-spento{{color:rgba(240,236,224,.34);text-shadow:0 1px 2px rgba(0,0,0,.3)}}
+.ne-acceso{{position:absolute;left:0;top:0;opacity:0}}
+.ne-r2{{position:relative;display:inline-block;margin-left:0.55em}}
+.ne-sott{{position:absolute;left:-0.1em;right:-0.25em;bottom:0.02em;height:0.055em;border-radius:1em;background:currentColor;
+ box-shadow:inherit;transform:rotate(-2deg)}}
+.ne-acceso .ne-sott{{background:#FFF6CF;box-shadow:0 0 6px #FFF6CF,0 0 18px #FFD84A,0 0 40px #FFD84A}}
+.ne-alone{{position:absolute;width:840px;height:760px;opacity:0;z-index:1;mix-blend-mode:screen}}
 @font-face{{font-family:'Instrument Serif';src:url('assets/InstrumentSerif-Italic.ttf');font-style:italic}}
 .pc{{position:absolute;inset:0;z-index:36;opacity:0;background:radial-gradient(ellipse at 50% 45%,{banda} 0%,{scuro} 72%),{scuro}}}
 .pc-lab{{position:absolute;left:0;right:0;text-align:center;{M};font-size:34px;letter-spacing:5px;color:{luce}}}

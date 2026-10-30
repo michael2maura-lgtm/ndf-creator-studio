@@ -35,7 +35,7 @@ CATALOGO = {
     "etichette": {"nome": "Fermo con etichette", "per": "Spiegare chi sei o cosa c'è in scena",
                   "descrizione": "L'immagine si ferma mentre continui a parlare e delle etichette numerate ti indicano."},
     "neon": {"nome": "Insegna al neon", "per": "Una frase da ricordare",
-             "descrizione": "La frase si accende come un neon sul muro sopra di te e la stanza si abbassa."},
+             "descrizione": "La frase, scritta a mano, si accende come un neon sul muro accanto a te e la stanza si abbassa."},
     "percorso": {"nome": "Percorso su carta", "per": "Un metodo, dei passaggi",
                  "descrizione": "Si passa a un foglio scuro: un titolo in corsivo e i passi che scendono uno sotto l'altro."},
     "telefono": {"nome": "Telefono", "per": "Instagram, storie, reel, app",
