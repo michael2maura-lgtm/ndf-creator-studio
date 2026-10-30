@@ -84,7 +84,8 @@ Effetti (motion graphics del motore grafica): catalogo in `strumenti/effetti.py`
 nel piano usa solo quelli (grafica.py salta gli altri con una NOTA). Gli effetti li scegli TU per ogni reel, da
 quello che si dice (lo stile.md dice quando): l'utente non sceglie niente reel per reel, nella pagina toglie solo
 quelli che non vuole mai. Le scelte le usa `costruisci.py` da solo: tu nel piano
-scrivi lo stile scelto e basta. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio)
+scrivi lo stile scelto e basta. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio) più la sua copertina
+`anteprima.jpg` (un fotogramma con la faccia ferma e una scritta, mai una mano davanti)
 nella sua cartella: falla quando crei uno stile nuovo, dal primo video approvato.
 
 ## Correzioni dell'utente

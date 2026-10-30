@@ -294,7 +294,7 @@ function disegnaStili() {
   $("#stili").innerHTML = D.stili.map(s => `
     <button class="scheda" data-stile="${s.chiave}" aria-pressed="${s.chiave === stato.stile}">
       <span class="spunta"></span>
-      ${s.anteprima ? `<span class="media"><video class="vid" src="/file/anteprima-${s.chiave}#t=1" playsinline preload="metadata"></video>
+      ${s.anteprima ? `<span class="media"><video class="vid" src="/file/anteprima-${s.chiave}" poster="/file/anteprima-${s.chiave}-jpg" playsinline preload="none"></video>
                       <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
                     : `<div class="vuoto t">${esc(s.nome)}</div>`}
       <div class="corpo"><div class="t">${esc(s.nome)}</div>
@@ -353,7 +353,7 @@ function disegnaSott() {
   $("#sott").innerHTML = lista.map(x => `
     <button class="scheda" data-sott="${x.chiave}" aria-pressed="${x.chiave === scelto}">
       <span class="spunta"></span>
-      ${x.anteprima ? `<span class="media"><video class="vid" src="/file/sott-${x.chiave}#t=1.5" playsinline preload="metadata"></video>
+      ${x.anteprima ? `<span class="media"><video class="vid" src="/file/sott-${x.chiave}" poster="/file/sott-${x.chiave}-jpg" playsinline preload="none"></video>
                       <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
                     : `<div class="vuoto t">${esc(x.nome)}</div>`}
       <div class="corpo"><div class="t">${esc(x.nome)}</div>
@@ -384,7 +384,7 @@ function disegnaEff() {
   $("#eff").innerHTML = D.effetti.map(x => `
     <button class="scheda" data-eff="${x.chiave}" aria-pressed="${presi.includes(x.chiave)}">
       <span class="spunta quadro"></span>
-      ${x.anteprima ? `<span class="media"><video class="vid" src="/file/eff-${x.chiave}#t=1.5" playsinline preload="metadata"></video>
+      ${x.anteprima ? `<span class="media"><video class="vid" src="/file/eff-${x.chiave}" poster="/file/eff-${x.chiave}-jpg" playsinline preload="none"></video>
                       <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
                     : `<div class="vuoto t">${esc(x.nome)}</div>`}
       <div class="corpo"><div class="t">${esc(x.nome)}</div>

@@ -78,6 +78,8 @@ def raccogli():
             anteprima = os.path.join(cart, k, "anteprima.mp4")
             if os.path.exists(anteprima):
                 file["anteprima-" + k] = anteprima
+            if os.path.exists(anteprima[:-4] + ".jpg"):  # la copertina: il browser non salta a un secondo preciso
+                file["anteprima-" + k + "-jpg"] = anteprima[:-4] + ".jpg"
             if st.get("sottotitoli_nome") in sottotitoli.CATALOGO:
                 di_serie["sottotitoli"] = st["sottotitoli_nome"]
             momenti = [m for m in MOMENTI_MOTORE.get(motore, MOMENTI_MOTORE[""])]
@@ -95,6 +97,8 @@ def raccogli():
         p = os.path.join(STUDIO, "sottotitoli", "anteprime", k + ".mp4")
         if os.path.exists(p):
             file["sott-" + k] = p
+        if os.path.exists(p[:-4] + ".jpg"):
+            file["sott-" + k + "-jpg"] = p[:-4] + ".jpg"
         sott.append({"chiave": k, "nome": s["nome"], "per": s["per"], "descrizione": s["descrizione"],
                      "anteprima": os.path.exists(p)})
 
@@ -103,6 +107,8 @@ def raccogli():
         p = os.path.join(STUDIO, "effetti", "anteprime", k + ".mp4")
         if os.path.exists(p):
             file["eff-" + k] = p
+        if os.path.exists(p[:-4] + ".jpg"):
+            file["eff-" + k + "-jpg"] = p[:-4] + ".jpg"
         eff.append(dict(e, chiave=k, anteprima=os.path.exists(p)))
 
     looks = []
