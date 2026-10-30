@@ -32,6 +32,15 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "neon", "da": 7.0, "quando": 8.08, "a": 9.6, "testo": "più semplice"},  insegna sul muro (con ritaglio)
    {"tipo": "percorso", "da": 55.9, "a": 64.6, "etichetta": "IL MIO METODO", "titolo": "dalle domande ai contatti",
     "passi": [["domande", 57.24], ["contenuti", 61.84], ["+ contatti", 62.58, "stessa riga"]]},
+   {"tipo": "checklist", "da": 22.6, "a": 37.9, "titolo": "Tutto quello che serve",
+    "voci": [["Domande nelle storie", 23.5], ["Un reel per domanda", 30.9], ["Risposta semplice", 35.3]]},
+   {"tipo": "contachilometri", "da": 17.4, "a": 21.8, "numeri": [{"valore": "15", "etichetta": "DOMANDE", "da": 17.66},
+    {"valore": "15", "etichetta": "CONTENUTI", "sotto": "pronti", "da": 19.8}]},
+   {"tipo": "pillole", "a": 47.2, "voci": [["contenuti", 43.78], ["post", 44.72]]},
+   {"tipo": "prompt", "da": 58.0, "a": 63.6, "testo": "trasforma i contenuti in contatti", "scrivi_da": 61.0, "scrivi_a": 63.0},
+   {"tipo": "telefono3d", "da": 9.6, "a": 17.1, "app": "ChatGPT", "messaggi": [["Quali sono le domande...", 11.76, "io"]],
+    "scheda": {"etichetta": "Risposta", "titolo": "15 domande pronte", "bottone": "Copia", "da": 14.5}, "tocco": 16.2, "fatto": "Copiato"},
+   {"tipo": "orbita", "da": 50.0, "a": 55.8},                     con ritaglio: copertine dei reel già montati
    {"tipo": "zoom", "mosse": [[0.3, 2.4, 1.12, "lento"], [3.6, 3.9, 1.3, "scatto"], [4.9, 5.2, 1.0, "fuori"]]}],
  "finale_da": 64.75, "finale_sopra": "TE LO INVIO IN DIRECT", "finale_testo": "COMMENTA", "finale_bottone": "INFO"}
 
@@ -665,6 +674,213 @@ class Reel:
         self.suono("transizione", da - 0.1, 0.3)
         self.nascondi.append((da, a))
 
+    def checklist(self, e, faccia):
+        """Checklist: una scheda di vetro scuro si costruisce sul muro (o sotto il mento, se sopra la testa non c'è
+        posto): titolo piccolo, contatore "0 di 3", barra a segmenti, e ogni passo si spunta in giallo quando lo dici.
+        Alla fine il bordo si accende e brillano due stelline. e = {"da", "a", "titolo": "TUTTO QUELLO CHE SERVE",
+        "voci": [["Domande nelle storie", secondo], ...] (al massimo 4)}."""
+        da, a = e["da"], e["a"]
+        self.font_extra("InterTight.ttf")
+        voci = e["voci"][:4]
+        n = len(self.corpo)
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
+        alt = 190 + len(voci) * 112
+        sopra = cima - 60 >= alt + 150
+        y = 150 if sopra else min(faccia["mento"] + 50, 1900 - alt - 260)
+        segmenti = "".join(f'<i><b id="ck{n}s{j}"></b></i>' for j in range(len(voci)))
+        righe = "".join(f'<div class="ck-riga" id="ck{n}r{j}"><span class="ck-tondo" id="ck{n}o{j}"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9"/></svg></span>'
+                        f'<span class="ck-vuoto" id="ck{n}v{j}"></span><span class="ck-tx" id="ck{n}t{j}">{html.escape(t)}</span></div>'
+                        for j, (t, _) in enumerate(voci))
+        self.corpo.append(f'<div class="ck" id="ck{n}" style="top:{y}px"><div class="ck-testa"><span class="ck-lab"><i></i>'
+                          f'{html.escape(e.get("titolo", "TUTTO QUELLO CHE SERVE").upper())}</span><span class="ck-conta" id="ck{n}c">0 di {len(voci)}</span></div>'
+                          f'<div class="ck-barra">{segmenti}</div>{righe}<em class="ck-stella" id="ck{n}x">✦</em><em class="ck-stella b" id="ck{n}y">✦</em></div>')
+        T = self.tl.append
+        T(f'tl.fromTo("#ck{n}",{{opacity:0,scale:0.94,filter:"blur(12px)"}},{{opacity:1,scale:1,filter:"blur(0px)",duration:0.45,ease:"power3.out",immediateRender:false}},{da:.3f});'
+          f'tl.to("#ck{n}",{{opacity:0,scale:0.97,duration:0.25}},{a - 0.25:.3f});')
+        for j, (_, quando) in enumerate(voci):
+            spunta = quando + 0.35
+            T(f'tl.set("#ck{n}v{j}",{{display:"none"}},{quando:.3f});'
+              f'tl.fromTo("#ck{n}t{j}",{{opacity:0,filter:"blur(8px)",x:-10}},{{opacity:1,filter:"blur(0px)",x:0,duration:0.3,ease:"power2.out",immediateRender:false}},{quando:.3f});'
+              f'tl.set("#ck{n}r{j}",{{backgroundColor:"rgba(255,255,255,0.07)"}},{quando:.3f});'
+              f'tl.set("#ck{n}t{j}",{{color:"#F4E06D"}},{spunta:.3f});'
+              f'tl.set("#ck{n}o{j}",{{backgroundColor:"#F4E06D",borderColor:"#F4E06D"}},{spunta:.3f});tl.set("#ck{n}o{j} svg",{{opacity:1}},{spunta:.3f});'
+              f'tl.fromTo("#ck{n}o{j}",{{scale:0.6}},{{scale:1,duration:0.3,ease:"back.out(3)",immediateRender:false}},{spunta:.3f});'
+              f'tl.fromTo("#ck{n}s{j}",{{scaleX:0}},{{scaleX:1,duration:0.35,ease:"power2.out",immediateRender:false}},{spunta:.3f});'
+              f'tl.set("#ck{n}c",{{textContent:"{j + 1} di {len(voci)}"}},{spunta:.3f});'
+              f'tl.set("#ck{n}t{j}",{{color:"#FFFFFF"}},{spunta + 0.7:.3f});tl.set("#ck{n}r{j}",{{backgroundColor:"rgba(255,255,255,0)"}},{spunta + 0.7:.3f});')
+            self.suono("pop", spunta, 0.35)
+        fine = voci[-1][1] + 0.5
+        T(f'tl.set("#ck{n}",{{borderColor:"rgba(244,224,109,0.85)",boxShadow:"0 0 0 2px rgba(244,224,109,0.25),0 20px 60px rgba(0,0,0,0.45)"}},{fine:.3f});'
+          f'tl.set("#ck{n}c",{{backgroundColor:"#F4E06D",color:"#141414"}},{fine:.3f});'
+          f'tl.fromTo(["#ck{n}x","#ck{n}y"],{{opacity:0,scale:0.2,rotate:0}},{{opacity:1,scale:1,rotate:90,duration:0.5,ease:"back.out(2)",immediateRender:false}},{fine:.3f});')
+        self.suono("ding", fine, 0.3)
+        if not sopra:
+            self.nascondi.append((da, a))
+
+    def contachilometri(self, e, faccia):
+        """Contachilometri: in alto un pannello scuro con le cifre in caselle che girano come un contachilometri fino al
+        numero detto (una lettera dopo, tipo la "s" di 100s, resta gialla), sotto una riga gialla e l'etichetta.
+        Il numero dopo arriva grande e quello prima si fa piccolo a sinistra.
+        e = {"da", "a", "numeri": [{"valore": "15", "etichetta": "DOMANDE", "sotto": "ogni mese", "da": secondo}, ...]}."""
+        da, a = e["da"], e["a"]
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        numeri = e["numeri"][:2]
+        pezzi = []
+        for k, nu in enumerate(numeri):
+            celle = []
+            for c, ch in enumerate(str(nu["valore"])):
+                if ch.isdigit():
+                    striscia = "".join(f"<b>{d % 10}</b>" for d in range(20 + int(ch) + 1))
+                    celle.append(f'<span class="od-cella"><span class="od-str" id="od{n}k{k}c{c}">{striscia}</span></span>')
+                else:
+                    celle.append(f'<span class="od-segno">{html.escape(ch)}</span>')
+            sotto = f'<div class="od-sotto" id="od{n}k{k}u">{html.escape(nu.get("sotto", "").upper())}</div>' if nu.get("sotto") else ""
+            pezzi.append(f'<div class="od" id="od{n}k{k}"><div class="od-pann">{"".join(celle)}</div>'
+                         f'<div class="od-lab"><span>{html.escape(nu.get("etichetta", "").upper())}</span></div>{sotto}</div>')
+        self.corpo.append(f'<div class="ods" id="od{n}">{"".join(pezzi)}</div>')
+        T = self.tl.append
+        T(f'tl.set("#od{n}",{{opacity:1}},{da:.3f});tl.to("#od{n}",{{opacity:0,duration:0.25}},{a - 0.25:.3f});')
+        for k, nu in enumerate(numeri):
+            t = nu.get("da", da)
+            T(f'tl.fromTo("#od{n}k{k}",{{opacity:0,y:-20}},{{opacity:1,y:0,duration:0.3,ease:"power3.out",immediateRender:false}},{t - 0.3:.3f});')
+            for c, ch in enumerate(str(nu["valore"])):
+                if ch.isdigit():
+                    passi = 20 + int(ch)
+                    T(f'tl.fromTo("#od{n}k{k}c{c}",{{y:0,filter:"blur(5px)"}},{{y:{-passi * 150},filter:"blur(0px)",duration:{0.9 + c * 0.12:.2f},ease:"power3.out",immediateRender:false}},{t:.3f});')
+            if nu.get("sotto"):
+                T(f'tl.fromTo("#od{n}k{k}u",{{opacity:0}},{{opacity:1,duration:0.25,immediateRender:false}},{nu.get("sotto_da", t + 1.2):.3f});')
+            if k > 0:   # quello prima si fa piccolo e va a sinistra
+                T(f'tl.to("#od{n}k{k - 1}",{{scale:0.48,x:-420,y:-40,duration:0.4,ease:"power3.inOut"}},{t - 0.35:.3f});')
+            self.suono("livello", t + 0.8, 0.35)
+
+    def pillole(self, e, faccia):
+        """Pillole in fila: mentre fai un elenco, sotto i sottotitoli compare una pillola con il bordo bianco per ogni
+        cosa che nomini, una accanto all'altra. I sottotitoli restano. e = {"a": fine, "voci": [["brand", secondo], ...]}."""
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        voci = e["voci"][:5]
+        y = min(faccia["mento"] + 300, 1400)
+        self.corpo.append(f'<div class="pl" id="pl{n}" style="top:{y}px">'
+                          + "".join(f'<span class="pl-p" id="pl{n}p{j}">{html.escape(t)}</span>' for j, (t, _) in enumerate(voci)) + '</div>')
+        self.tl.append(f'tl.set("#pl{n}",{{opacity:1}},{voci[0][1]:.3f});tl.to("#pl{n}",{{opacity:0,duration:0.25}},{e["a"] - 0.25:.3f});')
+        for j, (_, quando) in enumerate(voci):
+            self.tl.append(f'tl.fromTo("#pl{n}p{j}",{{opacity:0,scale:0.6}},{{opacity:1,scale:1,duration:0.28,ease:"back.out(2.4)",immediateRender:false}},{quando:.3f});')
+            self.suono("pop", quando, 0.3)
+
+    def prompt(self, e, faccia):
+        """Prompt che si scrive: sul petto un riquadro di vetro con la scritta "prompt" sul bordo, e dentro si scrive da
+        solo quello che dici di scrivere, con il cursore. e = {"da", "a", "testo": "...", "scrivi_da": secondo,
+        "scrivi_a": secondo, "etichetta": "prompt"}."""
+        da, a = e["da"], e["a"]
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        testo = e["testo"]
+        scrivi_da = e.get("scrivi_da", da + 0.3)
+        scrivi_a = e.get("scrivi_a", min(scrivi_da + 0.06 * len(testo), a - 0.6))
+        y = min(faccia["mento"] + 150, 1280)
+        dim = 58 if len(testo) <= 22 else 46 if len(testo) <= 44 else 38
+        self.corpo.append(f'<div class="pr2" id="pr{n}" style="top:{y}px"><span class="pr2-lab">{html.escape(e.get("etichetta", "prompt"))}</span>'
+                          f'<div class="pr2-tx" style="font-size:{dim}px"><span id="pr{n}t"></span><span class="pr2-car" id="pr{n}c"></span></div></div>')
+        self.tl.append(f'tl.fromTo("#pr{n}",{{opacity:0,y:16}},{{opacity:1,y:0,duration:0.25,ease:"power2.out",immediateRender:false}},{da:.3f});'
+                       f'scrivi("#pr{n}t",{json.dumps(testo)},{scrivi_da:.3f},{scrivi_a:.3f});'
+                       f'tl.fromTo("#pr{n}c",{{opacity:1}},{{opacity:0,duration:0.25,repeat:{max(int((a - da) / 0.25), 1)},yoyo:true,immediateRender:false}},{da:.3f});'
+                       f'tl.to("#pr{n}",{{opacity:0,duration:0.2}},{a - 0.2:.3f});')
+        self.suono("tastiera", scrivi_da, 0.3, dur=scrivi_a - scrivi_da)
+        self.nascondi.append((da, a))
+
+    def telefono3d(self, e, faccia):
+        """Telefono 3D: un telefono vero, inclinato, vola accanto a te e mostra una chat: l'intestazione dell'app, i
+        messaggi che arrivano e una scheda con un bottone giallo che viene toccato sulla parola giusta.
+        e = {"da", "a", "app": "ChatGPT", "messaggi": [["testo", secondo, "io"|"app"], ...],
+        "scheda": {"etichetta": "RISPOSTA", "titolo": "15 domande pronte", "bottone": "Copia", "da": secondo},
+        "tocco": secondo (facoltativo), "fatto": "Copiato" (facoltativo)}."""
+        da, a = e["da"], e["a"]
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        destra = 1080 - faccia["destra"] >= faccia["sinistra"]
+        # grande quanto il posto accanto alla testa (tra 0.7 e 1 volte il telefono intero da 400 px)
+        posto = (1080 - faccia["destra"]) if destra else faccia["sinistra"]
+        scala = max(0.7, min(1.0, (posto - 10) / 400))
+        larg = 400 * scala
+        x = (1080 - larg - 16) if destra else 16
+        y = max(faccia["occhi"] - 420 * scala, 120)
+        msg = "".join(f'<div class="tf-m {"io" if (m[2] if len(m) > 2 else "io") == "io" else "app"}" id="tf{n}m{j}">{html.escape(m[0])}</div>'
+                      for j, m in enumerate(e.get("messaggi", [])[:3]))
+        sc = e.get("scheda")
+        scheda = ""
+        if sc:
+            scheda = (f'<div class="tf-sch" id="tf{n}k"><div class="tf-sl">✦ {html.escape(sc.get("etichetta", "RISPOSTA").upper())}</div>'
+                      f'<div class="tf-st">{html.escape(sc["titolo"])}</div>'
+                      f'<div class="tf-bot" id="tf{n}b"><span id="tf{n}bt">{html.escape(sc.get("bottone", "Approva"))}</span></div>'
+                      f'<i class="tf-onda" id="tf{n}o"></i></div>')
+        self.corpo.append(
+            f'<div class="tf-scena" style="left:{x:.0f}px;top:{y:.0f}px;transform:scale({scala:.2f});transform-origin:0 0"><div class="tf" id="tf{n}" style="transform-origin:{"0" if destra else "100%"} 50%">'
+            f'<div class="tf-isola"></div><div class="tf-stato"><b>9:41</b><span>▮▮▮ ◠ ▭</span></div>'
+            f'<div class="tf-testa"><span class="tf-av">✦</span><div><b>{html.escape(e.get("app", "Assistente"))}</b><small><i></i>Online</small></div></div>'
+            f'<div class="tf-chat">{msg}{scheda}</div><div class="tf-scrivi">Messaggio<span>↑</span></div><i class="tf-riflesso"></i></div></div>')
+        giro = -14 if destra else 14
+        T = self.tl.append
+        T(f'tl.fromTo("#tf{n}",{{opacity:0,x:{300 if destra else -300},rotationY:{giro * 3},rotationX:6,scale:0.85}},'
+          f'{{opacity:1,x:0,rotationY:{giro},rotationX:4,scale:1,duration:0.6,ease:"power3.out",immediateRender:false}},{da:.3f});'
+          f'tl.to("#tf{n}",{{y:-14,duration:{max((a - da - 1) / 2, 0.3):.2f},ease:"sine.inOut",yoyo:true,repeat:1}},{da + 0.6:.3f});'
+          f'tl.to("#tf{n}",{{opacity:0,x:{260 if destra else -260},rotationY:{giro * 3},duration:0.4,ease:"power3.in"}},{a - 0.4:.3f});')
+        for j, m in enumerate(e.get("messaggi", [])[:3]):
+            T(f'tl.fromTo("#tf{n}m{j}",{{opacity:0,y:14,scale:0.96}},{{opacity:1,y:0,scale:1,duration:0.25,ease:"power2.out",immediateRender:false}},{m[1]:.3f});')
+            self.suono("pop", m[1], 0.25)
+        if sc:
+            T(f'tl.fromTo("#tf{n}k",{{opacity:0,y:20}},{{opacity:1,y:0,duration:0.3,ease:"power3.out",immediateRender:false}},{sc["da"]:.3f});')
+            self.suono("ding", sc["da"], 0.25)
+            if e.get("tocco"):
+                t = e["tocco"]
+                T(f'tl.fromTo("#tf{n}o",{{opacity:0.8,scale:0.2}},{{opacity:0,scale:2.4,duration:0.6,ease:"power2.out",immediateRender:false}},{t:.3f});'
+                  f'tl.fromTo("#tf{n}b",{{scale:1}},{{keyframes:[{{scale:0.92,duration:0.08}},{{scale:1,duration:0.12}}],immediateRender:false}},{t:.3f});'
+                  f'tl.set("#tf{n}b",{{backgroundColor:"#F4E06D",color:"#141414"}},{t + 0.08:.3f});'
+                  f'tl.set("#tf{n}bt",{{textContent:"✓ {e.get("fatto", "Fatto")}"}},{t + 0.08:.3f});')
+                self.suono("click", t, 0.45)
+        self.suono("transizione", da, 0.3)
+
+    def orbita(self, e, faccia):
+        """Orbita: le copertine dei tuoi reel ti girano attorno su un'ellisse, passano dietro di te (ritaglio) e davanti,
+        più piccole e scure quando sono dietro. e = {"da", "a", "immagini": ["file.jpg", ...] (facoltativo: senza,
+        prende un fotogramma dai tuoi reel già montati), "giri": 1}."""
+        da, a = e["da"], e["a"]
+        sel = self.ritaglio(da, a)
+        cart = os.path.dirname(self.reel)
+        copertine = []
+        for k, f in enumerate(e.get("immagini", [])[:7]):
+            src = trova(f) if not os.path.isabs(f) else f
+            if src and os.path.exists(src):
+                dest = f"orbita-{k}.jpg"
+                subprocess.run([FFMPEG, "-v", "error", "-y", "-i", src, "-vf", "scale=300:534:force_original_aspect_ratio=increase,crop=300:534",
+                                "-frames:v", "1", os.path.join(self.assets, dest)], check=True)
+                copertine.append(dest)
+        if len(copertine) < 5:   # i reel già montati, uno per lavoro, un fotogramma a un terzo
+            import glob
+            lavori = sorted({os.path.dirname(os.path.dirname(v)) for v in glob.glob(os.path.join(os.path.dirname(cart), "*", "finale", "*.mp4"))
+                             if os.path.dirname(os.path.dirname(v)) != cart})
+            for k, lav in enumerate(lavori):
+                if len(copertine) >= 7:
+                    break
+                v = sorted(glob.glob(os.path.join(lav, "finale", "*.mp4")))[-1]
+                for quota in (0.3, 0.6):
+                    if len(copertine) >= 7:
+                        break
+                    dest = f"orbita-r{k}-{int(quota * 10)}.jpg"
+                    subprocess.run([FFMPEG, "-v", "error", "-y", "-ss", f"{durata(v) * quota:.2f}", "-i", v, "-vf",
+                                    "scale=300:534:force_original_aspect_ratio=increase,crop=300:534", "-frames:v", "1",
+                                    os.path.join(self.assets, dest)], check=True)
+                    copertine.append(dest)
+        n = len(self.camera)
+        self.camera.append(f'<div class="ob" id="ob{n}">' + "".join(f'<img class="ob-c" src="assets/{c}">' for c in copertine) + '</div>')
+        cx = (faccia["sinistra"] + faccia["destra"]) / 2
+        cy = faccia["mento"] + 120
+        giri = e.get("giri", 1)
+        self.tl.append(f'tl.set("{sel}",{{opacity:1}},{da:.3f});tl.set("{sel}",{{opacity:0}},{a:.3f});'
+                       f'tl.set("#ob{n}",{{opacity:1}},{da:.3f});tl.set("#ob{n}",{{opacity:0}},{a:.3f});'
+                       f'orbita("#ob{n}",{cx:.0f},{cy:.0f},{da:.3f},{a:.3f},{giri});')
+        self.suono("transizione", da, 0.3)
+
     def finale(self, piano, da):
         self.bande(da)
         self.scuro(da, self.D)
@@ -736,7 +952,7 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         r.titolo(ap["sopra"], ap["targa"], 0.0, ap.get("a", 2.0), petto - 20)
         r.nascondi.append((0.0, ap.get("a", 2.0)))
         r.suono("apertura", 0.0, 0.4)
-    for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][2] if x.get("voci") else 0):
+    for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][-1] if x.get("voci") else 0):
         tipo = e["tipo"]
         if accesi is not None and effetti.chiave_di(e) not in accesi:
             print(f'NOTA: "{effetti.CATALOGO[effetti.chiave_di(e)]["nome"]}" non è tra gli effetti accesi, lo salto')
@@ -776,6 +992,18 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.neon(e, faccia)
         elif tipo == "percorso":
             r.percorso(e)
+        elif tipo == "checklist":
+            r.checklist(e, faccia)
+        elif tipo == "contachilometri":
+            r.contachilometri(e, faccia)
+        elif tipo == "pillole":
+            r.pillole(e, faccia)
+        elif tipo == "prompt":
+            r.prompt(e, faccia)
+        elif tipo == "telefono3d":
+            r.telefono3d(e, faccia)
+        elif tipo == "orbita":
+            r.orbita(e, faccia)
     # il commento fa da chiusura: senza "finale_da" nel piano, niente finale scuro sopra
     finale_da = piano.get("finale_da", D + 1 if commento else D - 2.3)
     if finale_da < D:
@@ -960,6 +1188,76 @@ html,body{{margin:0;background:{scuro}}}
 .pc-passo{{position:absolute;left:0;right:0;text-align:center;font-family:'Inter Tight';font-weight:800;font-size:66px;line-height:1;
  letter-spacing:-2px;color:#EDE4D6}}
 .pc-passo.serif{{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-size:78px;letter-spacing:0}}
+.ck{{position:absolute;left:70px;right:70px;z-index:33;opacity:0;padding:30px 34px 26px;border-radius:34px;font-family:'Inter Tight';
+ background:rgba(26,26,30,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:2px solid rgba(255,255,255,.12);
+ box-shadow:0 20px 60px rgba(0,0,0,.45)}}
+.ck-testa{{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}}
+.ck-lab{{display:flex;align-items:center;gap:14px;font-weight:600;font-size:24px;letter-spacing:5px;color:rgba(255,255,255,.62)}}
+.ck-lab i{{width:10px;height:10px;border-radius:50%;background:#F4E06D}}
+.ck-conta{{font-weight:800;font-size:26px;padding:6px 18px;border-radius:20px;background:rgba(255,255,255,.12);color:#fff}}
+.ck-barra{{display:flex;gap:10px;margin-bottom:22px}}
+.ck-barra i{{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}}
+.ck-barra b{{display:block;height:100%;background:#F4E06D;transform:scaleX(0);transform-origin:0 50%}}
+.ck-riga{{display:flex;align-items:center;gap:22px;height:96px;padding:0 16px;margin:0 -16px 16px;border-radius:20px}}
+.ck-tondo{{flex:none;width:56px;height:56px;border-radius:50%;border:3px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center}}
+.ck-tondo svg{{width:34px;height:34px;fill:none;stroke:#141414;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;opacity:0}}
+.ck-tondo.fatto{{background:#F4E06D;border-color:#F4E06D}}
+.ck-tondo.fatto svg{{opacity:1}}
+.ck-vuoto{{flex:1;height:22px;border-radius:11px;background:rgba(255,255,255,.1);max-width:420px}}
+.ck-tx{{font-weight:800;font-size:50px;letter-spacing:-1.5px;color:#fff;opacity:0;white-space:nowrap}}
+.ck-stella{{position:absolute;right:-14px;top:-18px;color:#F4E06D;font-style:normal;font-size:40px;opacity:0;text-shadow:0 0 14px #F4E06D}}
+.ck-stella.b{{right:auto;left:-16px;top:auto;bottom:40%;font-size:26px}}
+.ods{{position:absolute;right:40px;top:150px;z-index:33;opacity:0;font-family:'Inter Tight'}}
+.od{{position:absolute;right:0;top:0;opacity:0;transform-origin:100% 0;text-align:right}}
+.od-pann{{display:inline-flex;align-items:center;gap:10px;padding:14px;border-radius:26px;background:linear-gradient(#232831,#151920);
+ box-shadow:0 18px 50px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08)}}
+.od-cella{{position:relative;width:112px;height:150px;border-radius:14px;overflow:hidden;
+ background:linear-gradient(#2c323c 0%,#1a1e25 48%,#0f1217 52%,#20252d 100%);box-shadow:inset 0 2px 6px rgba(0,0,0,.6)}}
+.od-cella:after{{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(0,0,0,.55)}}
+.od-str{{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column}}
+.od-str b{{height:150px;line-height:150px;text-align:center;font-weight:800;font-size:118px;color:#F2EADB;letter-spacing:-3px}}
+.od-segno{{font-weight:800;font-size:118px;line-height:150px;color:#F4E06D;padding:0 4px}}
+.od-lab{{margin-top:12px;border-top:4px solid #F4E06D;padding-top:8px}}
+.od-lab span{{font-weight:800;font-size:38px;letter-spacing:1px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}}
+.od-sotto{{font-weight:800;font-size:24px;letter-spacing:2px;color:#fff;opacity:0;text-shadow:0 2px 10px rgba(0,0,0,.6)}}
+.pl{{position:absolute;left:40px;right:40px;display:flex;justify-content:center;gap:16px;z-index:32;opacity:0;font-family:'Inter Tight'}}
+.pl-p{{padding:12px 28px 14px;border-radius:40px;border:2.5px solid rgba(255,255,255,.78);background:rgba(0,0,0,.18);color:#fff;
+ font-weight:600;font-size:36px;white-space:nowrap;opacity:0;text-shadow:0 2px 8px rgba(0,0,0,.4)}}
+.pr2{{position:absolute;left:100px;right:100px;z-index:33;opacity:0;font-family:'Inter Tight';padding:40px 40px 34px;border-radius:30px;
+ border:2.5px solid rgba(255,255,255,.55);background:rgba(10,10,12,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}}
+.pr2-lab{{position:absolute;left:50%;top:-24px;transform:translateX(-50%);padding:0 22px;font-weight:500;font-size:32px;color:#fff;
+ text-shadow:0 2px 8px rgba(0,0,0,.6)}}
+.pr2-tx{{font-weight:800;letter-spacing:-1.5px;color:#F2EADB;line-height:1.12;text-shadow:0 2px 12px rgba(0,0,0,.35);min-height:60px}}
+.pr2-car{{display:inline-block;width:4px;height:1em;background:#fff;vertical-align:-0.12em;margin-left:4px}}
+.tf-scena{{position:absolute;width:400px;height:820px;z-index:31;perspective:1600px}}
+.tf{{position:absolute;inset:0;border-radius:64px;background:#0B0B0D;padding:16px;opacity:0;font-family:'Inter Tight';
+ box-shadow:0 0 0 3px #2a2a2e,0 0 0 5px #0a0a0a,0 40px 80px rgba(0,0,0,.55);overflow:hidden}}
+.tf:before{{content:"";position:absolute;inset:16px;border-radius:50px;background:linear-gradient(#17181c,#111215)}}
+.tf>*{{position:relative}}
+.tf-isola{{position:absolute;left:50%;top:28px;width:116px;height:34px;margin-left:-58px;border-radius:20px;background:#000;z-index:3}}
+.tf-stato{{display:flex;justify-content:space-between;padding:16px 30px 0;color:#fff;font-size:22px}}
+.tf-stato span{{font-size:14px;letter-spacing:2px;padding-top:4px}}
+.tf-testa{{display:flex;align-items:center;gap:14px;padding:26px 24px 16px;color:#fff}}
+.tf-testa b{{display:block;font-size:26px;font-weight:700}}
+.tf-testa small{{display:flex;align-items:center;gap:6px;font-size:18px;color:rgba(255,255,255,.55)}}
+.tf-testa small i{{width:8px;height:8px;border-radius:50%;background:#4CD964}}
+.tf-av{{width:52px;height:52px;border-radius:50%;background:#F4E06D;color:#141414;font-size:26px;display:flex;align-items:center;justify-content:center}}
+.tf-chat{{padding:6px 18px;display:flex;flex-direction:column;gap:12px}}
+.tf-m{{max-width:86%;padding:14px 18px;border-radius:20px;font-size:23px;line-height:1.25;opacity:0}}
+.tf-m.app{{align-self:flex-start;background:#26282e;color:#fff}}
+.tf-m.io{{align-self:flex-end;background:#F4E06D;color:#141414;font-weight:600}}
+.tf-sch{{position:relative;padding:20px;border-radius:22px;background:#202228;color:#fff;opacity:0}}
+.tf-sl{{font-size:16px;letter-spacing:3px;color:#F4E06D;font-weight:700;margin-bottom:10px}}
+.tf-st{{font-size:34px;font-weight:800;line-height:1.1;letter-spacing:-1px;margin-bottom:18px}}
+.tf-bot{{height:62px;border-radius:31px;background:#fff;color:#141414;font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center}}
+.tf-onda{{position:absolute;left:50%;bottom:30px;width:80px;height:80px;margin-left:-40px;border-radius:50%;border:3px solid #F4E06D;opacity:0}}
+.tf-scrivi{{position:absolute;left:30px;right:30px;bottom:34px;height:58px;border-radius:30px;background:#1f2126;color:rgba(255,255,255,.4);
+ font-size:20px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 22px}}
+.tf-scrivi span{{width:42px;height:42px;border-radius:50%;background:#2c2e34;color:#fff;display:flex;align-items:center;justify-content:center}}
+.tf-riflesso{{position:absolute;inset:0;border-radius:64px;background:linear-gradient(115deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 35%);pointer-events:none}}
+.ob{{position:absolute;inset:0;opacity:0;pointer-events:none}}
+.ob-c{{position:absolute;left:0;top:0;width:300px;height:534px;border-radius:24px;object-fit:cover;border:3px solid rgba(255,255,255,.9);
+ box-shadow:0 20px 50px rgba(0,0,0,.45)}}
 {css_sott}
 </style>
 <script src="{GSAP}"></script>
@@ -1005,6 +1303,22 @@ function cronometro(sel, da, a) {{
   tl.to(o, {{t: a - da, duration: a - da, ease: "none", onUpdate: () => {{
     const s = Math.floor(o.t), f = Math.floor((o.t % 1) * 30);
     el.textContent = "00:" + String(s).padStart(2, "0") + ":" + String(f).padStart(2, "0"); }}}}, da);
+}}
+function orbita(sel, cx, cy, da, a, giri) {{
+  // le copertine su un'ellisse attorno alla persona: davanti (z alto, grandi) o dietro il ritaglio (z basso, piccole)
+  const carte = [...document.querySelectorAll(sel + " .ob-c")]; const o = {{t: 0}};
+  const posa = () => {{
+    const entra = Math.min(o.t / 0.6, 1), esce = Math.min(Math.max((a - da - o.t) / 0.5, 0), 1), f = entra * esce;
+    carte.forEach((c, i) => {{
+      const ang = (i / carte.length) * Math.PI * 2 + (o.t / (a - da)) * Math.PI * 2 * giri;
+      const z = Math.cos(ang), x = cx + Math.sin(ang) * 470 * f, y = cy - 120 + z * 70 * f - Math.sin(ang) * 40;
+      const s = (0.62 + 0.28 * (z + 1) / 2) * (0.3 + 0.7 * f);
+      c.style.transform = `translate(${{x - 150}}px, ${{y - 267}}px) scale(${{s}}) rotateY(${{Math.sin(ang) * -25}}deg)`;
+      c.style.zIndex = z > 0 ? 6 : 1; c.style.filter = `brightness(${{0.62 + 0.38 * (z + 1) / 2}})`; c.style.opacity = f;
+    }});
+  }};
+  posa();
+  tl.to(o, {{t: a - da, duration: a - da, ease: "none", onUpdate: posa}}, da);
 }}
 cronometro("#tc", 0, {D:.3f});
 tl.to("#mir", {{opacity: 0, duration: 0.25}}, {MIRINO_FINO});
