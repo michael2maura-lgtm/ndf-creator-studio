@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NDF Creator Studio · Scegli il tuo look</title>
+<style>
+@font-face{font-family:"Titoli";src:url("/file/font-titoli") format("truetype");font-weight:100 900;font-stretch:62.5% 125%}
+:root{
+  --fondo:#140E0A;--fondo2:#1E140E;--riga:#3A2A20;--testo:#F9F7F4;--piano:#B9A796;
+  --arancio:#E86530;--luce:#FF8A4C;--carta:#F4EEE6;--inchiostro:#1A120C;--grigio:#7C6B5E;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 700px at 85% -10%,#3A1F10 0,transparent 60%),var(--fondo);
+  background-attachment:fixed;color:var(--testo);font:16px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:110px}
+.t{font-family:"Titoli",Impact,sans-serif;font-weight:900;font-stretch:125%;text-transform:uppercase;letter-spacing:-.01em;line-height:.95;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
+
+/* barra in alto */
+.top{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--riga)}
+.marchio{font-family:"Titoli",sans-serif;font-weight:900;font-stretch:125%;font-size:15px;letter-spacing:.06em}
+.marchio b{color:var(--arancio)}
+.etic{font:500 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--piano)}
+.punto{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--arancio);margin-right:8px;box-shadow:0 0 10px var(--arancio)}
+
+/* apertura */
+.intro{padding-top:56px}
+.intro h1{font-size:clamp(46px,9vw,112px)}
+.intro h1 em{font-style:normal;color:var(--arancio)}
+.intro p{color:var(--piano);margin:18px 0 30px;font-size:17px}
+.strade{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.strada{text-align:left;border:1px solid var(--riga);border-radius:14px;padding:20px 22px;background:var(--fondo2);transition:.2s}
+.strada:hover{border-color:var(--grigio)}
+.strada .t{font-size:24px;display:flex;gap:12px;align-items:center}
+.strada p{margin:8px 0 0;color:var(--piano);font-size:14px}
+.strada .tondo{width:12px;height:12px;border-radius:50%;border:2px solid var(--piano);flex:none}
+.strada[aria-selected=true]{background:var(--carta);color:var(--inchiostro);border-color:var(--carta)}
+.strada[aria-selected=true] p{color:#5B4A3E}
+.strada[aria-selected=true] .tondo{border-color:var(--arancio);background:var(--arancio);box-shadow:0 0 12px var(--arancio)}
+
+/* sezioni */
+.sez{padding-top:64px}
+.sez[hidden]{display:none}
+.capo{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--riga);padding-bottom:10px;margin-bottom:18px}
+.capo .etic b{color:var(--luce);font-weight:500}
+.capo .etic{display:flex;align-items:center;gap:10px}
+.ciak{width:34px;height:12px;flex:none}
+.cambia{margin-top:22px;font:600 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--testo);
+  border-bottom:2px solid var(--arancio);padding-bottom:5px}
+.cambia[hidden]{display:none}
+.cambia:hover{color:var(--luce)}
+.sez h2{font-size:clamp(34px,5vw,58px);margin-bottom:10px}
+.sez .aiuto{color:var(--piano);margin:0 0 22px}
+
+/* schede degli stili */
+.griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.scheda{position:relative;display:flex;flex-direction:column;text-align:left;background:var(--carta);color:var(--inchiostro);border-radius:12px;overflow:hidden;
+  border:3px solid transparent;transition:transform .2s,border-color .2s}
+.scheda:hover{transform:translateY(-3px)}
+.scheda[aria-pressed=true]{border-color:var(--arancio)}
+.scheda .vid{aspect-ratio:9/16;background:#2A1D14;display:block;width:100%;object-fit:cover}
+.scheda .media{position:relative;display:block}
+.gioca{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;
+  background:rgba(244,238,230,.92);color:var(--inchiostro);display:grid;place-items:center;font-size:22px;padding-left:4px;
+  box-shadow:0 6px 24px rgba(0,0,0,.4);transition:transform .15s,opacity .2s}
+.gioca:hover{transform:translate(-50%,-50%) scale(1.08)}
+.gioca.on{opacity:0;padding-left:0}
+.media:hover .gioca.on{opacity:1}
+.scheda .vuoto{aspect-ratio:9/16;display:grid;place-items:center;background:linear-gradient(160deg,#3A2416,#140E0A);color:var(--luce)}
+.scheda .corpo{padding:14px 16px 16px}
+.scheda .t{font-size:20px}
+.scheda .tag{font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;color:var(--arancio);text-transform:uppercase;margin:8px 0}
+.scheda .desc{font-size:13px;color:#5B4A3E;margin:0}
+.spunta{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);
+  display:grid;place-items:center;font-size:14px;color:#fff}
+[aria-pressed=true]>.spunta{background:var(--arancio);border-color:var(--arancio)}
+[aria-pressed=true]>.spunta::after{content:"✓"}
+
+/* replica */
+.replica{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.passo{background:var(--fondo2);border:1px solid var(--riga);border-radius:14px;padding:22px}
+.passo .n{font-family:"Titoli",sans-serif;font-weight:900;font-stretch:125%;font-size:44px;color:var(--arancio);line-height:1}
+.passo p{margin:10px 0 0;color:var(--piano)}
+.passo p b{color:var(--testo)}
+.frase{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.frase code{background:var(--fondo2);border:1px dashed var(--grigio);border-radius:8px;padding:10px 14px;font-size:15px}
+
+/* suoni */
+.momento{margin-bottom:28px}.momento:last-child{margin-bottom:0}
+.momento h3{margin:0 0 10px;font-size:15px;display:flex;gap:10px;align-items:baseline}
+.momento h3 .t{font-size:20px}
+.momento h3 span{color:var(--piano);font-weight:400;font-size:14px}
+.fila{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x proximity}
+.fila::-webkit-scrollbar{height:6px}.fila::-webkit-scrollbar-thumb{background:var(--riga);border-radius:3px}
+.suono{flex:none;width:190px;scroll-snap-align:start;position:relative;display:flex;align-items:center;gap:10px;text-align:left;
+  background:var(--fondo2);border:2px solid var(--riga);border-radius:12px;padding:10px 12px;transition:border-color .15s}
+.suono:hover{border-color:var(--grigio)}
+.suono[aria-pressed=true]{border-color:var(--arancio);background:#2B1A10}
+.suono .play{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:#35251A;font-size:13px}
+.suono .play.on{background:var(--arancio)}
+.suono .nome{min-width:0;flex:1}
+.suono .nome b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suono .nome small{font-size:11px;color:var(--piano)}
+.suono .nome small.serie{color:var(--luce)}
+.suono.niente .play{background:none;border:1px dashed var(--grigio)}
+.altri{flex:none;align-self:center;padding:10px 14px;border:1px dashed var(--grigio);border-radius:12px;color:var(--piano);font-size:13px}
+
+.presto{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.presto div{border:1px dashed var(--riga);border-radius:14px;padding:18px 20px;color:var(--piano)}
+.presto b{display:block;color:var(--testo);margin-bottom:4px}
+
+/* barra in basso */
+.barra{position:fixed;left:0;right:0;bottom:0;background:rgba(20,14,10,.94);backdrop-filter:blur(10px);border-top:1px solid var(--riga);z-index:5}
+.barra .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:14px;padding-bottom:14px}
+.barra .riass{font-family:"Titoli",sans-serif;font-weight:900;font-stretch:125%;text-transform:uppercase;font-size:17px;margin-top:4px}
+.salva{background:var(--arancio);color:#fff;border-radius:10px;padding:14px 26px;font-family:"Titoli",sans-serif;font-weight:900;
+  font-stretch:125%;text-transform:uppercase;font-size:17px;transition:background .15s}
+.salva:hover{background:var(--luce)}
+.salva:disabled{background:#4A3A30;color:#9C8B7E;cursor:default}
+
+/* fatto */
+.fatto{position:fixed;inset:0;background:rgba(10,7,5,.85);display:grid;place-items:center;z-index:10;padding:20px}
+.fatto[hidden]{display:none}
+.fatto .box{background:var(--carta);color:var(--inchiostro);border-radius:16px;padding:34px;max-width:520px}
+.fatto .etic{color:var(--arancio);display:flex;align-items:center;font-weight:600}
+.fatto .t{font-size:52px;margin-top:14px}
+.fatto p{margin:14px 0 0}
+.fatto .parola{background:var(--arancio);color:#fff;padding:1px 7px;border-radius:4px;font-weight:600;white-space:nowrap}
+.fatto .scelte{font:500 12px/1.6 ui-monospace,Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;color:#5B4A3E;margin-top:14px}
+.fatto .poi{border-top:1px solid #DCCFC2;margin-top:18px;padding-top:14px;font-size:14px;color:#5B4A3E}
+.fatto button{margin-top:20px;font-weight:600}
+.fatto button{border:1px solid #CDBFB2;border-radius:10px;padding:12px 20px}
+.avviso{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--arancio);color:#fff;padding:10px 16px;border-radius:10px;
+  opacity:0;transition:opacity .2s;pointer-events:none;z-index:6}
+.avviso.v{opacity:1}
+
+@media (max-width:760px){
+  .strade,.replica,.presto{grid-template-columns:1fr}
+  .wrap{padding-left:16px;padding-right:16px}
+  .sez{padding-top:56px}
+  .barra .wrap{flex-direction:column;align-items:stretch}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="marchio">NDF <b>CREATOR</b> STUDIO</div>
+  <div class="etic"><span class="punto"></span>Scegli il tuo look</div>
+</header>
+
+<section class="intro wrap">
+  <h1 class="t">Scegli il<br>tuo <em>look.</em></h1>
+  <p>Premi ▶ per guardare un video o ascoltare un suono. Scegli e salva: il prossimo video lo monto così.</p>
+  <div class="strade" role="tablist">
+    <button class="strada" role="tab" data-strada="pronto"><div class="t"><span class="tondo"></span>Stile pronto</div>
+      <p>Un clic. Grafiche, suoni e musica sono già decisi.</p></button>
+    <button class="strada" role="tab" data-strada="replica"><div class="t"><span class="tondo"></span>Replica un reel</div>
+      <p>Hai visto un reel che ti piace? Lo copio io.</p></button>
+    <button class="strada" role="tab" data-strada="crea"><div class="t"><span class="tondo"></span>Crea il tuo</div>
+      <p>Parti da uno stile e cambia suoni e musica.</p></button>
+  </div>
+</section>
+
+<section class="sez wrap" id="sez-stili" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 01</b> · Stile</span><span class="etic">Scegline uno</span></div>
+  <h2 class="t" id="tit-stili">Scegli uno stile.</h2>
+  <p class="aiuto" id="aiuto-stili">Ogni stile ha già le sue grafiche, i suoi suoni e la sua musica.</p>
+  <div class="griglia" id="stili"></div>
+  <button class="cambia" id="cambia" hidden>Cambia i suoi suoni o la musica</button>
+</section>
+
+<section class="sez wrap" id="sez-replica" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 01</b> · Replica</span><span class="etic">Tre passi</span></div>
+  <h2 class="t">Mandami il reel.</h2>
+  <p class="aiuto">La pagina non guarda i video: li guardo io, in chat.</p>
+  <div class="replica">
+    <div class="passo"><div class="n">1</div><p><b>Copia il link</b> del reel che ti piace, o salva il video sul computer.</p></div>
+    <div class="passo"><div class="n">2</div><p><b>Incollalo a Claude</b> in chat e scrivi la frase qui sotto.</p></div>
+    <div class="passo"><div class="n">3</div><p><b>Lo studio e lo copio.</b> Quando riapri questa pagina lo trovi tra gli stili pronti.</p></div>
+  </div>
+  <div class="frase"><code>Replica questo reel:</code><button class="salva" id="copia-frase" style="padding:10px 18px;font-size:14px">Copia la frase</button></div>
+</section>
+
+<section class="sez wrap" id="sez-suoni" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 02</b> · Suoni</span><span class="etic">Uno per riga</span></div>
+  <h2 class="t">I tuoi suoni.</h2>
+  <p class="aiuto">Scegli i suoni che danno il carattere al video. Quello con scritto <b style="color:var(--luce)">di serie</b> è quello dello stile.
+    Gli altri (tastiera, click, spunte) li metto io quando servono.</p>
+  <div id="momenti"></div>
+</section>
+
+<section class="sez wrap" id="sez-musica" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 03</b> · Musica</span><span class="etic">Scegline una</span></div>
+  <h2 class="t">La tua musica.</h2>
+  <p class="aiuto">Va sotto tutto il video e si abbassa da sola quando parli.</p>
+  <div class="fila" id="musiche"></div>
+</section>
+
+<section class="sez wrap" id="sez-presto" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 04</b> · In arrivo</span><span class="etic">Presto qui</span></div>
+  <h2 class="t">Presto qui.</h2>
+  <p class="aiuto">Per ora questi vengono dallo stile che hai scelto.</p>
+  <div class="presto">
+    <div><b>Sottotitoli</b>Scegli come appaiono le parole.</div>
+    <div><b>Grafiche</b>Titoli, parola gigante, cornice, telefono.</div>
+    <div><b>Transizioni</b>Come si passa da una scena all'altra, anche col fuoco.</div>
+  </div>
+</section>
+
+<div class="barra"><div class="wrap">
+  <div><div class="etic">Le tue scelte</div><div class="riass" id="riass">Scegli una strada</div></div>
+  <button class="salva" id="salva" disabled>Salva le scelte</button>
+</div></div>
+
+<div class="fatto" id="fatto" hidden><div class="box">
+  <div class="etic"><span class="punto"></span>Salvato</div>
+  <div class="t">Tutto pronto.</div>
+  <p>Torna da Claude e scrivi <span class="parola">monta questo video</span>.</p>
+  <div class="scelte" id="fatto-scelte"></div>
+  <div class="poi">Vuoi cambiare più avanti? Scrivi a Claude <b>«apri la pagina»</b>.</div>
+  <button id="continua">Continua a scegliere</button>
+</div></div>
+<div class="avviso" id="avviso"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let D, stato = {strada: null, stile: null, suoni: {}, musica: null, cambia: false};
+const modifica = () => stato.strada === "crea" || (stato.strada === "pronto" && stato.cambia);  // si vedono suoni e musica
+const MOSTRA = 24; // suoni visibili per momento prima di "mostra tutti"
+
+const audio = new Audio(); let suona = null;
+function ascolta(btn, id) {
+  if (suona === btn && !audio.paused) { audio.pause(); btn.classList.remove("on"); btn.textContent = "▶"; return; }
+  if (suona) { suona.classList.remove("on"); suona.textContent = "▶"; }
+  fermaVideo();
+  audio.src = "/file/" + id; audio.currentTime = 0; audio.play();
+  btn.classList.add("on"); btn.textContent = "■"; suona = btn;
+}
+audio.onended = () => { if (suona) { suona.classList.remove("on"); suona.textContent = "▶"; } };
+
+function avviso(t) { const v = $("#avviso"); v.textContent = t; v.classList.add("v"); clearTimeout(v.t); v.t = setTimeout(() => v.classList.remove("v"), 2200); }
+const stile = () => D.stili.find(s => s.chiave === stato.stile);
+
+function strada(k, scorri) {
+  stato.strada = k;
+  document.querySelectorAll(".strada").forEach(b => b.setAttribute("aria-selected", b.dataset.strada === k));
+  $("#sez-stili").hidden = k === "replica";
+  $("#sez-replica").hidden = k !== "replica";
+  mostraModifica();
+  $("#tit-stili").textContent = k === "crea" ? "Parti da uno stile." : "Scegli uno stile.";
+  $("#aiuto-stili").textContent = k === "crea" ? "Le grafiche vengono da qui. Suoni e musica li cambi sotto."
+                                               : "Ogni stile ha già le sue grafiche, i suoi suoni e la sua musica.";
+  aggiorna();
+  if (scorri !== false) $(k === "replica" ? "#sez-replica" : "#sez-stili").scrollIntoView({behavior: "smooth"});
+}
+
+function mostraModifica() {
+  const k = stato.strada, on = modifica();
+  $("#sez-suoni").hidden = $("#sez-musica").hidden = $("#sez-presto").hidden = !on;
+  $("#cambia").hidden = k !== "pronto" || !stato.stile;
+  $("#cambia").textContent = stato.cambia ? "Nascondi suoni e musica" : "Cambia i suoi suoni o la musica";
+  if (on) disegnaSuoni();
+}
+
+function disegnaStili() {
+  $("#stili").innerHTML = D.stili.map(s => `
+    <button class="scheda" data-stile="${s.chiave}" aria-pressed="${s.chiave === stato.stile}">
+      <span class="spunta"></span>
+      ${s.anteprima ? `<span class="media"><video class="vid" src="/file/anteprima-${s.chiave}#t=1" playsinline preload="metadata"></video>
+                      <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
+                    : `<div class="vuoto t">${esc(s.nome)}</div>`}
+      <div class="corpo"><div class="t">${esc(s.nome)}</div>
+        <div class="tag">${s.grafiche ? "Grafiche animate" : "Scene e omini"}</div>
+        <p class="desc">${esc(s.descrizione)}</p></div>
+    </button>`).join("");
+  document.querySelectorAll(".scheda").forEach(b => {
+    const v = b.querySelector("video");
+    if (v) v.onended = () => fermaVideo();
+    b.onclick = e => {
+      if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
+      if (stato.stile !== b.dataset.stile) { stato.suoni = {}; stato.musica = null; }
+      stato.stile = b.dataset.stile;
+      document.querySelectorAll(".scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
+      mostraModifica();
+      aggiorna();
+    };
+  });
+}
+
+// i video degli stili partono solo col play, con l'audio, uno alla volta
+function fermaVideo() {
+  document.querySelectorAll(".scheda video").forEach(x => x.pause());
+  document.querySelectorAll(".gioca").forEach(x => { x.classList.remove("on"); x.textContent = "▶"; });
+}
+function guardaVideo(btn, v) {
+  const parti = v.paused;
+  fermaVideo();
+  if (parti) {
+    if (suona) { audio.pause(); suona.classList.remove("on"); suona.textContent = "▶"; }
+    v.play().catch(() => {}); btn.classList.add("on"); btn.textContent = "❚❚";
+  }
+}
+
+function carta(id, nome, sotto, scelto, serie) {
+  const niente = id === "" || id === "nessuna";
+  return `<button class="suono${niente ? " niente" : ""}" data-id="${id}" aria-pressed="${scelto}">
+    <span class="play" ${niente ? "" : `data-play="${id}"`}>${niente ? "✕" : "▶"}</span>
+    <span class="nome"><b>${esc(nome)}</b><small class="${serie ? "serie" : ""}">${esc(sotto)}</small></span></button>`;
+}
+
+function fila(el, voci, scelto, serie, vuoto, quando, alClic) {
+  // in testa: nessuno, quello di serie, poi gli altri; il resto dietro "mostra tutti"
+  const prima = voci.filter(v => v.id === serie), altri = voci.filter(v => v.id !== serie);
+  const tutti = el.dataset.tutti === "1";
+  const vis = tutti ? altri : altri.slice(0, MOSTRA);
+  if (!tutti && scelto && !vis.some(v => v.id === scelto)) { const x = altri.find(v => v.id === scelto); if (x) vis.unshift(x); }
+  el.innerHTML = carta(vuoto, vuoto === "" ? "Nessun suono" : "Nessuna musica", quando, scelto === vuoto, false)
+    + prima.map(v => carta(v.id, v.nome, "di serie", scelto === v.id, true)).join("")
+    + vis.map(v => carta(v.id, v.nome, v.da, scelto === v.id, false)).join("")
+    + (!tutti && altri.length > MOSTRA ? `<button class="altri">Mostra tutti (${altri.length})</button>` : "");
+  el.querySelectorAll(".suono").forEach(b => b.onclick = e => {
+    if (e.target.closest("[data-play]")) return ascolta(e.target.closest("[data-play]"), b.dataset.id);
+    alClic(b.dataset.id);
+    el.querySelectorAll(".suono").forEach(x => x.setAttribute("aria-pressed", x === b));
+    aggiorna();
+  });
+  const piu = el.querySelector(".altri");
+  if (piu) piu.onclick = () => { el.dataset.tutti = "1"; fila(el, voci, scelto, serie, vuoto, quando, alClic); };
+}
+
+function disegnaSuoni() {
+  const s = stile();
+  if (!s) { $("#momenti").innerHTML = `<p class="aiuto">Prima scegli uno stile qui sopra.</p>`; $("#musiche").innerHTML = ""; return; }
+  $("#momenti").innerHTML = s.momenti.map(m => `<div class="momento"><h3><span class="t">${esc(m.titolo)}</span><span>${esc(m.quando)}</span></h3>
+    <div class="fila" data-m="${m.chiave}"></div></div>`).join("");
+  s.momenti.forEach(m => {
+    const voci = D.suoni.filter(x => m.categorie.includes(x.cat) || x.id === s.di_serie[m.chiave])
+      .sort((a, b) => m.categorie.indexOf(a.cat) - m.categorie.indexOf(b.cat));  // prima la categoria giusta per quel momento
+    const serie = s.di_serie[m.chiave] || null;
+    const scelto = m.chiave in stato.suoni ? stato.suoni[m.chiave] : (serie || "");
+    fila($(`.fila[data-m="${m.chiave}"]`), voci, scelto, serie, "", m.quando, id => { stato.suoni[m.chiave] = id; });
+  });
+  const serieM = s.di_serie.musica || null;
+  fila($("#musiche"), D.suoni.filter(x => x.cat === "Musiche" || x.id === serieM), stato.musica || serieM || "nessuna", serieM,
+       "nessuna", "solo la voce", id => { stato.musica = id; });
+}
+
+function aggiorna() {
+  const s = stile();
+  let t = "Scegli una strada", ok = false;
+  if (stato.strada === "replica") t = "Mandami il reel in chat";
+  else if (stato.strada && !s) t = "Scegli uno stile";
+  else if (s && !modifica()) { t = s.nome; ok = true; }
+  else if (s) {
+    const cambiati = Object.entries(stato.suoni).filter(([m, id]) => id !== (s.di_serie[m] || "")).length;
+    const mus = stato.musica === "nessuna" ? "senza musica" : (stato.musica && stato.musica !== s.di_serie.musica ? "musica cambiata" : "musica di serie");
+    t = `${s.nome} · ${cambiati ? cambiati + (cambiati === 1 ? " suono cambiato" : " suoni cambiati") : "suoni di serie"} · ${mus}`;
+    ok = true;
+  }
+  $("#riass").textContent = t;
+  $("#salva").disabled = !ok;
+}
+
+$("#salva").onclick = async () => {
+  const r = await fetch("/salva", {method: "POST", headers: {"Content-Type": "application/json"},
+                                   body: JSON.stringify({...stato, strada: modifica() ? "crea" : "pronto"})});
+  if (r.ok) { $("#fatto-scelte").textContent = $("#riass").textContent; $("#fatto").hidden = false; } else { avviso((await r.json()).errore || "Non sono riuscito a salvare"); }
+};
+$("#continua").onclick = () => { $("#fatto").hidden = true; };
+$("#copia-frase").onclick = () => { navigator.clipboard.writeText("Replica questo reel: ").then(() => avviso("Frase copiata"), () => avviso("Scrivi: Replica questo reel")); };
+document.querySelectorAll(".strada").forEach(b => b.onclick = () => strada(b.dataset.strada));
+$("#cambia").onclick = () => {
+  stato.cambia = !stato.cambia; mostraModifica(); aggiorna();
+  if (stato.cambia) $("#sez-suoni").scrollIntoView({behavior: "smooth"});
+};
+
+setInterval(() => fetch("/ping", {method: "POST", body: "{}"}).catch(() => {}), 5000);
+fetch("/ping", {method: "POST", body: "{}"}).catch(() => {});
+
+fetch("/dati").then(r => r.json()).then(d => {
+  D = d;
+  const sc = d.scelte;
+  if (sc && d.stili.some(s => s.chiave === sc.stile)) {
+    stato.stile = sc.stile;
+    stato.suoni = Object.fromEntries(Object.entries(sc.suoni || {}).filter(([, v]) => v !== null && v !== undefined));
+    stato.musica = sc.musica;
+  }
+  disegnaStili();
+  strada(sc && sc.strada ? sc.strada : "pronto", false);
+});
+</script>
+</body>
+</html>

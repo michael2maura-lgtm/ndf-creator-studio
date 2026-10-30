@@ -21,7 +21,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import STUDIO, cartella_lavoro, cartella_stile, durata, leggi, trova  # noqa: E402
+from comune import STUDIO, cartella_lavoro, cartella_stile, con_le_scelte, durata, leggi, trova  # noqa: E402
 import grafica  # noqa: E402
 import scene  # noqa: E402
 import split  # noqa: E402
@@ -113,7 +113,7 @@ def main():
     cart = cartella_lavoro(args[0])
     piano = leggi(os.path.join(cart, "piano.json"))
     cart_stile = cartella_stile(piano.get("stile", "ndf"))
-    stile = leggi(os.path.join(cart_stile, "stile.json"))
+    stile = con_le_scelte(piano.get("stile", "ndf"), leggi(os.path.join(cart_stile, "stile.json")))
     faccia = leggi(os.path.join(cart, "faccia.json"))
     parole = parole_corrette(leggi(os.path.join(cart, "parole.json")), piano)
     video = os.path.join(cart, "tagliato.mp4")

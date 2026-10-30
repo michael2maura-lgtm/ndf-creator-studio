@@ -66,7 +66,16 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    ascoltare o controllare (le parole corrette a intuito, con il secondo). Tu non senti l'audio: dillo.
 
 Stili in `DATI/stili/` (quelli dell'utente) e `STUDIO/stili/` (quelli pronti). L'utente può dire quale
-("monta questo in stile X"); se non lo dice, usa il suo.
+("monta questo in stile X"); se non lo dice, usa quello di `DATI/scelte.json` (la pagina qui sotto), se no il suo.
+
+## La pagina "Scegli il tuo look"
+L'utente dice "scegli il look", "apri la pagina", "voglio cambiare suoni / musica", o non sa che stile usare:
+lancia `PY STUDIO/strumenti/scegli.py` in sottofondo e di' in una riga che si è aperta nel browser.
+Tre strade: stile pronto, replica un reel (l'utente ti manda il link in chat: lo studi con l'abilità `crea-stile`
+e ne fai uno stile nuovo, che poi compare nella pagina), crea il tuo (parte da uno stile e cambia suoni e musica).
+Quando scrive `SCELTE SALVATE`, di' in una riga cosa ha scelto. Le scelte le usa `costruisci.py` da solo: tu nel piano
+scrivi lo stile scelto e basta. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio)
+nella sua cartella: falla quando crei uno stile nuovo, dal primo video approvato.
 
 ## Correzioni dell'utente
 Una correzione per questo video si fa nel `piano.json` o nel `tagli.json` di questo video, poi si rifà dal passaggio

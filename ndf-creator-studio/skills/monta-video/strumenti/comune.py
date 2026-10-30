@@ -47,6 +47,27 @@ def cartella_stile(nome):
     sys.exit(f"Non trovo lo stile '{nome}'.")
 
 
+SCELTE = os.path.join(DATI, "scelte.json")  # quello che l'utente ha scelto nella pagina "Scegli il tuo look" (scegli.py)
+
+
+def con_le_scelte(nome_stile, stile):
+    """Lo stile con dentro i suoni e la musica scelti nella pagina, se li ha scelti per questo stile.
+    I suoni scelti sono percorsi interi: os.path.join(cartella_stile, percorso intero) dà il percorso intero."""
+    try:
+        sc = leggi(SCELTE)
+    except (OSError, ValueError):
+        return stile
+    if sc.get("stile") != nome_stile:
+        return stile
+    suoni = dict(stile.get("suoni", {}))
+    suoni.update({k: v for k, v in sc.get("suoni", {}).items() if v == "" or os.path.exists(v)})  # "" = nessun suono
+    if sc.get("musica") == "nessuna":
+        suoni.pop("musica", None)
+    elif sc.get("musica") and os.path.exists(sc["musica"]):
+        suoni["musica"] = sc["musica"]
+    return dict(stile, suoni=suoni)
+
+
 def trova(rel, cartella="suoni"):
     """Un file di suoni o clip: prima nei dati dell'utente (scaricati all'installazione), poi nel motore."""
     for base in (DATI, STUDIO):

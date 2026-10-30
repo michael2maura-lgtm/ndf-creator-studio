@@ -25,6 +25,7 @@ Regole: un "gigante" porta da solo le bande all'entrata e all'uscita; cornice e 
 I sottotitoli (1-3 parole) spariscono da soli sotto titoli, targhette, contatore, scene scure e finale.
 Testi dei titoli: 1-3 parole, quelle dette. "titoli" di cornice e telefono: [sopra, targa, da], ognuno fino al successivo.
 """
+import hashlib
 import html
 import json
 import math
@@ -33,7 +34,7 @@ import re
 import shutil
 import subprocess
 
-from comune import FFMPEG, durata, leggi
+from comune import FFMPEG, durata
 
 GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
 MIRINO_FINO = 6.2  # il mirino REC solo in apertura: per tutto il reel stanca
@@ -46,18 +47,24 @@ class Reel:
         self.corpo, self.tl, self.audio, self.nascondi, self.transizioni = [], [], [], [], []
 
     # ---------- suoni ----------
-    def suono(self, nome, da, vol=0.45, dur=None):
-        """Un suono dello stile (stile.json "suoni"), a -16 LUFS come tutti gli altri, al secondo `da`."""
-        rel = self.stile["suoni"].get(nome)
+    def suono(self, nome, da, vol=0.45, dur=None, se_manca=None):
+        """Un suono dello stile al secondo `da`, a -16 LUFS come tutti gli altri (i suoni scelti nella pagina sono già
+        dentro lo stile: comune.con_le_scelte). Se lo stile non ha `nome`, suona `se_manca` (o niente)."""
+        cart, rel = self.cart_stile, self.stile["suoni"].get(nome)
+        if rel == "":  # "nessun suono" scelto nella pagina: niente, nemmeno il ripiego
+            return
         if not rel:
+            if se_manca:
+                self.suono(se_manca, da, vol, dur)
             return
         if nome == "transizione":  # un solo suono per cambio di scena, mai due attaccati
             if any(abs(da - t) < 0.4 for t in self.transizioni):
                 return
             self.transizioni.append(da)
-        dest = os.path.join(self.assets, f"sfx-{nome}.m4a")
+        src = os.path.join(cart, rel)  # rel può essere un percorso intero (suono scelto nella pagina)
+        dest = os.path.join(self.assets, f"sfx-{hashlib.md5(src.encode()).hexdigest()[:6]}-{os.path.splitext(os.path.basename(rel))[0]}.m4a")
         if not os.path.exists(dest):
-            subprocess.run([FFMPEG, "-v", "error", "-y", "-i", os.path.join(self.cart_stile, rel), "-af",
+            subprocess.run([FFMPEG, "-v", "error", "-y", "-i", src, "-af",
                             "loudnorm=I=-16:TP=-1.5,aresample=48000", "-c:a", "aac", dest], check=True)
         n = len(self.audio)
         self.audio.append(f'<audio id="s{n}" src="assets/{os.path.basename(dest)}" data-start="{da:.3f}" data-media-start="0" '
@@ -120,6 +127,7 @@ class Reel:
                            f'y:{dist * math.sin(ang) * 0.7:.0f},opacity:0,scale:0.3,duration:0.9,ease:"power2.out"}},{da + 0.12:.3f});')
         if e.get("sotto"):
             self.decodifica(f"#g{n}m", e["sotto"], da + 0.6)
+        self.suono("attesa", max(da - 1.7, 0), 0.3)
         self.suono("impatto", da, 0.5)
 
     def titolo(self, sopra, targa, da, a, y):
@@ -188,7 +196,8 @@ class Reel:
             self.tl.append(f'tl.fromTo("#r{n},#rl{n}",{{opacity:0}},{{opacity:1,duration:0.2}},{da + 0.4:.3f});'
                            f'tl.to("#r{n},#rl{n}",{{opacity:0,duration:0.15}},{a - 0.45:.3f});'
                            f'cronometro("#rt{n}",{da:.3f},{a:.3f});')
-        self.suono("transizione", da - 0.1, 0.4)
+        self.suono("zoom", da - 0.05, 0.4, se_manca="transizione")
+        self.suono("zoom", a - 0.45, 0.4)
         titoli = e.get("titoli", [])
         for k, (sopra, targa, t) in enumerate(titoli):
             fine = titoli[k + 1][2] if k + 1 < len(titoli) else a
@@ -278,6 +287,7 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     if ap:
         r.titolo(ap["sopra"], ap["targa"], 0.0, ap.get("a", 2.0), petto - 20)
         r.nascondi.append((0.0, ap.get("a", 2.0)))
+        r.suono("apertura", 0.0, 0.4)
     for e in sorted(piano.get("elementi", []), key=lambda x: x.get("da", x.get("voci", [[0, 0, 0]])[0][2])):
         tipo = e["tipo"]
         if tipo == "gigante":
