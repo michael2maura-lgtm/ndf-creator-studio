@@ -84,7 +84,7 @@ def raccogli():
                 di_serie["sottotitoli"] = st["sottotitoli_nome"]
             momenti = [m for m in MOMENTI_MOTORE.get(motore, MOMENTI_MOTORE[""])]
             stili.append({"chiave": k, "nome": st.get("nome", k), "descrizione": st.get("descrizione", ""),
-                          "effetti": st.get("effetti"),
+                          "effetti": st.get("effetti"), "transizione": st.get("transizione", "bande" if motore == "grafica" else None),
                           "grafiche": motore == "grafica", "anteprima": os.path.exists(anteprima),
                           "di_serie": di_serie,
                           "momenti": [{"chiave": m, "titolo": MOMENTI[m][0], "quando": MOMENTI[m][1],
@@ -128,11 +128,21 @@ def raccogli():
                   "suoni": {m: ("" if v == "" else per_percorso.get(os.path.realpath(v)))
                             for m, v in sc.get("suoni", {}).items()},
                   "sottotitoli": sc.get("sottotitoli"), "effetti": sc.get("effetti"), "colore": sc.get("colore"), "velocita": sc.get("velocita"),
+                  "transizione": sc.get("transizione"),
                   "musica": "nessuna" if sc.get("musica") == "nessuna" else per_percorso.get(os.path.realpath(sc["musica"]))
                   if sc.get("musica") else None}
     except (OSError, ValueError):
         pass
-    return {"stili": stili, "suoni": suoni, "sottotitoli": sott, "effetti": eff, "colori": looks, "scelte": scelte}, file
+    transizioni = {}
+    for k in ("sfumatura", "bande", "taglio"):
+        p = os.path.join(STUDIO, "transizioni", "anteprime", k + ".mp4")
+        if os.path.exists(p):
+            file["tr-" + k] = p
+            if os.path.exists(p[:-4] + ".jpg"):
+                file["tr-" + k + "-jpg"] = p[:-4] + ".jpg"
+        transizioni[k] = os.path.exists(p)
+    return {"stili": stili, "suoni": suoni, "sottotitoli": sott, "effetti": eff, "colori": looks, "transizioni": transizioni,
+            "scelte": scelte}, file
 
 
 class Pagina(BaseHTTPRequestHandler):
@@ -200,7 +210,10 @@ class Pagina(BaseHTTPRequestHandler):
                     eff = None  # quelli dello stile
             look = corpo.get("colore") if crea and corpo.get("colore") in colore.LOOK and corpo.get("colore") != "originale" else None
             vel = corpo.get("velocita") if corpo.get("velocita") in (1, 1.2) else None  # None = di serie (comune.VELOCITA)
-            scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "colore": look, "velocita": vel,
+            tr = corpo.get("transizione") if crea and corpo.get("transizione") in ("sfumatura", "bande", "taglio") else None
+            if tr == stili[corpo["stile"]]["transizione"]:
+                tr = None  # quella dello stile
+            scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "colore": look, "velocita": vel, "transizione": tr,
                             "sottotitoli": sott, "effetti": eff,
                             "suoni": suoni,
                             "musica": musica, "aggiornato": datetime.datetime.now().isoformat(timespec="seconds")})

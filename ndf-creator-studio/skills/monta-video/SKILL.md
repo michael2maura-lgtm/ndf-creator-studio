@@ -87,6 +87,11 @@ dice quando): grafica.py salta gli altri con una NOTA. L'utente non sceglie nien
 scrivi lo stile scelto e basta. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio) più la sua copertina
 `anteprima.jpg` (un fotogramma con la faccia ferma e una scritta, mai una mano davanti)
 nella sua cartella: falla quando crei uno stile nuovo, dal primo video approvato.
+Velocità: ogni reel finito va il 12% più veloce (comune.VELOCITA); nella pagina l'utente sceglie Normale, Svelta o
+Veloce, e `rendi.py` la usa da solo. Per un reel diverso: "velocita" nel piano (1 = com'è girato).
+Transizioni (stili del motore grafica): nel piano scrivi "transizioni": [secondi], SOLO sui cambi di argomento (2-3 in
+un minuto, nella pausa prima della parte nuova). Il tipo (sfumatura di luce, bande, taglio netto) è quello dello stile
+o quello scelto nella pagina: tu scrivi solo i secondi.
 
 ## Correzioni dell'utente
 Una correzione per questo video si fa nel `piano.json` o nel `tagli.json` di questo video, poi si rifà dal passaggio

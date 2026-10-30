@@ -120,7 +120,7 @@ def main():
     faccia = leggi(os.path.join(cart, "faccia.json"))
     parole = parole_corrette(leggi(os.path.join(cart, "parole.json")), piano)
     # colore del girato: quello del piano ("colore": "argento"), se no quello scelto nella pagina, se no l'originale
-    video = look_girato.applica(cart, piano.get("colore", stile.get("colore_scelto")))
+    video = look_girato.applica(cart, piano.get("colore", stile.get("colore_scelto", stile.get("colore"))))  # "colore" = look di serie dello stile
     D = min(durata(video), piano.get("durata_max", 10 ** 6))  # durata_max: per le prove corte
     if stile.get("motore") == "grafica":  # stili con motion graphics: tutto in strumenti/grafica.py
         grafica.costruisci(cart, piano, stile, cart_stile, parole, faccia, D,

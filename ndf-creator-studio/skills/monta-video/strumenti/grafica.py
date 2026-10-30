@@ -44,6 +44,10 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "zoom", "mosse": [[0.3, 2.4, 1.12, "lento"], [3.6, 3.9, 1.3, "scatto"], [4.9, 5.2, 1.0, "fuori"]]}],
  "finale_da": 64.75, "finale_sopra": "TE LO INVIO IN DIRECT", "finale_testo": "COMMENTA", "finale_bottone": "INFO"}
 
+ "transizioni": [14.6, 40.7],     cambi di argomento: la transizione dello stile (sfumatura, bande o niente)
+ "apertura": {"box": "Il format che fa crescere i profili", "a": 4.0},   in alternativa al titolo NDF: riquadro bianco
+stile.json può avere "mirino": false, "finale": false, "transizione": "sfumatura" | "bande" | "taglio".
+
 Regole: un "gigante" porta da solo le bande all'entrata e all'uscita; cornice e telefono entrano con un vortice.
 I sottotitoli (1-3 parole) spariscono da soli sotto titoli, targhette, contatore, scene scure e finale.
 Testi dei titoli: 1-3 parole, quelle dette. "titoli" di cornice e telefono: [sopra, targa, da], ognuno fino al successivo.
@@ -881,6 +885,37 @@ class Reel:
                        f'orbita("#ob{n}",{cx:.0f},{cy:.0f},{da:.3f},{a:.3f},{giri});')
         self.suono("transizione", da, 0.3)
 
+    def sfumatura(self, t, dur=1.3):
+        """Transizione "sfumatura di luce": una luce calda arancio cresce sull'immagine, diventa bianca piena sul
+        cambio (t) e poi si ritira lasciando un velo caldo che svanisce. Sotto il bianco l'immagine si sfoca appena."""
+        n = len(self.corpo)
+        self.corpo.append(f'<div class="sfu" id="sf{n}"><i class="sfu-calda" id="sf{n}c"></i><i class="sfu-bianca" id="sf{n}b"></i></div>')
+        su, giu = dur * 0.4, dur * 0.6
+        self.tl.append(f'tl.set("#sf{n}",{{opacity:1}},{t - su:.3f});'
+                       f'tl.fromTo("#sf{n}c",{{opacity:0,scale:0.6}},{{opacity:1,scale:1.15,duration:{su:.3f},ease:"power1.in",immediateRender:false}},{t - su:.3f});'
+                       f'tl.fromTo("#sf{n}b",{{opacity:0}},{{opacity:1,duration:{su * 0.45:.3f},ease:"power2.in",immediateRender:false}},{t - su * 0.45:.3f});'
+                       f'tl.to("#sf{n}b",{{opacity:0,duration:{giu * 0.5:.3f},ease:"power2.out"}},{t + 0.04:.3f});'
+                       f'tl.to("#sf{n}c",{{opacity:0,scale:1.3,duration:{giu:.3f},ease:"power1.out"}},{t + 0.04:.3f});'
+                       f'tl.fromTo("#bg",{{filter:"blur(0px) brightness(1) saturate(1)"}},{{filter:"blur(6px) brightness(1.55) saturate(1.25)",duration:{su:.3f},ease:"power1.in",immediateRender:false}},{t - su:.3f});'
+                       f'tl.fromTo("#bg",{{filter:"blur(3px) brightness(1.3) saturate(1.2)"}},{{filter:"blur(0px) brightness(1) saturate(1)",duration:{giu * 0.8:.3f},immediateRender:false}},{t + 0.04:.3f});'
+                       f'tl.set("#sf{n}",{{opacity:0}},{t + giu + 0.05:.3f});')
+        self.suono("transizione", t - su * 0.6, 0.3)
+
+    def transizione(self, t):
+        """La transizione dello stile (o scelta nella pagina) su un cambio di argomento."""
+        tipo = self.stile.get("transizione_scelta") or self.stile.get("transizione", "bande")
+        if tipo == "sfumatura":
+            self.sfumatura(t)
+        elif tipo == "bande":
+            self.bande(t)
+
+    def titolo_box(self, testo, da, a, y):
+        """Titolo d'apertura semplice: un riquadro bianco con il testo nero, due righe al massimo."""
+        n = len(self.corpo)
+        self.corpo.append(f'<div class="tbox" id="tb{n}" style="top:{y}px"><span>{html.escape(testo)}</span></div>')
+        self.tl.append(f'tl.fromTo("#tb{n}",{{opacity:0,y:12}},{{opacity:1,y:0,duration:0.25,ease:"power2.out",immediateRender:false}},{da:.3f});'
+                       f'tl.to("#tb{n}",{{opacity:0,duration:0.2}},{a - 0.2:.3f});')
+
     def finale(self, piano, da):
         self.bande(da)
         self.scuro(da, self.D)
@@ -945,6 +980,10 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     # effetti accesi: quelli scelti nella pagina, se no quelli dello stile (stile.json "effetti"), se no tutti
     accesi = stile.get("effetti_scelti", stile.get("effetti"))
     commento = False
+    if ap and ap.get("box"):
+        r.titolo_box(ap["box"], 0.0, ap.get("a", 4.0), max(faccia["mento"] - 40, 900))
+        r.suono("apertura", 0.0, 0.3)
+        ap = None
     if ap and accesi is not None and "titolo" not in accesi:
         print('NOTA: "Titolo" non è tra gli effetti scelti, niente titolo d\'apertura')
         ap = None
@@ -1004,16 +1043,19 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.telefono3d(e, faccia)
         elif tipo == "orbita":
             r.orbita(e, faccia)
+    for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude
+        r.transizione(t)
     # il commento fa da chiusura: senza "finale_da" nel piano, niente finale scuro sopra
-    finale_da = piano.get("finale_da", D + 1 if commento else D - 2.3)
+    finale_da = piano.get("finale_da", D + 1 if commento or stile.get("finale") is False else D - 2.3)
     if finale_da < D:
         r.finale(piano, finale_da)
     if piano.get("musica", True):
         r.musica()
     chiave = {p.lower() for p in piano.get("parole_chiave", [])}
     css_sott = ""
-    if stile.get("sottotitoli_scelti"):  # sottotitoli scelti nella pagina (strumenti/sottotitoli.py)
-        css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile["sottotitoli_scelti"], parole, chiave, y_sub,
+    propri = stile.get("sottotitoli_nome") if stile.get("sottotitoli_nome") not in (None, "ndf-targhetta") else None
+    if stile.get("sottotitoli_scelti") or propri:  # scelti nella pagina, o quelli dello stile (strumenti/sottotitoli.py)
+        css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile.get("sottotitoli_scelti") or propri, parole, chiave, y_sub,
                                                             r.nascondi + [(finale_da, D + 1)], stile["colori"])
         r.corpo += c_sott
         r.tl += tl_sott
@@ -1258,6 +1300,14 @@ html,body{{margin:0;background:{scuro}}}
 .ob{{position:absolute;inset:0;opacity:0;pointer-events:none}}
 .ob-c{{position:absolute;left:0;top:0;width:300px;height:534px;border-radius:24px;object-fit:cover;border:3px solid rgba(255,255,255,.9);
  box-shadow:0 20px 50px rgba(0,0,0,.45)}}
+.sfu{{position:absolute;inset:0;z-index:45;opacity:0;pointer-events:none;overflow:hidden}}
+.sfu-calda{{position:absolute;inset:-20%;opacity:0;mix-blend-mode:screen;
+ background:radial-gradient(ellipse 70% 60% at 25% 75%,#FFC266 0%,#FF8A3D 40%,rgba(255,110,50,.35) 70%,rgba(255,110,50,.18) 100%),
+ radial-gradient(ellipse 55% 50% at 80% 25%,#FFF0C8 0%,rgba(255,190,110,0) 70%)}}
+.sfu-bianca{{position:absolute;inset:0;opacity:0;background:#FFFBF4}}
+.tbox{{position:absolute;left:0;right:0;text-align:center;z-index:34;opacity:0}}
+.tbox span{{display:inline-block;max-width:820px;padding:16px 30px 18px;background:#fff;color:#111;border-radius:6px;
+ font-family:'{ft["famiglia"]}';font-weight:800;font-size:48px;line-height:1.15;box-shadow:0 8px 24px rgba(0,0,0,.25)}}
 {css_sott}
 </style>
 <script src="{GSAP}"></script>
@@ -1321,7 +1371,7 @@ function orbita(sel, cx, cy, da, a, giri) {{
   tl.to(o, {{t: a - da, duration: a - da, ease: "none", onUpdate: posa}}, da);
 }}
 cronometro("#tc", 0, {D:.3f});
-tl.to("#mir", {{opacity: 0, duration: 0.25}}, {MIRINO_FINO});
+tl.to("#mir", {{opacity: 0, duration: 0.25}}, {MIRINO_FINO if stile.get("mirino", True) else 0});
 {chr(10).join(r.tl)}
 tl.set({{}}, {{}}, {D:.3f});
 window.__timelines = window.__timelines || {{}};

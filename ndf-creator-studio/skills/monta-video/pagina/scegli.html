@@ -207,6 +207,13 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
   <div class="griglia" id="col"></div>
 </section>
 
+<section class="sez wrap" id="sez-tr" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Passaggi</b> · Transizioni</span><span class="etic">Scegline una</span></div>
+  <h2 class="t">Le tue transizioni.</h2>
+  <p class="aiuto">Come si passa da un argomento all'altro. La metto solo dove cambi argomento, non a ogni taglio.</p>
+  <div class="griglia" id="tr"></div>
+</section>
+
 <section class="sez wrap" id="sez-sott" hidden>
   <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 03</b> · Sottotitoli</span><span class="etic">Scegline uno</span></div>
   <h2 class="t">I tuoi sottotitoli.</h2>
@@ -266,9 +273,12 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const TRANSIZIONI = [{k: "sfumatura", nome: "Sfumatura di luce", per: "Luce calda che diventa bianca e torna. Morbida, elegante."},
+                     {k: "bande", nome: "Bande", per: "Bande colorate che attraversano lo schermo. Energica."},
+                     {k: "taglio", nome: "Taglio netto", per: "Nessun effetto: si passa e basta. Pulita."}];
 const VELOCITA = [{v: 1, nome: "Normale", per: "Com'è girato", tag: "1×"}, {v: 1.12, nome: "Svelta", per: "Più ritmo, la voce suona naturale", tag: "+12%"},
                   {v: 1.2, nome: "Veloce", per: "Ritmo serrato, per reel brevi", tag: "+20%"}];
-let D, stato = {velocita: null, strada: null, stile: null, colore: null, sottotitoli: null, effetti: null, suoni: {}, musica: null, cambia: false};
+let D, stato = {transizione: null, velocita: null, strada: null, stile: null, colore: null, sottotitoli: null, effetti: null, suoni: {}, musica: null, cambia: false};
 const modifica = () => stato.strada === "crea" || (stato.strada === "pronto" && stato.cambia);  // si vedono suoni e musica
 const MOSTRA = 24; // suoni visibili per momento prima di "mostra tutti"
 
@@ -303,7 +313,9 @@ function mostraModifica() {
   $("#sez-col").hidden = $("#sez-sott").hidden = $("#sez-eff").hidden = $("#sez-suoni").hidden = $("#sez-musica").hidden = $("#sez-presto").hidden = !on;
   $("#cambia").hidden = k !== "pronto" || !stato.stile;
   $("#cambia").textContent = stato.cambia ? "Nascondi i pezzi dello stile" : "Cambia colore, sottotitoli, effetti, suoni o musica";
-  if (on) { disegnaCol(); disegnaSott(); disegnaEff(); disegnaSuoni(); }
+  const s = stile();
+  $("#sez-tr").hidden = !on || !s || !s.grafiche;   // le transizioni a scelta valgono per gli stili con le grafiche
+  if (on) { disegnaCol(); disegnaSott(); disegnaEff(); disegnaSuoni(); if (s && s.grafiche) disegnaTr(); }
 }
 
 function disegnaStili() {
@@ -357,6 +369,30 @@ function disegnaVel() {
     stato.velocita = +b.dataset.vel === 1.12 ? null : +b.dataset.vel;
     document.querySelectorAll("#vel .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
     aggiorna();
+  });
+}
+
+function disegnaTr() {
+  const s = stile(); if (!s) return;
+  const serie = s.transizione || "bande", scelta = stato.transizione || serie;
+  $("#tr").innerHTML = TRANSIZIONI.map(x => `
+    <button class="scheda" data-tr="${x.k}" aria-pressed="${x.k === scelta}">
+      <span class="spunta"></span>
+      ${D.transizioni[x.k] ? `<span class="media"><video class="vid" src="/file/tr-${x.k}" poster="/file/tr-${x.k}-jpg" playsinline preload="none"></video>
+                      <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
+                    : `<div class="vuoto t">${esc(x.nome)}</div>`}
+      <div class="corpo"><div class="t">${esc(x.nome)}</div><div class="tag">${x.k === serie ? "di serie" : "transizione"}</div>
+        <p class="desc">${esc(x.per)}</p></div>
+    </button>`).join("");
+  document.querySelectorAll("#tr .scheda").forEach(b => {
+    const v = b.querySelector("video");
+    if (v) v.onended = () => fermaVideo();
+    b.onclick = e => {
+      if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
+      stato.transizione = b.dataset.tr === serie ? null : b.dataset.tr;
+      document.querySelectorAll("#tr .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
+      aggiorna();
+    };
   });
 }
 
@@ -514,6 +550,7 @@ function aggiorna() {
   if ($("#sez-vel").hidden === vs) { $("#sez-vel").hidden = !vs; if (vs) disegnaVel(); }
   const vel = VELOCITA.find(x => x.v === (stato.velocita || 1.12));
   if (ok && stato.velocita) t += " · " + vel.nome.toLowerCase();
+  if (ok && modifica() && stato.transizione) t += " · " + TRANSIZIONI.find(x => x.k === stato.transizione).nome.toLowerCase();
   $("#riass").textContent = t;
   $("#salva").disabled = !ok;
 }
@@ -549,6 +586,7 @@ fetch("/dati").then(r => r.json()).then(d => {
     stato.effetti = sc.effetti || null;
     stato.colore = sc.colore || null;
     stato.velocita = sc.velocita || null;
+    stato.transizione = sc.transizione || null;
   }
   disegnaStili();
   strada(sc && sc.strada ? sc.strada : "pronto", false);

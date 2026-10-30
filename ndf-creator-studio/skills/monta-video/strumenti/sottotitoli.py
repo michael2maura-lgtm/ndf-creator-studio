@@ -47,6 +47,14 @@ CATALOGO = {
         "css": ".st{font-family:%f-jakarta%;font-weight:800;font-size:84px;line-height:1.1;color:#fff;" + OMBRA + "}"
                ".st .k{color:%acc%}",
     },
+    "spaziato": {
+        "nome": "Spaziato", "per": "Video semplici, tono calmo",
+        "descrizione": "Poche parole piccole, bianche e distanziate; la parola chiave grande da sola.",
+        "modo": "gruppo", "parole": 2, "lettere": 16, "maiuscolo": True, "entra": ENTRA_MORBIDO, "font": ["jakarta"],
+        "css": ".st{font-family:%f-jakarta%;font-weight:700;font-size:34px;line-height:1.3;letter-spacing:.22em;color:#fff;"
+               "text-shadow:0 2px 12px rgba(0,0,0,.55)}"
+               ".st .k{display:block;font-weight:800;font-size:80px;letter-spacing:.2em;line-height:1.05}",
+    },
     "ndf-targhetta": {
         "nome": "NDF Targhetta", "per": "Motion graphics, video dinamici",
         "descrizione": "Due o tre parole in maiuscolo, la parola importante su una targhetta arancione.",
