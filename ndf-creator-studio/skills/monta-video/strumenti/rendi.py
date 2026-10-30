@@ -7,8 +7,8 @@ Uso:  python3 strumenti/rendi.py <nome-lavoro> [--bozza]
 
 Scrive lavori/<nome>/finale/<nome>-vN.mp4 (ogni versione resta, non si sovrascrive mai).
 Volume: -14 LUFS come vuole Instagram, picchi mai sopra -1 dB. L'immagine non si tocca.
-Velocità: il reel finito va un po' più veloce del girato (VELOCITA in comune.py, 1.12 = +12%; "velocita" nel piano
-la cambia per un reel, 1 = com'è). La voce accelera senza cambiare tono.
+Velocità: il reel finito va un po' più veloce del girato (VELOCITA in comune.py, 1.12 = +12%). Si cambia nella pagina
+(Normale 1, Svelta 1.12, Veloce 1.2) o per un solo reel con "velocita" nel piano. La voce accelera senza cambiare tono.
 """
 import os
 import subprocess
@@ -16,7 +16,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import FFMPEG, HYPERFRAMES, NPX, VELOCITA, cartella_lavoro, codec_video, durata, env_node, esegui, leggi  # noqa: E402
+from comune import FFMPEG, HYPERFRAMES, NPX, VELOCITA, cartella_lavoro, codec_video, con_le_scelte, durata, env_node, esegui, leggi  # noqa: E402
 
 OBIETTIVO = "I=-14:TP=-2:LRA=11"
 
@@ -83,7 +83,9 @@ def main():
     fin = os.path.join(cart, "finale")
     os.makedirs(fin, exist_ok=True)
     piano = os.path.join(cart, "piano.json")
-    vel = float((leggi(piano) if os.path.exists(piano) else {}).get("velocita", VELOCITA))
+    # velocità: quella del piano, se no quella scelta nella pagina, se no quella di serie
+    pi = leggi(piano) if os.path.exists(piano) else {}
+    vel = float(pi.get("velocita") or con_le_scelte(pi.get("stile", ""), {}).get("velocita") or VELOCITA)
     v = 1
     while os.path.exists(os.path.join(fin, f"{nome}-v{v}.mp4")):
         v += 1

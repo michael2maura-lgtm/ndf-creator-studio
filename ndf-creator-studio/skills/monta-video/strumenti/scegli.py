@@ -127,7 +127,7 @@ def raccogli():
         scelte = {"strada": sc.get("strada", "pronto"), "stile": sc.get("stile"),
                   "suoni": {m: ("" if v == "" else per_percorso.get(os.path.realpath(v)))
                             for m, v in sc.get("suoni", {}).items()},
-                  "sottotitoli": sc.get("sottotitoli"), "effetti": sc.get("effetti"), "colore": sc.get("colore"),
+                  "sottotitoli": sc.get("sottotitoli"), "effetti": sc.get("effetti"), "colore": sc.get("colore"), "velocita": sc.get("velocita"),
                   "musica": "nessuna" if sc.get("musica") == "nessuna" else per_percorso.get(os.path.realpath(sc["musica"]))
                   if sc.get("musica") else None}
     except (OSError, ValueError):
@@ -199,12 +199,13 @@ class Pagina(BaseHTTPRequestHandler):
                 if di_serie is not None and sorted(eff) == sorted(di_serie):
                     eff = None  # quelli dello stile
             look = corpo.get("colore") if crea and corpo.get("colore") in colore.LOOK and corpo.get("colore") != "originale" else None
-            scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "colore": look,
+            vel = corpo.get("velocita") if corpo.get("velocita") in (1, 1.2) else None  # None = di serie (comune.VELOCITA)
+            scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "colore": look, "velocita": vel,
                             "sottotitoli": sott, "effetti": eff,
                             "suoni": suoni,
                             "musica": musica, "aggiornato": datetime.datetime.now().isoformat(timespec="seconds")})
             print(f"SCELTE SALVATE stile={corpo['stile']} colore={look or 'originale'} sottotitoli={sott or 'dello stile'} effetti={'dello stile' if eff is None else len(eff)} suoni cambiati={len(suoni)} "
-                  f"musica={'nessuna' if musica == 'nessuna' else ('cambiata' if musica else 'di serie')}", flush=True)
+                  f"musica={'nessuna' if musica == 'nessuna' else ('cambiata' if musica else 'di serie')} velocita={vel or 'di serie'}", flush=True)
             return self._manda(200, b"{}")
         self._manda(404, b"{}")
 

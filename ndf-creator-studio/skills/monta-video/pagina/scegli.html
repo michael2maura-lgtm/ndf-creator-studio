@@ -57,6 +57,7 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
 
 /* schede degli stili */
 .griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.griglia.vel .vuoto{aspect-ratio:auto;height:120px;font-size:44px}
 .scheda{position:relative;display:flex;flex-direction:column;text-align:left;background:var(--carta);color:var(--inchiostro);border-radius:12px;overflow:hidden;
   border:3px solid transparent;transition:transform .2s,border-color .2s}
 .scheda:hover{transform:translateY(-3px)}
@@ -192,6 +193,13 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
   <div class="frase"><code>Replica questo reel:</code><button class="salva" id="copia-frase" style="padding:10px 18px;font-size:14px">Copia la frase</button></div>
 </section>
 
+<section class="sez wrap" id="sez-vel" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Ritmo</b> · Velocità</span><span class="etic">Scegline una</span></div>
+  <h2 class="t">La tua velocità.</h2>
+  <p class="aiuto">Quanto va veloce il reel finito. La voce resta la tua: cambia il ritmo, non il tono.</p>
+  <div class="griglia vel" id="vel"></div>
+</section>
+
 <section class="sez wrap" id="sez-col" hidden>
   <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 02</b> · Colore</span><span class="etic">Scegline uno</span></div>
   <h2 class="t">Il tuo colore.</h2>
@@ -258,7 +266,9 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let D, stato = {strada: null, stile: null, colore: null, sottotitoli: null, effetti: null, suoni: {}, musica: null, cambia: false};
+const VELOCITA = [{v: 1, nome: "Normale", per: "Com'è girato", tag: "1×"}, {v: 1.12, nome: "Svelta", per: "Più ritmo, la voce suona naturale", tag: "+12%"},
+                  {v: 1.2, nome: "Veloce", per: "Ritmo serrato, per reel brevi", tag: "+20%"}];
+let D, stato = {velocita: null, strada: null, stile: null, colore: null, sottotitoli: null, effetti: null, suoni: {}, musica: null, cambia: false};
 const modifica = () => stato.strada === "crea" || (stato.strada === "pronto" && stato.cambia);  // si vedono suoni e musica
 const MOSTRA = 24; // suoni visibili per momento prima di "mostra tutti"
 
@@ -333,6 +343,21 @@ function guardaVideo(btn, v) {
     if (suona) { audio.pause(); suona.classList.remove("on"); suona.textContent = "▶"; }
     v.play().catch(() => {}); btn.classList.add("on"); btn.textContent = "❚❚";
   }
+}
+
+function disegnaVel() {
+  const scelta = stato.velocita || 1.12;
+  $("#vel").innerHTML = VELOCITA.map(x => `
+    <button class="scheda" data-vel="${x.v}" aria-pressed="${x.v === scelta}">
+      <span class="spunta"></span><div class="vuoto t">${x.tag}</div>
+      <div class="corpo"><div class="t">${x.nome}</div><div class="tag">${x.v === 1.12 ? "di serie" : "velocità"}</div>
+        <p class="desc">${x.per}</p></div>
+    </button>`).join("");
+  document.querySelectorAll("#vel .scheda").forEach(b => b.onclick = () => {
+    stato.velocita = +b.dataset.vel === 1.12 ? null : +b.dataset.vel;
+    document.querySelectorAll("#vel .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
+    aggiorna();
+  });
 }
 
 function disegnaCol() {
@@ -485,6 +510,10 @@ function aggiorna() {
     t = `${s.nome}${co ? " · look " + co : ""}${st ? " · sottotitoli " + st : ""}${ne === null ? "" : ne === 0 ? " · nessun effetto" : " · " + ne + (ne === 1 ? " effetto" : " effetti")} · ${cambiati ? cambiati + (cambiati === 1 ? " suono cambiato" : " suoni cambiati") : "suoni di serie"} · ${mus}`;
     ok = true;
   }
+  const vs = stato.strada !== "replica" && !!s;
+  if ($("#sez-vel").hidden === vs) { $("#sez-vel").hidden = !vs; if (vs) disegnaVel(); }
+  const vel = VELOCITA.find(x => x.v === (stato.velocita || 1.12));
+  if (ok && stato.velocita) t += " · " + vel.nome.toLowerCase();
   $("#riass").textContent = t;
   $("#salva").disabled = !ok;
 }
@@ -519,6 +548,7 @@ fetch("/dati").then(r => r.json()).then(d => {
     stato.sottotitoli = sc.sottotitoli || null;
     stato.effetti = sc.effetti || null;
     stato.colore = sc.colore || null;
+    stato.velocita = sc.velocita || null;
   }
   disegnaStili();
   strada(sc && sc.strada ? sc.strada : "pronto", false);
