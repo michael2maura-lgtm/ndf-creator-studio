@@ -7,6 +7,8 @@ Uso:  python3 strumenti/rendi.py <nome-lavoro> [--bozza]
 
 Scrive lavori/<nome>/finale/<nome>-vN.mp4 (ogni versione resta, non si sovrascrive mai).
 Volume: -14 LUFS come vuole Instagram, picchi mai sopra -1 dB. L'immagine non si tocca.
+Velocità: il reel finito va un po' più veloce del girato (VELOCITA in comune.py, 1.12 = +12%; "velocita" nel piano
+la cambia per un reel, 1 = com'è). La voce accelera senza cambiare tono.
 """
 import os
 import subprocess
@@ -14,7 +16,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import FFMPEG, HYPERFRAMES, NPX, cartella_lavoro, durata, env_node, esegui  # noqa: E402
+from comune import FFMPEG, HYPERFRAMES, NPX, VELOCITA, cartella_lavoro, codec_video, durata, env_node, esegui, leggi  # noqa: E402
 
 OBIETTIVO = "I=-14:TP=-2:LRA=11"
 
@@ -32,9 +34,10 @@ def volume_giusto(entrata, uscita):
             "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", uscita])
 
 
-def solo_audio(reel, video_prima, finito):
+def solo_audio(reel, video_prima, finito, vel=1.0, gia_veloce=False):
     """Rifà solo l'audio (voce + suoni + musica, letti dalla pagina del reel) sopra un video già creato.
-    Si usa quando sono cambiati solo suoni o musica: pochi secondi invece di 4-5 minuti."""
+    Si usa quando sono cambiati solo suoni o musica: pochi secondi invece di 4-5 minuti.
+    vel: velocità del reel finito; gia_veloce: il video di partenza è già accelerato (versione precedente)."""
     import re
     pagina = open(os.path.join(reel, "index.html"), encoding="utf-8").read()
     tracce = []
@@ -57,10 +60,11 @@ def solo_audio(reel, video_prima, finito):
         filtri.append(f"[a{i_musica}][chiave]sidechaincompress=threshold=0.015:ratio=8:attack=30:release=350[musica]")
         nomi[i_voce], nomi[i_musica] = "[voce]", "[musica]"
     n = len(tracce)
-    filtri.append("".join(nomi) + f"amix=inputs={n}:normalize=0:duration=longest[mix]")
+    filtri.append("".join(nomi) + f"amix=inputs={n}:normalize=0:duration=longest" + (f",atempo={vel:.3f}" if vel != 1 else "") + "[mix]")
     misto = finito + ".wav"
     esegui([FFMPEG, "-v", "error", "-y", *ingressi, "-filter_complex", ";".join(filtri), "-map", "[mix]", misto])
-    esegui([FFMPEG, "-v", "error", "-y", "-i", video_prima, "-i", misto, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+    immagine = ["-c:v", "copy"] if vel == 1 or gia_veloce else ["-vf", f"setpts=PTS/{vel:.3f},fps=30", *codec_video()]
+    esegui([FFMPEG, "-v", "error", "-y", "-i", video_prima, "-i", misto, "-map", "0:v", "-map", "1:a", *immagine,
             "-c:a", "pcm_s16le", "-shortest", finito + ".mov"])
     volume_giusto(finito + ".mov", finito)
     os.remove(misto)
@@ -78,6 +82,8 @@ def main():
         sys.exit("Prima lancia costruisci.py")
     fin = os.path.join(cart, "finale")
     os.makedirs(fin, exist_ok=True)
+    piano = os.path.join(cart, "piano.json")
+    vel = float((leggi(piano) if os.path.exists(piano) else {}).get("velocita", VELOCITA))
     v = 1
     while os.path.exists(os.path.join(fin, f"{nome}-v{v}.mp4")):
         v += 1
@@ -86,7 +92,7 @@ def main():
     if "--solo-audio" in sys.argv:
         if v == 1:
             sys.exit("Non c'è ancora un video da cui partire: lancia rendi.py senza --solo-audio.")
-        solo_audio(reel, os.path.join(fin, f"{nome}-v{v - 1}.mp4"), finito)
+        solo_audio(reel, os.path.join(fin, f"{nome}-v{v - 1}.mp4"), finito, vel, gia_veloce=True)
         print(f"Fatto (solo audio): {finito}")
         return
 
@@ -114,7 +120,7 @@ def main():
     if r.returncode != 0 or not os.path.exists(grezzo):
         sys.exit("Errore nella creazione del video:\n" + (r.stderr or r.stdout)[-2500:])
     # l'audio lo rifacciamo noi (serve per il ducking della musica): del video creato si tengono solo le immagini
-    solo_audio(reel, grezzo, finito)
+    solo_audio(reel, grezzo, finito, vel)
     os.remove(grezzo)
     print(f"Fatto: {finito}")
 

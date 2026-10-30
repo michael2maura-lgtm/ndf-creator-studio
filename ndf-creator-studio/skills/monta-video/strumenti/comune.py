@@ -9,6 +9,7 @@ import sys
 # scaricati) stanno in una cartella sua, che gli aggiornamenti non toccano mai.
 STUDIO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATI = os.path.expanduser(os.environ.get("NDF_STUDIO_DATI", os.path.join("~", "Documents", "NDFCreatorStudio")))
+VELOCITA = 1.12  # il reel finito va il 12% più veloce del girato: ritmo più svelto, voce naturale
 LAVORI = os.path.join(DATI, "lavori")
 STRUMENTI_UTENTE = os.path.join(os.path.expanduser("~"), ".studio-video")
 MODELLI = os.path.join(STRUMENTI_UTENTE, "modelli")
