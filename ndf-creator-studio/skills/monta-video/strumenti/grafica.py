@@ -1133,7 +1133,7 @@ class Reel:
         self.font_extra("InstrumentSerif-Italic.ttf")
         n = len(self.corpo)
         pieno = e.get("pieno")
-        cy = 860 if pieno else 470            # centro verticale del contenuto
+        cy = 560 if pieno else 470            # centro della grafica; a tutto schermo resta in alto, i sottotitoli sotto
         m = e["modulo"]
         dentro = getattr(self, "p_" + m["tipo"])(m, n, da, a, cy)
         sfondo = f'<div class="pan-fondo{" chiaro" if pieno == "chiaro" else ""}"></div>' if pieno else ""
@@ -1143,10 +1143,15 @@ class Reel:
         scala = {"titolo": 1.0, "cta": 1.25, "numero": 1.1, "lista": 1.15, "schede": 1.35,
                  "icone": 1.5 if quante <= 2 else 1.12, "flusso": 1.4 if quante <= 3 else 1.1}.get(m["tipo"], 1.2)
         dentro = f'<div style="position:absolute;inset:0;transform-origin:540px {cy}px;transform:scale({scala})">{dentro}</div>'
-        self.corpo.append(f'<div class="pan-el{" pieno" if pieno else ""}" id="pe{n}">{sfondo}{dentro}</div>')
-        if pieno:   # a tutto schermo la scritta grande è il sottotitolo: quelli normali spariscono
+        self.corpo.append(f'<div class="pan-el{" pieno " + pieno if pieno else ""}" id="pe{n}">{sfondo}{dentro}</div>')
+        if pieno and m["tipo"] == "titolo":   # una scritta grande a tutto schermo è già il sottotitolo
             self.nascondi.append((da, a))
-        self.tl.append(f'tl.set("#pe{n}",{{opacity:1}},{da:.3f});tl.to("#pe{n}",{{opacity:0,duration:0.15}},{a - 0.15:.3f});')
+        if pieno == "chiaro":   # sul fondo chiaro i sottotitoli diventano scuri, poi tornano bianchi
+            self.tl.append(f'tl.set(".st",{{color:"#16142C",textShadow:"none"}},{da:.3f});'
+                           f'tl.set(".st",{{color:"#FFFFFF",textShadow:"0 3px 14px rgba(0,0,0,.6)"}},{a:.3f});')
+        # come nell'esempio: si entra e si esce con un taglio netto (a tutto schermo) o quasi (nel pannello)
+        self.tl.append(f'tl.set("#pe{n}",{{opacity:1}},{da:.3f});' + (f'tl.set("#pe{n}",{{opacity:0}},{a:.3f});' if pieno else
+                       f'tl.to("#pe{n}",{{opacity:0,duration:0.1}},{a - 0.1:.3f});'))
 
     def _entra(self, sel, t, dy=24):
         self.tl.append(f'tl.fromTo("{sel}",{{opacity:0,y:{dy},scale:0.92}},{{opacity:1,y:0,scale:1,duration:0.22,ease:"back.out(1.8)",immediateRender:false}},{t:.3f});')
@@ -1744,8 +1749,17 @@ html,body{{margin:0;background:{scuro}}}
 .pan:after{{content:"";position:absolute;left:0;right:0;bottom:0;height:140px;background:linear-gradient(rgba(10,9,24,0),#0A0918)}}
 .pan-el{{position:absolute;left:0;right:0;top:0;height:1000px;z-index:9;opacity:0;font-family:'Plus Jakarta Sans'}}
 .pan-el.pieno{{height:1920px;z-index:29}}
-.pan-fondo{{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 30%,#1B1640,#0A0918 70%)}}
-.pan-fondo.chiaro{{background:linear-gradient(#F6F3FF,#ECE6FA 60%,#F7D9F0)}}
+.pan-fondo{{position:absolute;inset:0;overflow:hidden;background:
+ radial-gradient(circle at 18% 22%,rgba(255,61,180,.7) 0 3px,transparent 4px),radial-gradient(circle at 82% 35%,rgba(122,92,255,.8) 0 3px,transparent 4px),
+ radial-gradient(circle at 70% 70%,rgba(255,61,180,.6) 0 3px,transparent 4px),radial-gradient(circle at 25% 80%,rgba(63,123,255,.7) 0 3px,transparent 4px),
+ radial-gradient(ellipse 85% 55% at 50% 35%,#191536,#0A0918 72%)}}
+.pan-fondo.chiaro{{background:radial-gradient(circle at 20% 30%,rgba(255,61,180,.5) 0 3px,transparent 4px),
+ radial-gradient(circle at 80% 22%,rgba(122,92,255,.5) 0 3px,transparent 4px),linear-gradient(#F7F5FC,#EEEAF8 55%,#F3E3F2)}}
+.pan-fondo.chiaro:after{{content:"";position:absolute;left:-60%;right:-60%;top:1180px;height:1300px;transform:perspective(600px) rotateX(64deg);
+ transform-origin:50% 0;background-image:linear-gradient(rgba(214,120,200,.45) 2px,transparent 2px),linear-gradient(90deg,rgba(214,120,200,.45) 2px,transparent 2px);
+ background-size:110px 110px;-webkit-mask:linear-gradient(rgba(0,0,0,.2),#000 40%);mask:linear-gradient(rgba(0,0,0,.2),#000 40%)}}
+.pan-el.pieno.chiaro .pi,.pan-el.pieno.chiaro .pt-r.forte,.pan-el.pieno.chiaro .pt-r.corsivo,.pan-el.pieno.chiaro .pn,.pan-el.pieno.chiaro .pn-sopra{{color:#16142C}}
+.pan-el.pieno.chiaro .pi svg{{color:#16142C}}
 .pt-r{{position:absolute;left:60px;right:60px;text-align:center;color:#fff;opacity:0;line-height:1}}
 .pt-r.corsivo{{font-family:'Instrument Serif';font-style:italic;font-size:118px}}
 .pt-r.forte{{font-weight:800;font-size:100px;letter-spacing:-2px}}

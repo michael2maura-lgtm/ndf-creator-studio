@@ -65,7 +65,7 @@ CATALOGO = {
     "due-righe": {
         "nome": "Due righe", "per": "Schermo diviso, video calmi e curati",
         "descrizione": "Prima riga in corsivo elegante, seconda in grassetto; la parola chiave colorata.",
-        "modo": "gruppo", "parole": 5, "lettere": 26, "due_righe": True, "entra": ENTRA_MORBIDO,
+        "modo": "accumula", "parole": 5, "lettere": 26, "due_righe": True, "entra": ENTRA_MORBIDO,
         "font": ["serif-corsivo", "jakarta"],
         "css": ".st{font-family:%f-jakarta%;font-weight:700;font-size:58px;line-height:1.05;color:#fff;"
                "text-shadow:0 3px 14px rgba(0,0,0,.6)}.st .r1{display:block;font-family:%f-serif-corsivo%;font-weight:400;"
