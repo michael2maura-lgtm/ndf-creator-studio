@@ -1,0 +1,50 @@
+{
+ "nome": "Stile NDF Grafica",
+ "motore": "grafica",
+ "colori": {
+  "accento": "#E86530",
+  "accento_luce": "#FF8A4C",
+  "testo": "#F9F7F4",
+  "scuro": "#140E0A",
+  "banda": "#4A2412"
+ },
+ "font": {
+  "titoli": {
+   "file": "font/Archivo.ttf",
+   "famiglia": "Archivo",
+   "peso": 900,
+   "larghezza": 125
+  },
+  "mono": {
+   "file": "font/JetBrainsMono.ttf",
+   "famiglia": "JetBrains Mono"
+  }
+ },
+ "finale": {
+  "testo": "COMMENTA",
+  "bottone": "INFO",
+  "sopra": "TE LO INVIO IN DIRECT"
+ },
+ "suoni": {
+  "transizione": "suoni/transizione.mp3",
+  "impatto": "suoni/impatto.mp3",
+  "glitch": "suoni/glitch.mp3",
+  "pop": "suoni/pop.mp3",
+  "tastiera": "suoni/tastiera.mp3",
+  "ding": "suoni/ding.mp3",
+  "livello": "suoni/livello.mp3",
+  "click": "suoni/click.mp3",
+  "musica": "suoni/musica.wav"
+ },
+ "descrizione": "Grafiche animate sopra di te: titoli, parola gigante, cornice, telefono, contatore.",
+ "sottotitoli_nome": "ndf-targhetta",
+ "effetti": [
+  "titolo",
+  "gigante",
+  "chat",
+  "passi",
+  "contatore",
+  "targhette",
+  "telefono"
+ ]
+}

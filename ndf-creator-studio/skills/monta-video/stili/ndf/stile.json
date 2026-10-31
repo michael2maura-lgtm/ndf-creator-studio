@@ -1,0 +1,47 @@
+{
+ "nome": "Stile NDF",
+ "colori": {
+  "accento": "#E86530",
+  "accento_luce": "#FF8A4C",
+  "testo": "#F9F7F4",
+  "scuro": "#140E0A"
+ },
+ "font": {
+  "titoli": {
+   "file": "font/PlusJakartaSans.ttf",
+   "famiglia": "Plus Jakarta Sans",
+   "peso": 800
+  },
+  "corsivo": {
+   "file": "font/InstrumentSerif-Italic.ttf",
+   "famiglia": "Instrument Serif",
+   "stile": "italic"
+  }
+ },
+ "sottotitoli": {
+  "parole_insieme": 1,
+  "maiuscolo": true,
+  "dimensione": 76,
+  "colore": "testo"
+ },
+ "titoli": {
+  "dimensione_grande": 118,
+  "dimensione_corsivo": 66,
+  "durata_minima": 1.2,
+  "entrata": 0.35,
+  "uscita": 0.2
+ },
+ "finale": {
+  "testo": "COMMENTA INFO",
+  "secondi": 2.6,
+  "colore": "accento"
+ },
+ "suoni": {
+  "transizione": "suoni/transizione.mp3",
+  "colpo": "suoni/colpo.mp3",
+  "tastiera": "suoni/tastiera.mp3",
+  "musica": "suoni/musica.wav"
+ },
+ "descrizione": "Scene a tutto schermo con omini e clip vere, una parola alla volta, musica sotto.",
+ "sottotitoli_nome": "ndf-classico"
+}

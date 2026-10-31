@@ -849,7 +849,6 @@ class Reel:
         più piccole e scure quando sono dietro. e = {"da", "a", "immagini": ["file.jpg", ...] (facoltativo: senza,
         prende un fotogramma dai tuoi reel già montati), "giri": 1}."""
         da, a = e["da"], e["a"]
-        sel = self.ritaglio(da, a)
         cart = os.path.dirname(self.reel)
         copertine = []
         for k, f in enumerate(e.get("immagini", [])[:7]):
@@ -875,6 +874,10 @@ class Reel:
                                     "scale=300:534:force_original_aspect_ratio=increase,crop=300:534", "-frames:v", "1",
                                     os.path.join(self.assets, dest)], check=True)
                     copertine.append(dest)
+        if len(copertine) < 5:   # un cliente nuovo non ha ancora reel montati: senza copertine l'orbita gira vuota
+            print(f'NOTA: "Orbita" saltata: servono almeno 5 copertine (reel già montati o "immagini" nel piano), ne ho {len(copertine)}')
+            return
+        sel = self.ritaglio(da, a)
         n = len(self.camera)
         self.camera.append(f'<div class="ob" id="ob{n}">' + "".join(f'<img class="ob-c" src="assets/{c}">' for c in copertine) + '</div>')
         cx = (faccia["sinistra"] + faccia["destra"]) / 2

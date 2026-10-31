@@ -151,8 +151,10 @@ def main():
     titoli = piano.get("titoli", [])
     finale_da = piano.get("finale_da", D - fin["secondi"])
 
-    scene_piano = piano.get("scene", [])
-    liste = piano.get("liste", [])
+    # solo quello che comincia prima della fine del video (con "durata_max" o un taglio, il resto si blocca nel render)
+    scene_piano = [x for x in piano.get("scene", []) if x["da"] < D - 0.2]
+    titoli = [x for x in titoli if x["da"] < D - 0.2]
+    liste = [x for x in piano.get("liste", []) if x["da"] < D - 0.2]
     chiave = {p.lower() for p in piano.get("parole_chiave", [])}
 
     def coperto(t):

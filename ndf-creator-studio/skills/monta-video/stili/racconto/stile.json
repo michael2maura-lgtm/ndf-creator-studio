@@ -1,0 +1,37 @@
+{
+ "nome": "Stile Racconto",
+ "motore": "grafica",
+ "descrizione": "Racconto con scene a tutto schermo, scure e chiare: barrette che riempiono, timbri, parole barrate, il play che diventa pronto.",
+ "colori": {
+  "accento": "#E86530",
+  "accento_luce": "#FF8A4C",
+  "testo": "#F9F7F4",
+  "scuro": "#140E0A",
+  "banda": "#4A2412"
+ },
+ "font": {
+  "titoli": {
+   "file": "font/Archivo.ttf",
+   "famiglia": "Archivo",
+   "peso": 900,
+   "larghezza": 125
+  },
+  "mono": {
+   "file": "font/JetBrainsMono.ttf",
+   "famiglia": "JetBrains Mono"
+  }
+ },
+ "suoni": {
+  "transizione": "suoni/transizione.mp3",
+  "impatto": "suoni/impatto.mp3",
+  "pop": "suoni/pop.mp3",
+  "ding": "suoni/ding.mp3",
+  "livello": "suoni/livello.mp3",
+  "musica": "suoni/musica.wav"
+ },
+ "sottotitoli_nome": "targhetta-piccola",
+ "transizione": "taglio",
+ "mirino": false,
+ "finale": false,
+ "effetti": []
+}

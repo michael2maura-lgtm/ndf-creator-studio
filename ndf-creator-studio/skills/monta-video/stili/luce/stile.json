@@ -1,0 +1,17 @@
+{
+ "nome": "Stile Luce",
+ "motore": "grafica",
+ "descrizione": "Semplice e caldo: sottotitoli piccoli e distanziati, la parola chiave grande, una sfumatura di luce quando cambi argomento.",
+ "colori": {"accento": "#FF9A3C", "accento_luce": "#FFC27A", "testo": "#FFFFFF", "scuro": "#14100C", "banda": "#5A3418"},
+ "font": {
+  "titoli": {"file": "font/PlusJakartaSans.ttf", "famiglia": "Plus Jakarta Sans", "peso": 800, "larghezza": 100},
+  "mono": {"file": "font/JetBrainsMono.ttf", "famiglia": "JetBrains Mono"}
+ },
+ "suoni": {"transizione": "suoni/transizione.mp3", "musica": "suoni/musica.wav"},
+ "sottotitoli_nome": "spaziato",
+ "colore": "pellicola",
+ "transizione": "sfumatura",
+ "mirino": false,
+ "finale": false,
+ "effetti": []
+}
