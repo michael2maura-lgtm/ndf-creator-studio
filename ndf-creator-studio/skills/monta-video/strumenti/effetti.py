@@ -55,6 +55,12 @@ CATALOGO = {
 }
 
 
+# Doppioni: restano nel motore (lo Stile NDF Grafica pronto li usa, sono il suo aspetto) ma la pagina non li mostra,
+# perché c'è la versione uguale al Creator Studio: passi -> checklist, contatore -> contachilometri / numero gigante,
+# targhette -> pillole, chat -> prompt, telefono -> telefono 3D.
+NASCOSTI = {"passi", "contatore", "targhette", "chat", "telefono"}
+
+
 def chiave_di(elemento):
     """L'effetto a cui corrisponde un elemento del piano di grafica.py."""
     tipo = elemento["tipo"]

@@ -105,6 +105,8 @@ def raccogli():
 
     eff = []
     for k, e in effetti.CATALOGO.items():
+        if k in effetti.NASCOSTI:   # doppioni: nella pagina c'è solo la versione uguale al Creator Studio
+            continue
         p = os.path.join(STUDIO, "effetti", "anteprime", k + ".mp4")
         if os.path.exists(p):
             file["eff-" + k] = p
