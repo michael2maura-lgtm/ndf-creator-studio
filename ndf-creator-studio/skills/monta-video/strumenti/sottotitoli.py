@@ -71,6 +71,13 @@ CATALOGO = {
                "text-shadow:0 3px 14px rgba(0,0,0,.6)}.st .r1{display:block;font-family:%f-serif-corsivo%;font-weight:400;"
                "font-size:54px;letter-spacing:-.5px}.st .r2{display:block}.st .k{color:%acc%}",
     },
+    "bordo": {
+        "nome": "Bordo nero", "per": "Ads, ritmo veloce",
+        "descrizione": "Una, due o tre parole piccole, bianche con il bordo nero; la parola chiave colorata.",
+        "modo": "accumula", "parole": 3, "lettere": 16, "entra": ENTRA_SALTO, "font": ["jakarta"],
+        "css": ".st{font-family:%f-jakarta%;font-weight:800;font-size:50px;line-height:1.1;color:#fff;letter-spacing:-.5px;"
+               "-webkit-text-stroke:9px #000;paint-order:stroke fill;text-shadow:0 4px 14px rgba(0,0,0,.5)}.st .k{color:%acc%}",
+    },
     "ndf-targhetta": {
         "nome": "NDF Targhetta", "per": "Motion graphics, video dinamici",
         "descrizione": "Due o tre parole in maiuscolo, la parola importante su una targhetta arancione.",

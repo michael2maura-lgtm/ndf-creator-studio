@@ -343,6 +343,93 @@ TIPI = {"testo": testo, "capitolo": capitolo, "clip": clip, "omino": omino, "cha
 LAMPO = '<div id="lampo" style="position:absolute;inset:0;background:white;opacity:0;z-index:45;pointer-events:none"></div>'
 
 
+
+# ---------- stile delle ads (esempi/ads-g31): bagliore, scheda della persona, finale su carta ----------
+CSS_ADS = """
+.scena .alone{position:absolute;left:50%;top:44%;width:1500px;height:1500px;margin:-750px 0 0 -750px;border-radius:50%;opacity:.9}
+.scena .raggi{position:absolute;left:50%;top:46%;width:3200px;height:3200px;margin:-1600px 0 0 -1600px;opacity:.75;
+ -webkit-mask:radial-gradient(circle,rgba(0,0,0,0) 6%,#000 22%,rgba(0,0,0,.4) 60%);mask:radial-gradient(circle,rgba(0,0,0,0) 6%,#000 22%,rgba(0,0,0,.4) 60%)}
+.scena .pillola{display:inline-block;margin-top:18px;padding:8px 26px;border-radius:30px;font-family:'Plus Jakarta Sans';font-weight:800;
+ font-size:34px;letter-spacing:1px;text-transform:uppercase}
+.scena .contatore{font-size:330px;line-height:.9;margin-top:10px}
+.carta{background:radial-gradient(ellipse 60% 45% at 50% 45%,#F7F3EA 0%,#E8E0D2 70%,#CFC4B2 100%)}
+.carta .storto{transform:skewX(-9deg);font-style:normal}
+.carta .scheda-p{position:absolute;left:60px;right:60px;top:180px;bottom:220px;border-radius:40px;border:4px solid rgba(0,0,0,.18)}
+.carta .pill2{display:inline-flex;align-items:center;gap:12px;margin-top:22px;padding:10px 26px;border-radius:12px;
+ font-family:'Plus Jakarta Sans';font-weight:800;font-size:36px;text-transform:uppercase}
+.carta .giu{font-size:70px;line-height:1;margin-top:14px}
+"""
+
+
+def luce(s, n, colori, size):
+    """Scena "luce" (stile ads): fondo nero con un alone del colore d'accento e, se "raggi": true, raggi di luce che
+    corrono verso di te; titolo stretto e alto con il bagliore; sotto una pillola ("etichetta"); oppure un numero che
+    conta fino a quello detto ("numero": 184, con "grande" sopra come etichetta)."""
+    da, a = s["da"], s["a"]
+    acc = colori["accento"]
+    raggi = (f'<div class="raggi" id="sc{n}r" style="background:repeating-conic-gradient(from 0deg,{acc}00 0deg 4deg,{acc}cc 4.5deg 5deg,{acc}00 5.5deg 9deg)"></div>'
+             if s.get("raggi") else "")
+    alone = f'<div class="alone" style="background:radial-gradient(circle,{acc}cc 0%,{acc}55 25%,rgba(0,0,0,0) 60%)"></div>'
+    pill = (f'<div class="pillola" style="background:{acc};color:#140E0A">{html.escape(s["etichetta"])}</div>' if s.get("etichetta") else "")
+    numero = (f'<div class="grande contatore" id="sc{n}c" style="color:#fff">0</div>' if s.get("numero") is not None else "")
+    righe = "".join(f'<div class="grande" style="font-size:{size}px;color:#fff">{html.escape(r)}</div>' for r in s.get("grande", "").split(" / ") if r)
+    corpo = (f'<div class="scena" id="sc{n}" style="background:#050302">{alone}{raggi}'
+             f'<div class="blocco" id="sc{n}b">{righe}{numero}{pill}</div></div>')
+    tl = [f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});',
+          f'tl.fromTo("#sc{n}b",{{opacity:0,scale:1.25,filter:"blur(12px)"}},{{opacity:1,scale:1,filter:"blur(0px)",duration:0.28,ease:"power3.out"}},{da:.3f});',
+          f'tl.fromTo("#sc{n}b",{{y:0}},{{y:-20,duration:{max(a - da - 0.3, 0.1):.3f},ease:"none",immediateRender:false}},{da + 0.3:.3f});',
+          f'tl.set("#sc{n}",{{opacity:0}},{a:.3f});']
+    if s.get("raggi"):
+        tl.append(f'tl.fromTo("#sc{n}r",{{rotation:0,scale:0.8}},{{rotation:25,scale:1.25,duration:{a - da:.3f},ease:"none"}},{da:.3f});')
+    if s.get("numero") is not None:
+        tl.append(f'contaNumero("#sc{n}c",{int(s["numero"])},{s.get("conta", da + 0.15):.3f},0.8);')
+    return corpo, "".join(tl)
+
+
+def persona(s, n, colori, size):
+    """Scheda di una persona su fondo carta: il nome grande e storto, sotto le pillole della sua storia unite da
+    frecce (prima scura, ultima del colore d'accento). s = {"nome": "DAISY", "voci": ["20 anni dipendente",
+    "vive di network"], "da", "a"}."""
+    da, a = s["da"], s["a"]
+    voci = s.get("voci", [])
+    pill = []
+    for k, v in enumerate(voci):
+        ultimo = k == len(voci) - 1
+        col = f'background:{colori["accento"]};color:#140E0A' if ultimo else 'background:#1A1410;color:#fff'
+        pill.append(f'<div class="pill2" id="sc{n}p{k}" style="{col}">{html.escape(v)}</div>'
+                    + ('' if ultimo else f'<div class="giu" style="color:{colori["accento"]}">↓</div>'))
+    corpo = (f'<div class="scena carta" id="sc{n}"><div class="scheda-p"></div><div class="blocco" id="sc{n}b">'
+             f'<div class="grande storto" style="font-size:{min(size + 40, 200)}px;color:#140E0A;'
+             f'text-shadow:6px 6px 0 {colori["accento"]}">{html.escape(s["nome"])}</div>{"".join(pill)}</div></div>')
+    tl = [f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});',
+          f'tl.fromTo("#sc{n}b",{{opacity:0,y:40}},{{opacity:1,y:0,duration:0.3,ease:"power3.out"}},{da:.3f});',
+          f'tl.set("#sc{n}",{{opacity:0}},{a:.3f});']
+    for k in range(len(voci)):
+        tl.append(f'tl.fromTo("#sc{n}p{k}",{{opacity:0,scale:0.7}},{{opacity:1,scale:1,duration:0.22,ease:"back.out(2)"}},{da + 0.3 + 0.35 * k:.3f});')
+    return corpo, "".join(tl)
+
+
+def carta(s, n, colori, size):
+    """Finale su carta (stile ads): fondo chiaro con l'ombra ai bordi, righe grandi e storte con l'ombra d'accento,
+    una freccia che salta e una riga piccola sotto ("sotto"). s = {"grande": "CLICCA / QUI SOTTO", "sotto": "cambia tutto."}."""
+    da, a = s["da"], s["a"]
+    righe = [r for r in s["grande"].split(" / ") if r]
+    blocco = "".join(f'<div class="grande storto" style="font-size:{size if k == 0 else int(size * 0.72)}px;color:#140E0A;'
+                     f'text-shadow:5px 5px 0 {colori["accento"]}">{html.escape(r)}</div>' for k, r in enumerate(righe))
+    sotto = f'<div class="cors" id="sc{n}s" style="color:#140E0A;text-shadow:none;font-size:52px">{html.escape(s.get("sotto", ""))}</div>' if s.get("sotto") else ""
+    corpo = (f'<div class="scena carta" id="sc{n}"><div class="blocco" id="sc{n}b">{blocco}'
+             f'<div class="giu" id="sc{n}f" style="color:#140E0A;font-size:110px;margin:20px 0 50px">↓</div>{sotto}</div></div>')
+    tl = [f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});',
+          f'tl.fromTo("#sc{n}b",{{opacity:0,scale:0.9,filter:"blur(10px)"}},{{opacity:1,scale:1,filter:"blur(0px)",duration:0.3,ease:"power3.out"}},{da:.3f});',
+          f'tl.fromTo("#sc{n}f",{{y:0}},{{y:20,duration:0.4,repeat:{max(int((a - da) / 0.4), 1)},yoyo:true,ease:"sine.inOut"}},{da + 0.3:.3f});',
+          f'tl.set("#sc{n}",{{opacity:0}},{a:.3f});']
+    if s.get("sotto"):
+        tl.append(f'tl.fromTo("#sc{n}s",{{opacity:0}},{{opacity:1,duration:0.25}},{s.get("sotto_da", da + 0.8):.3f});')
+    return corpo, "".join(tl)
+
+
+TIPI.update({"luce": luce, "persona": persona, "carta": carta})
+
 def entrata(s, n):
     tipo, da, a = s.get("entrata"), s["da"], s["a"]
     if tipo == "lampo":

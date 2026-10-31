@@ -166,10 +166,11 @@ def main():
     limite = ZONA["basso"] - 10
     corpo, tl = [], []
     css_sott = ""
-    if stile.get("sottotitoli_scelti"):  # sottotitoli scelti nella pagina (strumenti/sottotitoli.py)
+    propri = stile.get("sottotitoli_nome") if stile.get("sottotitoli_nome") not in (None, "ndf-classico") else None
+    if stile.get("sottotitoli_scelti") or propri:  # scelti nella pagina, o quelli dello stile (strumenti/sottotitoli.py)
         nascondi = [(x["da"], x["a"]) for x in titoli + scene_piano + liste
                     + [p for p in piano.get("pannelli", []) if p.get("frase") or p.get("pieno")]] + [(finale_da, D + 1)]
-        css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile["sottotitoli_scelti"], parole, chiave, y_sub + 40,
+        css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile.get("sottotitoli_scelti") or propri, parole, chiave, y_sub + 40,
                                                             nascondi, stile["colori"])
         corpo += c_sott
         tl += tl_sott
@@ -233,6 +234,22 @@ def main():
     if any(s.get("entrata") == "lampo" for s in scene_piano):
         corpo.append(scene.LAMPO)
 
+    # effetti sulla persona (la voce e i sottotitoli continuano): "bianconero" = grigio, sfocato e quasi buio sulle
+    # frasi negative; "griglia" = l'inquadratura si moltiplica in una griglia di copie di te
+    for n, x in enumerate(piano.get("effetti_video", [])):
+        da, a = x["da"], x["a"]
+        if x["tipo"] == "bianconero":
+            tl.append(f'tl.fromTo("#bg",{{filter:"grayscale(0) blur(0px) brightness(1)"}},{{filter:"grayscale(1) blur(7px) brightness(0.45)",duration:0.25,immediateRender:false}},{da:.3f});'
+                      f'tl.to("#bg",{{filter:"grayscale(1) blur(0px) brightness(0.9)",duration:0.3}},{da + 0.35:.3f});'
+                      f'tl.set("#bg",{{filter:"none"}},{a:.3f});')
+        elif x["tipo"] == "griglia":
+            celle = "".join(f'<video id="gv{n}_{k}" src="assets/tagliato.mp4" muted playsinline data-start="{da:.3f}" '
+                            f'data-media-start="{da:.3f}" data-duration="{a - da:.3f}"></video>' for k in range(12))
+            corpo.append(f'<div class="griglia-v" id="gr{n}">{celle}</div>')
+            tl.append(f'tl.set("#gr{n}",{{opacity:1}},{da:.3f});tl.set("#gr{n}",{{opacity:0}},{a:.3f});')
+            for k in range(12):
+                tl.append(f'tl.fromTo("#gv{n}_{k}",{{opacity:0,scale:1.3}},{{opacity:1,scale:1,duration:0.15,immediateRender:false}},{da + 0.03 * k:.3f});')
+
     # zoom a scatti: a ogni pezzo del taglio l'inquadratura si stringe o si allarga, centrata sulla faccia
     if piano.get("zoom"):
         cx = (faccia["sinistra"] + faccia["destra"]) / 2
@@ -286,6 +303,11 @@ html,body{{margin:0;background:#000}}
 .zona{{position:absolute;background:rgba(255,0,0,.35);z-index:50}}
 .tit,.sub{{z-index:30}}
 {scene.CSS}
+{scene.CSS_ADS}
+.griglia-v{{position:absolute;inset:0;z-index:25;opacity:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);
+ gap:10px;background:#000;filter:grayscale(1)}}
+.griglia-v video{{width:100%;height:100%;object-fit:cover}}
+{'.grande{{text-shadow:0 0 28px ' + c["accento"] + 'cc,0 0 60px ' + c["accento"] + '77,0 4px 14px rgba(0,0,0,.6)}}' if stile.get("bagliore") else ''}
 {split.CSS if split_on else ''}
 {css_sott}
 </style>
@@ -300,6 +322,10 @@ html,body{{margin:0;background:#000}}
 </div>
 <script>
 const tl = gsap.timeline({{paused: true}});
+function contaNumero(sel, fino, da, dur) {{
+  const el = document.querySelector(sel); const o = {{v: 0}};
+  tl.to(o, {{v: fino, duration: dur, ease: "power2.out", onUpdate: () => {{ el.textContent = Math.round(o.v); }}}}, da);
+}}
 {sottotitoli.JS}
 {chr(10).join(tl)}
 tl.set({{}}, {{}}, {D:.3f});
