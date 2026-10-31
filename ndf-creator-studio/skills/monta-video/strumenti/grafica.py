@@ -70,9 +70,6 @@ MIRINO_FINO = 6.2  # il mirino REC solo in apertura: per tutto il reel stanca
 
 
 # schermo diviso: colori delle schede e delle righe, icone a linea (disegnate qui, 64x64)
-PANNELLO_GRAD = ["linear-gradient(160deg,#B44BFF,#FF3DB4 70%,#FF8A5C)", "linear-gradient(160deg,#3FB8FF,#7A5CFF 60%,#C44BFF)",
-                 "linear-gradient(160deg,#2FE0C6,#3F7BFF 75%)", "linear-gradient(160deg,#FFB547,#FF3DB4)"]
-PANNELLO_RIGHE = ["#7A5CFF", "#FF3DB4", "#FF8A3D", "#3F7BFF", "#2FE0C6"]
 _L = 'fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"'
 ICONE = {
     "ufficio": f'<rect x="12" y="20" width="40" height="32" rx="4" {_L}/><path d="M24 20v-6h16v6M12 34h40" {_L}/>',
@@ -88,9 +85,21 @@ ICONE = {
     "stella": f'<path d="M32 8l7 16 17 2-13 11 4 17-15-9-15 9 4-17L8 26l17-2z" {_L}/>',
 }
 
+PANNELLO = {  # colori dello schermo diviso; uno stile li cambia con "pannello" in stile.json
+    "acc": "#FF3DB4", "acc_rgb": "255,61,180", "viola_rgb": "122,92,255", "blu_rgb": "63,123,255",
+    "fondo_alto": "#0E0C22", "fondo": "#0A0918", "vetro_rgb": "24,22,48", "fondo_pieno": "#191536",
+    "verde": "#34E89E", "verde_rgb": "52,232,158", "cta_rgb": "14,22,24", "x": "#FF3D5E",
+    "chiaro1": "#F7F5FC", "chiaro2": "#EEEAF8", "chiaro3": "#F3E3F2", "griglia_rgb": "214,120,200", "testo_chiaro": "#16142C",
+    "schede": ["linear-gradient(160deg,#B44BFF,#FF3DB4 70%,#FF8A5C)", "linear-gradient(160deg,#3FB8FF,#7A5CFF 60%,#C44BFF)",
+               "linear-gradient(160deg,#2FE0C6,#3F7BFF 75%)", "linear-gradient(160deg,#FFB547,#FF3DB4)"],
+    "righe": ["#7A5CFF", "#FF3DB4", "#FF8A3D", "#3F7BFF", "#2FE0C6"],
+}
+
+
 class Reel:
     def __init__(self, stile, cart_stile, reel, D):
         self.stile, self.cart_stile, self.reel, self.D = stile, cart_stile, reel, D
+        self.P = dict(PANNELLO, **stile.get("pannello", {}))
         self.assets = os.path.join(reel, "assets")
         self.corpo, self.tl, self.audio, self.nascondi, self.transizioni = [], [], [], [], []
         self.camera = []  # cose dentro l'inquadratura (#cam), sopra il video: si muovono con zoom e cornici
@@ -1147,7 +1156,7 @@ class Reel:
         if pieno and m["tipo"] == "titolo":   # una scritta grande a tutto schermo è già il sottotitolo
             self.nascondi.append((da, a))
         if pieno == "chiaro":   # sul fondo chiaro i sottotitoli diventano scuri, poi tornano bianchi
-            self.tl.append(f'tl.set(".st",{{color:"#16142C",textShadow:"none"}},{da:.3f});'
+            self.tl.append(f'tl.set(".st",{{color:"{self.P['testo_chiaro']}",textShadow:"none"}},{da:.3f});'
                            f'tl.set(".st",{{color:"#FFFFFF",textShadow:"0 3px 14px rgba(0,0,0,.6)"}},{a:.3f});')
         # come nell'esempio: si entra e si esce con un taglio netto (a tutto schermo) o quasi (nel pannello)
         self.tl.append(f'tl.set("#pe{n}",{{opacity:1}},{da:.3f});' + (f'tl.set("#pe{n}",{{opacity:0}},{a:.3f});' if pieno else
@@ -1177,12 +1186,12 @@ class Reel:
         for j in range(k):
             nome = (m.get("nomi") or [None] * k)[j]
             out.append(f'<div class="ps" id="pe{n}s{j}" style="left:{x0 + j * (larg + gap):.0f}px;top:{cy - alt / 2:.0f}px;'
-                       f'background:{PANNELLO_GRAD[j % len(PANNELLO_GRAD)]}"><i class="ps-play"></i><b></b><b class="corta"></b>'
+                       f'background:{self.P["schede"][j % len(self.P["schede"])]}"><i class="ps-play"></i><b></b><b class="corta"></b>'
                        + (f'<span class="ps-nome">{html.escape(nome)}</span>' if nome else "") + '<em class="ps-lab"></em></div>')
             self._entra(f"#pe{n}s{j}", da + 0.08 * j)
         for (j, t, lab) in m.get("accendi", []):
             altri = [f"#pe{n}s{x}" for x in range(k) if x != j]
-            self.tl.append(f'tl.to("#pe{n}s{j}",{{scale:1.18,zIndex:3,boxShadow:"0 0 0 5px #FF3DB4,0 0 60px rgba(255,61,180,.6)",duration:0.25,ease:"back.out(2)"}},{t:.3f});'
+            self.tl.append(f'tl.to("#pe{n}s{j}",{{scale:1.18,zIndex:3,boxShadow:"0 0 0 5px {self.P['acc']},0 0 60px rgba({self.P['acc_rgb']},.6)",duration:0.25,ease:"back.out(2)"}},{t:.3f});'
                            + (f'tl.to({json.dumps(altri)},{{opacity:0.35,scale:0.94,duration:0.25}},{t:.3f});' if altri else "")
                            + f'tl.set("#pe{n}s{j} .ps-lab",{{textContent:{json.dumps(lab or "")},opacity:{1 if lab else 0}}},{t:.3f});')
             self.suono("pop", t, 0.3)
@@ -1216,7 +1225,7 @@ class Reel:
         alt = 90 + len(righe) * 78
         out = [f'<div class="pl2" id="pe{n}c" style="top:{cy - alt / 2:.0f}px;height:{alt}px"><div class="pl2-t">{html.escape(m.get("titolo", ""))}</div>']
         for j, (testo, t) in enumerate(righe):
-            out.append(f'<div class="pl2-r" id="pe{n}r{j}" style="background:{PANNELLO_RIGHE[j % len(PANNELLO_RIGHE)]}">{html.escape(testo)}</div>')
+            out.append(f'<div class="pl2-r" id="pe{n}r{j}" style="background:{self.P["righe"][j % len(self.P["righe"])]}">{html.escape(testo)}</div>')
             self.tl.append(f'tl.fromTo("#pe{n}r{j}",{{opacity:0,scaleX:0.2}},{{opacity:1,scaleX:1,duration:0.22,ease:"power3.out",immediateRender:false}},{t:.3f});')
             self.suono("pop", t, 0.2)
         if m.get("fine"):
@@ -1244,7 +1253,7 @@ class Reel:
             out.append(f'<div class="pf" id="pe{n}n{j}" style="left:{x - 80:.0f}px;top:{cy - 80:.0f}px"><svg viewBox="0 0 64 64">'
                        f'{ICONE.get(ico, ICONE["stella"])}</svg><span>{html.escape(lab)}</span></div>')
             self._entra(f"#pe{n}n{j}", da + 0.06 * j)
-            self.tl.append(f'tl.to("#pe{n}n{j}",{{borderColor:"#FF3DB4",boxShadow:"0 0 0 2px #FF3DB4,0 0 40px rgba(255,61,180,.5)",color:"#FFFFFF",duration:0.2}},{t:.3f});')
+            self.tl.append(f'tl.to("#pe{n}n{j}",{{borderColor:"{self.P['acc']}",boxShadow:"0 0 0 2px {self.P['acc']},0 0 40px rgba({self.P['acc_rgb']},.5)",color:"#FFFFFF",duration:0.2}},{t:.3f});')
             self.suono("pop", t, 0.25)
         return "".join(out)
 
@@ -1442,6 +1451,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
 
     c = stile["colori"]
     acc, luce, scuro, testo, banda = c["accento"], c["accento_luce"], c["scuro"], c["testo"], c["banda"]
+    P = dict(r.P)
+    P["fondo_rgb"] = ",".join(str(int(P["fondo"][i:i + 2], 16)) for i in (1, 3, 5))
     rgb = ",".join(str(int(luce[i:i + 2], 16)) for i in (1, 3, 5))  # il colore chiaro, per bordi e aloni trasparenti
     W = f"font-family:'{ft['famiglia']}';font-weight:{ft.get('peso', 900)};font-stretch:{ft.get('larghezza', 100)}%"
     M = f"font-family:'{fm['famiglia']}';font-weight:700"
@@ -1741,63 +1752,63 @@ html,body{{margin:0;background:{scuro}}}
 .fc-freccia{{position:absolute;left:50%;top:1210px;width:110px;height:110px;margin-left:-55px;border-radius:50%;background:{acc};color:#fff;
  font-size:64px;font-weight:900;display:flex;align-items:center;justify-content:center}}
 .pan{{position:absolute;left:0;right:0;top:0;height:1000px;z-index:8;overflow:hidden;
- background:radial-gradient(ellipse 70% 55% at 50% 0%,rgba(122,92,255,.35),rgba(122,92,255,0) 70%),linear-gradient(#0E0C22,#0A0918);
- background-image:radial-gradient(ellipse 70% 55% at 50% 0%,rgba(122,92,255,.35),rgba(122,92,255,0) 70%),
+ background:radial-gradient(ellipse 70% 55% at 50% 0%,rgba({P['viola_rgb']},.35),rgba({P['viola_rgb']},0) 70%),linear-gradient({P['fondo_alto']},{P['fondo']});
+ background-image:radial-gradient(ellipse 70% 55% at 50% 0%,rgba({P['viola_rgb']},.35),rgba({P['viola_rgb']},0) 70%),
  linear-gradient(rgba(255,255,255,.045) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.045) 2px,transparent 2px),
- linear-gradient(#0E0C22,#0A0918);background-size:100% 100%,72px 72px,72px 72px,100% 100%;
- box-shadow:0 30px 60px rgba(5,4,14,.85)}}
-.pan:after{{content:"";position:absolute;left:0;right:0;bottom:0;height:140px;background:linear-gradient(rgba(10,9,24,0),#0A0918)}}
+ linear-gradient({P['fondo_alto']},{P['fondo']});background-size:100% 100%,72px 72px,72px 72px,100% 100%;
+ box-shadow:0 30px 60px rgba(0,0,0,.85)}}
+.pan:after{{content:"";position:absolute;left:0;right:0;bottom:0;height:140px;background:linear-gradient(rgba({P['fondo_rgb']},0),{P['fondo']})}}
 .pan-el{{position:absolute;left:0;right:0;top:0;height:1000px;z-index:9;opacity:0;font-family:'Plus Jakarta Sans'}}
 .pan-el.pieno{{height:1920px;z-index:29}}
 .pan-fondo{{position:absolute;inset:0;overflow:hidden;background:
- radial-gradient(circle at 18% 22%,rgba(255,61,180,.7) 0 3px,transparent 4px),radial-gradient(circle at 82% 35%,rgba(122,92,255,.8) 0 3px,transparent 4px),
- radial-gradient(circle at 70% 70%,rgba(255,61,180,.6) 0 3px,transparent 4px),radial-gradient(circle at 25% 80%,rgba(63,123,255,.7) 0 3px,transparent 4px),
- radial-gradient(ellipse 85% 55% at 50% 35%,#191536,#0A0918 72%)}}
-.pan-fondo.chiaro{{background:radial-gradient(circle at 20% 30%,rgba(255,61,180,.5) 0 3px,transparent 4px),
- radial-gradient(circle at 80% 22%,rgba(122,92,255,.5) 0 3px,transparent 4px),linear-gradient(#F7F5FC,#EEEAF8 55%,#F3E3F2)}}
+ radial-gradient(circle at 18% 22%,rgba({P['acc_rgb']},.7) 0 3px,transparent 4px),radial-gradient(circle at 82% 35%,rgba({P['viola_rgb']},.8) 0 3px,transparent 4px),
+ radial-gradient(circle at 70% 70%,rgba({P['acc_rgb']},.6) 0 3px,transparent 4px),radial-gradient(circle at 25% 80%,rgba({P['blu_rgb']},.7) 0 3px,transparent 4px),
+ radial-gradient(ellipse 85% 55% at 50% 35%,{P['fondo_pieno']},{P['fondo']} 72%)}}
+.pan-fondo.chiaro{{background:radial-gradient(circle at 20% 30%,rgba({P['acc_rgb']},.5) 0 3px,transparent 4px),
+ radial-gradient(circle at 80% 22%,rgba({P['viola_rgb']},.5) 0 3px,transparent 4px),linear-gradient({P['chiaro1']},{P['chiaro2']} 55%,{P['chiaro3']})}}
 .pan-fondo.chiaro:after{{content:"";position:absolute;left:-60%;right:-60%;top:1180px;height:1300px;transform:perspective(600px) rotateX(64deg);
- transform-origin:50% 0;background-image:linear-gradient(rgba(214,120,200,.45) 2px,transparent 2px),linear-gradient(90deg,rgba(214,120,200,.45) 2px,transparent 2px);
+ transform-origin:50% 0;background-image:linear-gradient(rgba({P['griglia_rgb']},.45) 2px,transparent 2px),linear-gradient(90deg,rgba({P['griglia_rgb']},.45) 2px,transparent 2px);
  background-size:110px 110px;-webkit-mask:linear-gradient(rgba(0,0,0,.2),#000 40%);mask:linear-gradient(rgba(0,0,0,.2),#000 40%)}}
-.pan-el.pieno.chiaro .pi,.pan-el.pieno.chiaro .pt-r.forte,.pan-el.pieno.chiaro .pt-r.corsivo,.pan-el.pieno.chiaro .pn,.pan-el.pieno.chiaro .pn-sopra{{color:#16142C}}
-.pan-el.pieno.chiaro .pi svg{{color:#16142C}}
+.pan-el.pieno.chiaro .pi,.pan-el.pieno.chiaro .pt-r.forte,.pan-el.pieno.chiaro .pt-r.corsivo,.pan-el.pieno.chiaro .pn,.pan-el.pieno.chiaro .pn-sopra{{color:{P['testo_chiaro']}}}
+.pan-el.pieno.chiaro .pi svg{{color:{P['testo_chiaro']}}}
 .pt-r{{position:absolute;left:60px;right:60px;text-align:center;color:#fff;opacity:0;line-height:1}}
 .pt-r.corsivo{{font-family:'Instrument Serif';font-style:italic;font-size:118px}}
 .pt-r.forte{{font-weight:800;font-size:100px;letter-spacing:-2px}}
-.pt-r.accento{{font-weight:800;font-size:100px;letter-spacing:-2px;color:#FF3DB4;text-shadow:0 0 40px rgba(255,61,180,.45)}}
+.pt-r.accento{{font-weight:800;font-size:100px;letter-spacing:-2px;color:{P['acc']};text-shadow:0 0 40px rgba({P['acc_rgb']},.45)}}
 .ps{{position:absolute;width:200px;height:330px;border-radius:30px;opacity:0;box-shadow:0 18px 40px rgba(0,0,0,.4);transform-origin:50% 60%}}
 .ps-play{{position:absolute;left:78px;top:110px;border-left:52px solid #fff;border-top:32px solid transparent;border-bottom:32px solid transparent}}
 .ps b{{position:absolute;left:26px;right:26px;bottom:72px;height:14px;border-radius:7px;background:rgba(255,255,255,.75)}}
 .ps b.corta{{right:80px;bottom:44px;background:rgba(255,255,255,.5)}}
 .ps-nome{{position:absolute;left:-20px;right:-20px;top:350px;text-align:center;font-weight:700;font-size:32px;color:#fff}}
 .ps-lab{{position:absolute;left:50%;top:-62px;transform:translateX(-50%);white-space:nowrap;font-style:normal;font-weight:700;font-size:30px;
- background:#FF3DB4;color:#fff;padding:6px 22px;border-radius:24px;opacity:0}}
+ background:{P['acc']};color:#fff;padding:6px 22px;border-radius:24px;opacity:0}}
 .pi{{position:absolute;width:220px;text-align:center;color:#fff;opacity:0}}
 .pi svg{{width:180px;height:180px;color:#fff}}
 .pi span{{display:block;margin-top:14px;font-weight:700;font-size:34px}}
-.pi-x{{position:absolute;left:10px;right:10px;top:80px;height:14px;border-radius:7px;background:#FF3D5E;transform:rotate(-30deg) scaleX(0)}}
-.pl2{{position:absolute;left:150px;right:150px;border-radius:30px;background:rgba(24,22,48,.88);border:2px solid rgba(255,255,255,.12);
+.pi-x{{position:absolute;left:10px;right:10px;top:80px;height:14px;border-radius:7px;background:{P['x']};transform:rotate(-30deg) scaleX(0)}}
+.pl2{{position:absolute;left:150px;right:150px;border-radius:30px;background:rgba({P['vetro_rgb']},.88);border:2px solid rgba(255,255,255,.12);
  padding:22px 26px;opacity:0;box-shadow:0 20px 50px rgba(0,0,0,.4)}}
 .pl2-t{{font-weight:700;font-size:28px;color:rgba(255,255,255,.75);margin-bottom:14px}}
 .pl2-r{{height:62px;border-radius:14px;margin-bottom:16px;padding-left:22px;display:flex;align-items:center;font-weight:700;font-size:30px;
  color:#fff;transform-origin:0 50%;opacity:0}}
-.pl2-fine{{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#34E89E;color:#0A0918;font-weight:800;font-size:40px;
- padding:14px 34px;border-radius:40px;opacity:0;box-shadow:0 0 40px rgba(52,232,158,.5)}}
-.pf{{position:absolute;width:160px;height:160px;border-radius:28px;background:rgba(24,22,48,.9);border:3px solid rgba(255,255,255,.18);
+.pl2-fine{{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:{P['verde']};color:{P['fondo']};font-weight:800;font-size:40px;
+ padding:14px 34px;border-radius:40px;opacity:0;box-shadow:0 0 40px rgba({P['verde_rgb']},.5)}}
+.pf{{position:absolute;width:160px;height:160px;border-radius:28px;background:rgba({P['vetro_rgb']},.9);border:3px solid rgba(255,255,255,.18);
  color:rgba(255,255,255,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0}}
 .pf svg{{width:80px;height:80px;color:currentColor}}
 .pf span{{margin-top:8px;font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:1px}}
-.pf-l{{position:absolute;height:4px;background:#FF3DB4;border-radius:2px;transform-origin:0 50%;box-shadow:0 0 12px #FF3DB4}}
+.pf-l{{position:absolute;height:4px;background:{P['acc']};border-radius:2px;transform-origin:0 50%;box-shadow:0 0 12px {P['acc']}}}
 .pn-sopra{{position:absolute;left:0;right:0;text-align:center;font-family:'Instrument Serif';font-style:italic;font-size:70px;color:#fff}}
 .pn{{position:absolute;left:0;right:0;text-align:center;font-weight:800;font-size:190px;letter-spacing:-6px;color:#fff;
- text-shadow:0 0 40px rgba(255,61,180,.45)}}
-.pn-lab{{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:38px;color:#FF3DB4}}
+ text-shadow:0 0 40px rgba({P['acc_rgb']},.45)}}
+.pn-lab{{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:38px;color:{P['acc']}}}
 .pn-barre{{position:absolute;left:0;right:0;display:flex;justify-content:center;align-items:flex-end;gap:14px;height:170px}}
-.pn-barre i{{width:44px;border-radius:8px 8px 0 0;background:linear-gradient(#FF3DB4,#7A5CFF);transform-origin:50% 100%}}
-.pc2{{position:absolute;left:150px;right:150px;height:340px;border-radius:34px;background:rgba(14,22,24,.92);border:3px solid #34E89E;
- box-shadow:0 0 50px rgba(52,232,158,.25);padding:34px;opacity:0;text-align:center}}
+.pn-barre i{{width:44px;border-radius:8px 8px 0 0;background:linear-gradient({P['acc']},rgb({P['viola_rgb']}));transform-origin:50% 100%}}
+.pc2{{position:absolute;left:150px;right:150px;height:340px;border-radius:34px;background:rgba({P['cta_rgb']},.92);border:3px solid {P['verde']};
+ box-shadow:0 0 50px rgba({P['verde_rgb']},.25);padding:34px;opacity:0;text-align:center}}
 .pc2-t{{font-family:'Instrument Serif';font-size:72px;color:#fff}}
 .pc2-r{{font-size:26px;color:rgba(255,255,255,.6);margin:8px 0 26px;opacity:0}}
-.pc2-b{{height:100px;border-radius:20px;background:#34E89E;color:#0A0918;font-weight:800;font-size:40px;display:flex;align-items:center;
+.pc2-b{{height:100px;border-radius:20px;background:{P['verde']};color:{P['fondo']};font-weight:800;font-size:40px;display:flex;align-items:center;
  justify-content:center;opacity:0}}
 .pc2-m{{position:absolute;right:120px;bottom:30px;width:64px;height:64px;opacity:0}}
 {css_sott}
