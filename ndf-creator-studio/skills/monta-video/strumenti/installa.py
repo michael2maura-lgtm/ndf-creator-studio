@@ -83,6 +83,9 @@ def python_studio(uv_bin):
         gira([uv_bin, "venv", "--python", "3.12", VENV])
         gira([uv_bin, "pip", "install", "--python", PY, *PACCHETTI])
     stato("Python dello studio", sano())
+    # per copiare lo stile da un link (prendi_esempio.py): pochi MB, anche su chi aveva già lo studio
+    if gira([PY, "-c", "import yt_dlp"]).returncode != 0:
+        gira([uv_bin, "pip", "install", "--python", PY, "yt-dlp"])
 
 
 def ffmpeg():

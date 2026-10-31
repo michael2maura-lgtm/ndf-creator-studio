@@ -93,6 +93,34 @@ Transizioni (stili del motore grafica): nel piano scrivi "transizioni": [secondi
 un minuto, nella pausa prima della parte nuova). Il tipo (sfumatura di luce, bande, taglio netto) è quello dello stile
 o quello scelto nella pagina: tu scrivi solo i secondi.
 
+## Copiare lo stile di un reel ("replica questo reel", "voglio uno stile come questo")
+L'utente manda un link, un file o descrive un aspetto: quello è il brief. Non lo avvicini allo stile più simile che
+c'è: ne rifai l'aspetto, movimenti compresi, sul video dell'utente. Si copiano l'ASPETTO e la STRUTTURA (tipo di
+carattere, maiuscolo, colori, targhe, posizioni, ritmo dei sottotitoli, movimenti, ritmo dei tagli, tipo di grafiche,
+carattere dei suoni). Mai le immagini, la musica, la voce, il logo, il nome o le parole di chi l'ha fatto, e mai dire
+che il risultato è fatto con lui. Caratteri: quello gratuito più vicino (Google Fonts); di' quale usi al posto
+dell'originale. Mai un font a pagamento.
+1. **Prendi e studia ogni esempio.** `PY STUDIO/strumenti/prendi_esempio.py "<link o file>" [altri] --nome <nome>`,
+   poi `PY STUDIO/strumenti/studia.py <nome>` per ognuno. Se dice SERVE LOGIN chiedi il permesso di usare l'accesso del
+   browser (le parole sono nello strumento); solo con un sì rilancia con `--browser chrome`. GUARDA tutti i fogli,
+   `tagli.jpg`, tutte le strisce di movimento e 2-3 fotogrammi grandi: i fogli dicono COSA c'è, le strisce COME si
+   muove. I salti di suono sono le tue orecchie: controlla ogni salto sul fotogramma di quel secondo.
+   Più esempi: un messaggio solo, "di ognuno ho visto questo (una riga): cosa prendi da quale?".
+   Solo un'immagine (screenshot): non dice ritmo, movimento e suono: una domanda, o scelte calme e lo dici.
+2. **Crea lo stile e scrivilo.** `PY STUDIO/strumenti/stile_da_esempio.py <nome> --base <stile pronto più vicino>
+   --esempio <nome>`, poi compila `stile.md` (una riga per aspetto, niente "come nell'esempio") e cambia
+   `stile.json` (colori, font, sottotitoli, transizione, mirino, finale, effetti).
+3. **Rifallo sul video dell'utente**: le sue parole, le sue riprese, la sua durata. Si copia il ritmo, non i tempi.
+   Monta con `"stile": "<nome>"` come sempre (passaggi 1-7).
+4. **Confronta.** `PY STUDIO/strumenti/confronta.py <esempio> <lavoro>` (anche `--a` con secondi a metà di
+   un'entrata, dalle strisce): esempio sopra, il suo reel sotto. Correggi quello che non torna, una volta.
+   Poi dagli il foglio e una lista semplice: cosa è uguale, cosa non si è potuto rifare. Mai fingere.
+5. **Sistemalo con lui e salvalo.** Le sue correzioni vanno nello stile. Quando gli piace: anteprima dello stile da
+   quel reel (`anteprima.mp4` + `anteprima.jpg`), e di': "Salvato come Stile <nome>: lo trovi nella pagina; la
+   prossima volta basta monta questo video."
+Limiti da dire chiari: la musica dell'esempio non si prende (c'è quella dello stile); niente effetti 3D o
+rallentamenti dentro il video se lo studio non li ha.
+
 ## Correzioni dell'utente
 Una correzione per questo video si fa nel `piano.json` o nel `tagli.json` di questo video, poi si rifà dal passaggio
 che è cambiato e si crea la versione dopo (v2, v3: le vecchie restano). Tagli cambiati dopo il piano:
