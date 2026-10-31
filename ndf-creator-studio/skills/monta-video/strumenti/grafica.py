@@ -69,6 +69,25 @@ GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
 MIRINO_FINO = 6.2  # il mirino REC solo in apertura: per tutto il reel stanca
 
 
+# schermo diviso: colori delle schede e delle righe, icone a linea (disegnate qui, 64x64)
+PANNELLO_GRAD = ["linear-gradient(160deg,#B44BFF,#FF3DB4 70%,#FF8A5C)", "linear-gradient(160deg,#3FB8FF,#7A5CFF 60%,#C44BFF)",
+                 "linear-gradient(160deg,#2FE0C6,#3F7BFF 75%)", "linear-gradient(160deg,#FFB547,#FF3DB4)"]
+PANNELLO_RIGHE = ["#7A5CFF", "#FF3DB4", "#FF8A3D", "#3F7BFF", "#2FE0C6"]
+_L = 'fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"'
+ICONE = {
+    "ufficio": f'<rect x="12" y="20" width="40" height="32" rx="4" {_L}/><path d="M24 20v-6h16v6M12 34h40" {_L}/>',
+    "fabbrica": f'<path d="M8 54V30l14 8v-8l14 8v-8l14 8V14h6v40z" {_L}/>',
+    "persone": f'<circle cx="24" cy="22" r="8" {_L}/><circle cx="44" cy="24" r="6" {_L}/><path d="M10 52c0-9 6-15 14-15s14 6 14 15M38 50c0-7 3-12 8-12s8 5 8 12" {_L}/>',
+    "telefono": f'<rect x="20" y="8" width="24" height="48" rx="5" {_L}/><path d="M29 49h6" {_L}/>',
+    "tazza": f'<path d="M12 22h32v14a14 14 0 0 1-14 14h-4a14 14 0 0 1-14-14z M44 26h4a7 7 0 0 1 0 14h-5" {_L}/>',
+    "spunta": f'<circle cx="32" cy="32" r="22" {_L}/><path d="M22 33l7 7 14-15" {_L}/>',
+    "soldi": f'<rect x="8" y="18" width="48" height="28" rx="4" {_L}/><circle cx="32" cy="32" r="7" {_L}/>',
+    "porta": f'<path d="M16 56V8h26v48M42 12l10 4v40l-10-4" {_L}/><circle cx="36" cy="33" r="1.5" fill="currentColor"/>',
+    "crescita": f'<path d="M8 50l16-16 10 10 22-22M42 22h14v14" {_L}/>',
+    "cervello": f'<path d="M24 12a9 9 0 0 0-9 9 9 9 0 0 0-5 15 9 9 0 0 0 9 14h5V12zM40 12a9 9 0 0 1 9 9 9 9 0 0 1 5 15 9 9 0 0 1-9 14h-5V12z" {_L}/>',
+    "stella": f'<path d="M32 8l7 16 17 2-13 11 4 17-15-9-15 9 4-17L8 26l17-2z" {_L}/>',
+}
+
 class Reel:
     def __init__(self, stile, cart_stile, reel, D):
         self.stile, self.cart_stile, self.reel, self.D = stile, cart_stile, reel, D
@@ -1104,6 +1123,158 @@ class Reel:
         self.nascondi.append((da, self.D + 1))
         self.suono("transizione", da - 0.05, 0.25)
 
+    # ---------- schermo diviso (stile copiato da esempi/spunto) ----------
+    PAN_H = 1000   # altezza del pannello in alto; sotto c'è la persona
+
+    def pannello(self, e, faccia):
+        """Grafica nel pannello in alto (o a tutto schermo con "pieno": "scuro" | "chiaro"), una per frase.
+        e = {"da", "a", "pieno": null, "modulo": {"tipo": titolo|schede|icone|lista|flusso|numero|cta, ...}}."""
+        da, a = e["da"], e["a"]
+        self.font_extra("InstrumentSerif-Italic.ttf")
+        n = len(self.corpo)
+        pieno = e.get("pieno")
+        cy = 860 if pieno else 470            # centro verticale del contenuto
+        m = e["modulo"]
+        dentro = getattr(self, "p_" + m["tipo"])(m, n, da, a, cy)
+        sfondo = f'<div class="pan-fondo{" chiaro" if pieno == "chiaro" else ""}"></div>' if pieno else ""
+        # icone, schede, liste e caselle si disegnano piccole e si ingrandiscono attorno al centro: grandi come nell'esempio
+        # quanto ingrandire senza uscire dai lati: dipende da quante cose ci sono in fila
+        quante = len(m.get("icone") or m.get("nodi") or []) or m.get("quante", 3)
+        scala = {"titolo": 1.0, "cta": 1.25, "numero": 1.1, "lista": 1.15, "schede": 1.35,
+                 "icone": 1.5 if quante <= 2 else 1.12, "flusso": 1.4 if quante <= 3 else 1.1}.get(m["tipo"], 1.2)
+        dentro = f'<div style="position:absolute;inset:0;transform-origin:540px {cy}px;transform:scale({scala})">{dentro}</div>'
+        self.corpo.append(f'<div class="pan-el{" pieno" if pieno else ""}" id="pe{n}">{sfondo}{dentro}</div>')
+        if pieno:   # a tutto schermo la scritta grande è il sottotitolo: quelli normali spariscono
+            self.nascondi.append((da, a))
+        self.tl.append(f'tl.set("#pe{n}",{{opacity:1}},{da:.3f});tl.to("#pe{n}",{{opacity:0,duration:0.15}},{a - 0.15:.3f});')
+
+    def _entra(self, sel, t, dy=24):
+        self.tl.append(f'tl.fromTo("{sel}",{{opacity:0,y:{dy},scale:0.92}},{{opacity:1,y:0,scale:1,duration:0.22,ease:"back.out(1.8)",immediateRender:false}},{t:.3f});')
+
+    def p_titolo(self, m, n, da, a, cy):
+        """Righe grandi: "corsivo" (serif italic), "forte" (grassetto bianco), "accento" (grassetto magenta)."""
+        righe = m["righe"]
+        alto = cy - len(righe) * 60
+        out = []
+        for j, r in enumerate(righe):
+            out.append(f'<div class="pt-r {r.get("stile", "forte")}" id="pe{n}t{j}" style="top:{alto + j * 120}px">{html.escape(r["testo"])}</div>')
+            self._entra(f"#pe{n}t{j}", r.get("da", da), 18)
+            self.suono("pop", r.get("da", da), 0.2)
+        return "".join(out)
+
+    def p_schede(self, m, n, da, a, cy):
+        """Tre (o più) schede video colorate con il play; "accendi": [[indice, secondo, "etichetta"], ...] ingrandisce
+        quella detta con il bagliore e un'etichetta sopra, le altre si spengono. "nomi": etichette sotto le schede."""
+        k = m.get("quante", 3)
+        larg, alt, gap = 200, 330, 30
+        x0 = 540 - (k * larg + (k - 1) * gap) / 2
+        out = []
+        for j in range(k):
+            nome = (m.get("nomi") or [None] * k)[j]
+            out.append(f'<div class="ps" id="pe{n}s{j}" style="left:{x0 + j * (larg + gap):.0f}px;top:{cy - alt / 2:.0f}px;'
+                       f'background:{PANNELLO_GRAD[j % len(PANNELLO_GRAD)]}"><i class="ps-play"></i><b></b><b class="corta"></b>'
+                       + (f'<span class="ps-nome">{html.escape(nome)}</span>' if nome else "") + '<em class="ps-lab"></em></div>')
+            self._entra(f"#pe{n}s{j}", da + 0.08 * j)
+        for (j, t, lab) in m.get("accendi", []):
+            altri = [f"#pe{n}s{x}" for x in range(k) if x != j]
+            self.tl.append(f'tl.to("#pe{n}s{j}",{{scale:1.18,zIndex:3,boxShadow:"0 0 0 5px #FF3DB4,0 0 60px rgba(255,61,180,.6)",duration:0.25,ease:"back.out(2)"}},{t:.3f});'
+                           + (f'tl.to({json.dumps(altri)},{{opacity:0.35,scale:0.94,duration:0.25}},{t:.3f});' if altri else "")
+                           + f'tl.set("#pe{n}s{j} .ps-lab",{{textContent:{json.dumps(lab or "")},opacity:{1 if lab else 0}}},{t:.3f});')
+            self.suono("pop", t, 0.3)
+        return "".join(out)
+
+    def p_icone(self, m, n, da, a, cy):
+        """Icone a linea in fila, con un'etichetta sotto; "x": true le barra in rosso. m = {"icone": [["ufficio",
+        "in ufficio", secondo, true], ...]}. Icone: ufficio, fabbrica, persone, telefono, tazza, spunta, soldi, porta,
+        crescita, cervello, stella."""
+        ic = m["icone"]
+        passo = 300 if len(ic) <= 3 else 230
+        x0 = 540 - passo * (len(ic) - 1) / 2
+        out = []
+        for j, v in enumerate(ic):
+            nome, lab, t = v[0], v[1], v[2]
+            barra = len(v) > 3 and v[3]
+            out.append(f'<div class="pi" id="pe{n}i{j}" style="left:{x0 + j * passo - 110:.0f}px;top:{cy - 150:.0f}px">'
+                       f'<svg viewBox="0 0 64 64">{ICONE.get(nome, ICONE["stella"])}</svg><span>{html.escape(lab)}</span>'
+                       + (f'<i class="pi-x" id="pe{n}i{j}x"></i>' if barra else "") + '</div>')
+            self._entra(f"#pe{n}i{j}", t)
+            self.suono("pop", t, 0.25)
+            if barra:
+                self.tl.append(f'tl.fromTo("#pe{n}i{j}x",{{scaleX:0}},{{scaleX:1,duration:0.2,ease:"power2.out",immediateRender:false}},{t + 0.35:.3f});')
+        return "".join(out)
+
+    def p_lista(self, m, n, da, a, cy):
+        """Scheda di vetro con un'intestazione e righe colorate che entrano una alla volta. m = {"titolo": "oggi",
+        "righe": [["comunicare", secondo], ...], "fine": ["libera", secondo] (facoltativo: le righe spariscono e
+        resta una pillola verde)}."""
+        righe = m["righe"]
+        alt = 90 + len(righe) * 78
+        out = [f'<div class="pl2" id="pe{n}c" style="top:{cy - alt / 2:.0f}px;height:{alt}px"><div class="pl2-t">{html.escape(m.get("titolo", ""))}</div>']
+        for j, (testo, t) in enumerate(righe):
+            out.append(f'<div class="pl2-r" id="pe{n}r{j}" style="background:{PANNELLO_RIGHE[j % len(PANNELLO_RIGHE)]}">{html.escape(testo)}</div>')
+            self.tl.append(f'tl.fromTo("#pe{n}r{j}",{{opacity:0,scaleX:0.2}},{{opacity:1,scaleX:1,duration:0.22,ease:"power3.out",immediateRender:false}},{t:.3f});')
+            self.suono("pop", t, 0.2)
+        if m.get("fine"):
+            testo, t = m["fine"]
+            out.append(f'<div class="pl2-fine" id="pe{n}f">✓ {html.escape(testo)}</div>')
+            self.tl.append(f'tl.to("#pe{n}c .pl2-r",{{opacity:0,duration:0.2}},{t:.3f});')
+            self._entra(f"#pe{n}f", t + 0.1)
+            self.suono("ding", t, 0.3)
+        out.append('</div>')
+        self._entra(f"#pe{n}c", da)
+        return "".join(out)
+
+    def p_flusso(self, m, n, da, a, cy):
+        """Caselle con un'icona collegate da linee: si accendono una dopo l'altra in magenta.
+        m = {"nodi": [["persone", "amicizie", secondo], ["porta", "porte", secondo], ...]} (al massimo 4)."""
+        nodi = m["nodi"][:4]
+        passo = 240
+        x0 = 540 - passo * (len(nodi) - 1) / 2
+        out = []
+        for j, (ico, lab, t) in enumerate(nodi):
+            x = x0 + j * passo
+            if j:
+                out.append(f'<i class="pf-l" id="pe{n}l{j}" style="left:{x - passo + 80:.0f}px;top:{cy - 2:.0f}px;width:{passo - 160}px"></i>')
+                self.tl.append(f'tl.fromTo("#pe{n}l{j}",{{scaleX:0}},{{scaleX:1,duration:0.2,immediateRender:false}},{t - 0.15:.3f});')
+            out.append(f'<div class="pf" id="pe{n}n{j}" style="left:{x - 80:.0f}px;top:{cy - 80:.0f}px"><svg viewBox="0 0 64 64">'
+                       f'{ICONE.get(ico, ICONE["stella"])}</svg><span>{html.escape(lab)}</span></div>')
+            self._entra(f"#pe{n}n{j}", da + 0.06 * j)
+            self.tl.append(f'tl.to("#pe{n}n{j}",{{borderColor:"#FF3DB4",boxShadow:"0 0 0 2px #FF3DB4,0 0 40px rgba(255,61,180,.5)",color:"#FFFFFF",duration:0.2}},{t:.3f});')
+            self.suono("pop", t, 0.25)
+        return "".join(out)
+
+    def p_numero(self, m, n, da, a, cy):
+        """Numero grande che sale fino al valore detto, con una parola corsiva sopra, un'etichetta magenta sotto e
+        delle barre che crescono. m = {"valore": 3, "sopra": "oltre", "etichetta": "cose", "conta": secondo}."""
+        t = m.get("conta", da + 0.2)
+        out = [f'<div class="pn-sopra" id="pe{n}o" style="top:{cy - 230:.0f}px">{html.escape(m.get("sopra", ""))}</div>',
+               f'<div class="pn" id="pe{n}v" style="top:{cy - 170:.0f}px">0</div>',
+               f'<div class="pn-lab" style="top:{cy + 10:.0f}px">{html.escape(m.get("etichetta", ""))}</div>',
+               f'<div class="pn-barre" style="top:{cy + 80:.0f}px">'
+               + "".join(f'<i id="pe{n}b{j}" style="height:{30 + j * 18}px"></i>' for j in range(8)) + '</div>']
+        self.tl.append(f'conta("#pe{n}v",0,{int(m["valore"])},{t:.3f},0.7);')
+        for j in range(8):
+            self.tl.append(f'tl.fromTo("#pe{n}b{j}",{{scaleY:0}},{{scaleY:1,duration:0.3,ease:"back.out(2)",immediateRender:false}},{t + 0.07 * j:.3f});')
+        self.suono("livello", t + 0.6, 0.3)
+        return "".join(out)
+
+    def p_cta(self, m, n, da, a, cy):
+        """Scheda finale: nome in alto, una riga piccola, un bottone verde e la freccia del mouse che lo clicca.
+        m = {"titolo": "Networker del Futuro", "riga": "commenta INFO", "bottone": "Scrivi INFO", "clic": secondo}."""
+        out = [f'<div class="pc2" id="pe{n}c" style="top:{cy - 170:.0f}px"><div class="pc2-t">{html.escape(m["titolo"])}</div>'
+               f'<div class="pc2-r" id="pe{n}r">{html.escape(m.get("riga", ""))}</div>'
+               f'<div class="pc2-b" id="pe{n}b">{html.escape(m.get("bottone", ""))}</div>'
+               f'<svg class="pc2-m" id="pe{n}m" viewBox="0 0 24 24"><path d="M4 2l15 11-7 1-3 7z" fill="#fff" stroke="#111" stroke-width="1.5"/></svg></div>']
+        self._entra(f"#pe{n}c", da)
+        self.tl.append(f'tl.fromTo("#pe{n}r",{{opacity:0}},{{opacity:1,duration:0.2,immediateRender:false}},{da + 0.3:.3f});'
+                       f'tl.fromTo("#pe{n}b",{{opacity:0,y:16}},{{opacity:1,y:0,duration:0.22,immediateRender:false}},{da + 0.5:.3f});')
+        if m.get("clic"):
+            t = m["clic"]
+            self.tl.append(f'tl.fromTo("#pe{n}m",{{opacity:0,x:160,y:120}},{{opacity:1,x:0,y:0,duration:0.5,ease:"power2.out",immediateRender:false}},{t - 0.5:.3f});'
+                           f'tl.fromTo("#pe{n}b",{{scale:1}},{{keyframes:[{{scale:0.94,duration:0.08}},{{scale:1,duration:0.12}}],immediateRender:false}},{t:.3f});')
+            self.suono("click", t, 0.45)
+        return "".join(out)
+
     def finale(self, piano, da):
         self.bande(da)
         self.scuro(da, self.D)
@@ -1164,6 +1335,12 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
 
     petto = min(faccia["mento"] + 70, 1180)  # titoli e targhette sul petto, sotto il mento
     y_sub = min(faccia["mento"] + 160, 1300)
+    diviso = stile.get("layout") == "diviso"
+    sposta = 0
+    if diviso:   # schermo diviso: la persona scende sotto il pannello, la cima della testa appena sotto il bordo
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
+        sposta = int(Reel.PAN_H + 40 - cima)
+        y_sub = Reel.PAN_H - 90
     ap = piano.get("apertura")
     # effetti accesi: quelli scelti nella pagina, se no quelli dello stile (stile.json "effetti"), se no tutti
     accesi = stile.get("effetti_scelti", stile.get("effetti"))
@@ -1181,7 +1358,7 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         r.suono("apertura", 0.0, 0.4)
     for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][-1] if x.get("voci") else 0):
         tipo = e["tipo"]
-        if tipo != "scena" and accesi is not None and effetti.chiave_di(e) not in accesi:   # le scene sono lo stile, non un effetto
+        if tipo not in ("scena", "pannello") and accesi is not None and effetti.chiave_di(e) not in accesi:   # le scene sono lo stile, non un effetto
             print(f'NOTA: "{effetti.CATALOGO[effetti.chiave_di(e)]["nome"]}" non è tra gli effetti accesi, lo salto')
             continue
         if tipo == "gigante":
@@ -1233,6 +1410,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.orbita(e, faccia)
         elif tipo == "scena":
             r.scena(e, faccia)
+        elif tipo == "pannello":
+            r.pannello(e, faccia)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude
         r.transizione(t)
     # il commento fa da chiusura: senza "finale_da" nel piano, niente finale scuro sopra
@@ -1556,6 +1735,57 @@ html,body{{margin:0;background:{scuro}}}
 .fc-sc{{position:absolute;left:0;right:0;top:1150px;text-align:center;{M};font-size:24px;letter-spacing:4px;color:rgba(255,255,255,.75)}}
 .fc-freccia{{position:absolute;left:50%;top:1210px;width:110px;height:110px;margin-left:-55px;border-radius:50%;background:{acc};color:#fff;
  font-size:64px;font-weight:900;display:flex;align-items:center;justify-content:center}}
+.pan{{position:absolute;left:0;right:0;top:0;height:1000px;z-index:8;overflow:hidden;
+ background:radial-gradient(ellipse 70% 55% at 50% 0%,rgba(122,92,255,.35),rgba(122,92,255,0) 70%),linear-gradient(#0E0C22,#0A0918);
+ background-image:radial-gradient(ellipse 70% 55% at 50% 0%,rgba(122,92,255,.35),rgba(122,92,255,0) 70%),
+ linear-gradient(rgba(255,255,255,.045) 2px,transparent 2px),linear-gradient(90deg,rgba(255,255,255,.045) 2px,transparent 2px),
+ linear-gradient(#0E0C22,#0A0918);background-size:100% 100%,72px 72px,72px 72px,100% 100%;
+ box-shadow:0 30px 60px rgba(5,4,14,.85)}}
+.pan:after{{content:"";position:absolute;left:0;right:0;bottom:0;height:140px;background:linear-gradient(rgba(10,9,24,0),#0A0918)}}
+.pan-el{{position:absolute;left:0;right:0;top:0;height:1000px;z-index:9;opacity:0;font-family:'Plus Jakarta Sans'}}
+.pan-el.pieno{{height:1920px;z-index:29}}
+.pan-fondo{{position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 30%,#1B1640,#0A0918 70%)}}
+.pan-fondo.chiaro{{background:linear-gradient(#F6F3FF,#ECE6FA 60%,#F7D9F0)}}
+.pt-r{{position:absolute;left:60px;right:60px;text-align:center;color:#fff;opacity:0;line-height:1}}
+.pt-r.corsivo{{font-family:'Instrument Serif';font-style:italic;font-size:118px}}
+.pt-r.forte{{font-weight:800;font-size:100px;letter-spacing:-2px}}
+.pt-r.accento{{font-weight:800;font-size:100px;letter-spacing:-2px;color:#FF3DB4;text-shadow:0 0 40px rgba(255,61,180,.45)}}
+.ps{{position:absolute;width:200px;height:330px;border-radius:30px;opacity:0;box-shadow:0 18px 40px rgba(0,0,0,.4);transform-origin:50% 60%}}
+.ps-play{{position:absolute;left:78px;top:110px;border-left:52px solid #fff;border-top:32px solid transparent;border-bottom:32px solid transparent}}
+.ps b{{position:absolute;left:26px;right:26px;bottom:72px;height:14px;border-radius:7px;background:rgba(255,255,255,.75)}}
+.ps b.corta{{right:80px;bottom:44px;background:rgba(255,255,255,.5)}}
+.ps-nome{{position:absolute;left:-20px;right:-20px;top:350px;text-align:center;font-weight:700;font-size:32px;color:#fff}}
+.ps-lab{{position:absolute;left:50%;top:-62px;transform:translateX(-50%);white-space:nowrap;font-style:normal;font-weight:700;font-size:30px;
+ background:#FF3DB4;color:#fff;padding:6px 22px;border-radius:24px;opacity:0}}
+.pi{{position:absolute;width:220px;text-align:center;color:#fff;opacity:0}}
+.pi svg{{width:180px;height:180px;color:#fff}}
+.pi span{{display:block;margin-top:14px;font-weight:700;font-size:34px}}
+.pi-x{{position:absolute;left:10px;right:10px;top:80px;height:14px;border-radius:7px;background:#FF3D5E;transform:rotate(-30deg) scaleX(0)}}
+.pl2{{position:absolute;left:150px;right:150px;border-radius:30px;background:rgba(24,22,48,.88);border:2px solid rgba(255,255,255,.12);
+ padding:22px 26px;opacity:0;box-shadow:0 20px 50px rgba(0,0,0,.4)}}
+.pl2-t{{font-weight:700;font-size:28px;color:rgba(255,255,255,.75);margin-bottom:14px}}
+.pl2-r{{height:62px;border-radius:14px;margin-bottom:16px;padding-left:22px;display:flex;align-items:center;font-weight:700;font-size:30px;
+ color:#fff;transform-origin:0 50%;opacity:0}}
+.pl2-fine{{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#34E89E;color:#0A0918;font-weight:800;font-size:40px;
+ padding:14px 34px;border-radius:40px;opacity:0;box-shadow:0 0 40px rgba(52,232,158,.5)}}
+.pf{{position:absolute;width:160px;height:160px;border-radius:28px;background:rgba(24,22,48,.9);border:3px solid rgba(255,255,255,.18);
+ color:rgba(255,255,255,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0}}
+.pf svg{{width:80px;height:80px;color:currentColor}}
+.pf span{{margin-top:8px;font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:1px}}
+.pf-l{{position:absolute;height:4px;background:#FF3DB4;border-radius:2px;transform-origin:0 50%;box-shadow:0 0 12px #FF3DB4}}
+.pn-sopra{{position:absolute;left:0;right:0;text-align:center;font-family:'Instrument Serif';font-style:italic;font-size:70px;color:#fff}}
+.pn{{position:absolute;left:0;right:0;text-align:center;font-weight:800;font-size:190px;letter-spacing:-6px;color:#fff;
+ text-shadow:0 0 40px rgba(255,61,180,.45)}}
+.pn-lab{{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:38px;color:#FF3DB4}}
+.pn-barre{{position:absolute;left:0;right:0;display:flex;justify-content:center;align-items:flex-end;gap:14px;height:170px}}
+.pn-barre i{{width:44px;border-radius:8px 8px 0 0;background:linear-gradient(#FF3DB4,#7A5CFF);transform-origin:50% 100%}}
+.pc2{{position:absolute;left:150px;right:150px;height:340px;border-radius:34px;background:rgba(14,22,24,.92);border:3px solid #34E89E;
+ box-shadow:0 0 50px rgba(52,232,158,.25);padding:34px;opacity:0;text-align:center}}
+.pc2-t{{font-family:'Instrument Serif';font-size:72px;color:#fff}}
+.pc2-r{{font-size:26px;color:rgba(255,255,255,.6);margin:8px 0 26px;opacity:0}}
+.pc2-b{{height:100px;border-radius:20px;background:#34E89E;color:#0A0918;font-weight:800;font-size:40px;display:flex;align-items:center;
+ justify-content:center;opacity:0}}
+.pc2-m{{position:absolute;right:120px;bottom:30px;width:64px;height:64px;opacity:0}}
 {css_sott}
 </style>
 <script src="{GSAP}"></script>
@@ -1563,7 +1793,8 @@ html,body{{margin:0;background:{scuro}}}
 <div id="root" data-composition-id="main" data-start="0" data-duration="{D:.3f}" data-width="1080" data-height="1920">
 <audio id="voce" src="assets/tagliato.mp4" data-start="0" data-media-start="0" data-duration="{D:.3f}" data-volume="1"></audio>
 {chr(10).join(r.audio)}
-<div id="cam" class="cam"><video id="bg" src="assets/tagliato.mp4" muted playsinline data-start="0" data-media-start="0" data-duration="{D:.3f}"></video>
+{'<div class="pan"><i class="pan-luce"></i></div>' if diviso else ''}
+<div id="cam" class="cam"><video id="bg" src="assets/tagliato.mp4" style="top:{sposta}px" muted playsinline data-start="0" data-media-start="0" data-duration="{D:.3f}"></video>
 {chr(10).join(r.camera)}</div>
 <div class="mirino" id="mir"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i>
 <div class="mir-lab" style="left:150px"><span class="rosso">●</span> REC <span id="tc">00:00:00</span></div>

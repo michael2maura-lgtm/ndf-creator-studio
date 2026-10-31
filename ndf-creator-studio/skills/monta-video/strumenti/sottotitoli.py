@@ -62,6 +62,15 @@ CATALOGO = {
         "css": ".st{font-family:%f-archivo%;font-weight:900;font-stretch:125%;font-size:44px;line-height:1.2;color:#fff;"
                "text-shadow:0 3px 12px rgba(0,0,0,.6)}.st .k{background:%acc%;padding:2px 12px 4px;border-radius:6px;text-shadow:none}",
     },
+    "due-righe": {
+        "nome": "Due righe", "per": "Schermo diviso, video calmi e curati",
+        "descrizione": "Prima riga in corsivo elegante, seconda in grassetto; la parola chiave colorata.",
+        "modo": "gruppo", "parole": 5, "lettere": 26, "due_righe": True, "entra": ENTRA_MORBIDO,
+        "font": ["serif-corsivo", "jakarta"],
+        "css": ".st{font-family:%f-jakarta%;font-weight:700;font-size:58px;line-height:1.05;color:#fff;"
+               "text-shadow:0 3px 14px rgba(0,0,0,.6)}.st .r1{display:block;font-family:%f-serif-corsivo%;font-weight:400;"
+               "font-size:54px;letter-spacing:-.5px}.st .r2{display:block}.st .k{color:%acc%}",
+    },
     "ndf-targhetta": {
         "nome": "NDF Targhetta", "per": "Motion graphics, video dinamici",
         "descrizione": "Due o tre parole in maiuscolo, la parola importante su una targhetta arancione.",
@@ -268,6 +277,9 @@ def parti(nome, parole, chiave, y, nascondi, colori):
             t = t.upper() if s.get("maiuscolo") else t
             cl = "w k" if re.sub(r"[^\w]", "", t.lower()) in chiave else "w"
             pezzi.append(f'<span class="{cl}" id="u{i}w{j}">{html.escape(t)}</span>')
+        if s.get("due_righe") and len(pezzi) > 1:   # prima metà in corsivo sopra, il resto in grassetto sotto
+            m = max(1, len(pezzi) // 2)
+            pezzi = [f'<span class="r1">{" ".join(pezzi[:m])}</span>', f'<span class="r2">{" ".join(pezzi[m:])}</span>']
         corpo.append(f'<div class="st" id="u{i}" style="top:{y}px">{" ".join(pezzi)}</div>')
         da_v, a_v = s["entra"]
         if modo in ("gruppo", "parola", "karaoke"):
