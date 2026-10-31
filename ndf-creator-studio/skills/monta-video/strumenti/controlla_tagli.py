@@ -36,10 +36,17 @@ def main():
     out = os.path.join(cart, "controllo")
     os.makedirs(out, exist_ok=True)
 
+    # il video finito va più veloce del tagliato (rendi.py): i tagli cadono prima, nello stesso rapporto
+    vel = 1.0
+    if len(args) > 1:
+        from comune import VELOCITA, con_le_scelte
+        pi = leggi(os.path.join(cart, "piano.json")) if os.path.exists(os.path.join(cart, "piano.json")) else {}
+        vel = float(pi.get("velocita") or con_le_scelte(pi.get("stile", ""), {}).get("velocita") or VELOCITA)
+
     from PIL import Image, ImageDraw
     coppie = []
     for s in segmenti[1:]:
-        f = s["fotogramma"]
+        f = round(s["fotogramma"] / vel)
         a, b = os.path.join(out, "_a.jpg"), os.path.join(out, "_b.jpg")
         fotogramma(video, f - 1, a)
         fotogramma(video, f, b)

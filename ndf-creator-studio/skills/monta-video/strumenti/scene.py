@@ -171,7 +171,7 @@ def omino(s, n, colori, size):
              f'{html.escape(s["sotto"])}</div>') if s.get("sotto") else ""
     corpo = (f'<div class="scena" id="sc{n}" style="background:{fondo}">'
              + ("" if chiaro else f'<div class="luce" id="sc{n}l"></div>') + extra
-             + f'<div style="position:absolute;top:120px;left:0;right:0;text-align:center">'
+             + f'<div style="position:absolute;top:240px;left:0;right:0;text-align:center">'   # sotto la fascia alta di Instagram (220)
              f'<div class="grande scia" id="sc{n}g" style="font-size:{min(size, 150)}px;color:{col_grande};text-shadow:{ombra_t}">'
              f'{html.escape(s["grande"])}</div>{sotto}</div>'
              f'<div id="sc{n}o" style="position:absolute;top:600px;left:0;right:0;display:flex;justify-content:center">'
