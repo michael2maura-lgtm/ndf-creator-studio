@@ -50,6 +50,10 @@ CATALOGO = {
                    "descrizione": "Un telefono vero vola accanto a te e mostra la chat, con il bottone che viene toccato."},
     "orbita": {"nome": "Orbita", "per": "Far vedere i tuoi reel, i tuoi lavori",
                "descrizione": "Le copertine dei tuoi reel ti girano attorno, passando dietro e davanti a te."},
+    "targhetta": {"nome": "Targhetta in alto", "per": "Dire subito di cosa parla il video",
+                  "descrizione": "Sopra la testa un riquadro colorato con il tema del video su due righe, fisso fino alla fine."},
+    "barrate": {"nome": "Icone barrate", "per": "Senza questo, senza quello",
+                "descrizione": "Spuntano i riquadri di alcuni programmi e una X disegnata a mano li cancella uno dopo l'altro."},
     "telefono": {"nome": "Telefono", "per": "Instagram, storie, reel, app",
                  "descrizione": "Ti rimpicciolisci dentro lo schermo di un telefono, con i titoli sopra."},
 }

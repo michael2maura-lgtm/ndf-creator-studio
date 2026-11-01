@@ -40,6 +40,8 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "prompt", "da": 58.0, "a": 63.6, "testo": "trasforma i contenuti in contatti", "scrivi_da": 61.0, "scrivi_a": 63.0},
    {"tipo": "telefono3d", "da": 9.6, "a": 17.1, "app": "ChatGPT", "messaggi": [["Quali sono le domande...", 11.76, "io"]],
     "scheda": {"etichetta": "Risposta", "titolo": "15 domande pronte", "bottone": "Copia", "da": 14.5}, "tocco": 16.2, "fatto": "Copiato"},
+   {"tipo": "targhetta", "da": 2.0, "riga1": "Il metodo NDF", "riga2": "spiegato semplice"},   fissa in alto fino alla fine
+   {"tipo": "barrate", "da": 6.8, "barra": 9.2, "a": 11.5, "icone": ["forbici", "pellicola", "timeline"]},  "senza..."
    {"tipo": "orbita", "da": 50.0, "a": 55.8},                     con ritaglio: copertine dei reel già montati
    {"tipo": "zoom", "mosse": [[0.3, 2.4, 1.12, "lento"], [3.6, 3.9, 1.3, "scatto"], [4.9, 5.2, 1.0, "fuori"]]}],
  "finale_da": 64.75, "finale_sopra": "TE LO INVIO IN DIRECT", "finale_testo": "COMMENTA", "finale_bottone": "INFO"}
@@ -83,6 +85,11 @@ ICONE = {
     "crescita": f'<path d="M8 50l16-16 10 10 22-22M42 22h14v14" {_L}/>',
     "cervello": f'<path d="M24 12a9 9 0 0 0-9 9 9 9 0 0 0-5 15 9 9 0 0 0 9 14h5V12zM40 12a9 9 0 0 1 9 9 9 9 0 0 1 5 15 9 9 0 0 1-9 14h-5V12z" {_L}/>',
     "stella": f'<path d="M32 8l7 16 17 2-13 11 4 17-15-9-15 9 4-17L8 26l17-2z" {_L}/>',
+    # programmi da barrare (disegni nostri, mai i loghi veri)
+    "forbici": f'<circle cx="18" cy="46" r="8" {_L}/><circle cx="46" cy="46" r="8" {_L}/><path d="M23 40L48 10M41 40L16 10" {_L}/>',
+    "pellicola": f'<rect x="10" y="12" width="44" height="40" rx="4" {_L}/><path d="M20 12v40M44 12v40M10 24h10M10 40h10M44 24h10M44 40h10" {_L}/>',
+    "timeline": f'<path d="M10 18h28M18 32h36M10 46h22" stroke-width="7" stroke-linecap="round" stroke="currentColor"/>',
+    "play": f'<rect x="8" y="12" width="48" height="40" rx="8" {_L}/><path d="M27 23v18l15-9z" fill="currentColor"/>',
 }
 
 PANNELLO = {  # colori dello schermo diviso; uno stile li cambia con "pannello" in stile.json
@@ -821,6 +828,56 @@ class Reel:
         self.suono("tastiera", scrivi_da, 0.3, dur=scrivi_a - scrivi_da)
         self.nascondi.append((da, a))
 
+    def targhetta(self, e, faccia):
+        """Targhetta fissa in alto: un riquadro del colore d'accento sopra la testa, con il tema del video su due righe
+        (la prima in grassetto, la seconda in corsivo). Entra sfocata e resta fino alla fine (o fino ad "a").
+        e = {"da": secondo, "riga1": "Il metodo NDF", "riga2": "spiegato semplice", "a": facoltativo}."""
+        self.font_extra("InterTight.ttf")
+        self.font_extra("InstrumentSerif-Italic.ttf")
+        n = len(self.corpo)
+        da, a = e["da"], min(e.get("a", self.D), self.D)
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95   # la cima della testa
+        y = int(min(max(cima - 230, 250), 420))   # sopra la testa, mai nella fascia alta che Instagram copre
+        righe = f'<b>{html.escape(e["riga1"])}</b>' + (f'<i>{html.escape(e["riga2"])}</i>' if e.get("riga2") else "")
+        colore = e.get("colore", self.stile["colori"]["accento"])
+        self.corpo.append(f'<div class="tg" id="tg{n}" style="top:{y}px;background:{colore}">{righe}</div>')
+        self.tl.append(f'tl.fromTo("#tg{n}",{{opacity:0,y:-14,scale:0.94,filter:"blur(10px)"}},{{opacity:1,y:0,scale:1,filter:"blur(0px)",'
+                       f'duration:0.4,ease:"power2.out",immediateRender:false}},{da:.3f});')
+        if a < self.D - 0.1:
+            self.tl.append(f'tl.to("#tg{n}",{{opacity:0,duration:0.25}},{a - 0.25:.3f});')
+        self.suono("pop", da, 0.25)
+
+    def barrate(self, e, faccia):
+        """Icone barrate: sopra la testa spuntano i riquadri di alcuni programmi, un po' storti, e poi una X disegnata a
+        mano li cancella uno dopo l'altro ("senza nessun programma"). e = {"da": secondo, "barra": secondo della prima X,
+        "a": fine, "icone": ["forbici", "pellicola", "timeline"]} (icone: nomi di ICONE, 2-4)."""
+        n = len(self.corpo)
+        da, a = e["da"], e["a"]
+        nomi = (e.get("icone") or ["forbici", "pellicola", "timeline"])[:4]
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
+        y = int(min(max(cima - 250, 260), 440))
+        piastre = [("#FFFFFF", "#111111"), ("#141414", self.P["acc"]), ("#141414", "#FFB547"), ("#FFFFFF", "#3F7BFF")]
+        storti = [-7, 4, 8, -4]
+        x_col = e.get("colore", self.P["acc"])
+        pezzi = []
+        for j, nome in enumerate(nomi):
+            fondo, segno = piastre[j % 4]
+            pezzi.append(f'<div class="br-i" id="br{n}i{j}" style="transform:rotate({storti[j % 4]}deg)">'
+                         f'<div class="br-p" style="background:{fondo};color:{segno}"><svg viewBox="0 0 64 64">{ICONE.get(nome, ICONE["stella"])}</svg></div>'
+                         f'<svg class="br-x" viewBox="0 0 100 100"><path id="br{n}i{j}a" d="M10 12L90 88" pathLength="1" stroke="{x_col}"/>'
+                         f'<path id="br{n}i{j}b" d="M90 10L12 90" pathLength="1" stroke="{x_col}"/></svg></div>')
+        self.corpo.append(f'<div class="br" id="br{n}" style="top:{y}px">{"".join(pezzi)}</div>')
+        T = self.tl.append
+        T(f'tl.set("#br{n}",{{opacity:1}},{da:.3f});tl.to("#br{n}",{{opacity:0,duration:0.2}},{a - 0.2:.3f});')
+        barra = e.get("barra", da + 1.0)
+        for j in range(len(nomi)):
+            T(f'tl.fromTo("#br{n}i{j}",{{opacity:0,scale:0.4}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(2.2)",immediateRender:false}},{da + j * 0.08:.3f});')
+            t = barra + j * 0.2
+            T(f'tl.fromTo("#br{n}i{j}a",{{strokeDashoffset:1}},{{strokeDashoffset:0,duration:0.1,ease:"none",immediateRender:false}},{t:.3f});'
+              f'tl.fromTo("#br{n}i{j}b",{{strokeDashoffset:1}},{{strokeDashoffset:0,duration:0.1,ease:"none",immediateRender:false}},{t + 0.1:.3f});')
+            self.suono("click", t, 0.3, se_manca="pop")
+        self.suono("pop", da, 0.25)
+
     def telefono3d(self, e, faccia):
         """Telefono 3D: un telefono vero, inclinato, vola accanto a te e mostra una chat: l'intestazione dell'app, i
         messaggi che arrivano e una scheda con un bottone giallo che viene toccato sulla parola giusta.
@@ -1418,6 +1475,10 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.pillole(e, faccia)
         elif tipo == "prompt":
             r.prompt(e, faccia)
+        elif tipo == "targhetta":
+            r.targhetta(e, faccia)
+        elif tipo == "barrate":
+            r.barrate(e, faccia)
         elif tipo == "telefono3d":
             r.telefono3d(e, faccia)
         elif tipo == "orbita":
@@ -1658,6 +1719,18 @@ html,body{{margin:0;background:{scuro}}}
  text-shadow:0 2px 8px rgba(0,0,0,.6)}}
 .pr2-tx{{font-weight:800;letter-spacing:-1.5px;color:#F2EADB;line-height:1.12;text-shadow:0 2px 12px rgba(0,0,0,.35);min-height:60px}}
 .pr2-car{{display:inline-block;width:4px;height:1em;background:#fff;vertical-align:-0.12em;margin-left:4px}}
+@font-face{{font-family:'Instrument Serif Italic';src:url('assets/InstrumentSerif-Italic.ttf')}}
+.tg{{position:absolute;left:0;right:0;margin:0 auto;width:max-content;max-width:900px;z-index:34;opacity:0;
+ padding:20px 46px 22px;border-radius:24px;text-align:center;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.28)}}
+.tg b{{display:block;font-family:'Inter Tight';font-weight:800;font-size:64px;line-height:1.05;letter-spacing:-.5px}}
+.tg i{{display:block;font-family:'Instrument Serif Italic';font-style:normal;font-size:80px;line-height:1}}
+.br{{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:44px;z-index:33;opacity:0}}
+.br-i{{position:relative;width:170px;height:170px}}
+.br-p{{position:absolute;inset:0;border-radius:36px;display:flex;align-items:center;justify-content:center;
+ box-shadow:0 10px 26px rgba(0,0,0,.35)}}
+.br-p svg{{width:100px;height:100px}}
+.br-x{{position:absolute;left:-30px;top:-30px;width:230px;height:230px;overflow:visible}}
+.br-x path{{fill:none;stroke-width:9;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;opacity:.92}}
 .tf-scena{{position:absolute;width:400px;height:820px;z-index:31;perspective:1600px}}
 .tf{{position:absolute;inset:0;border-radius:64px;background:#0B0B0D;padding:16px;opacity:0;font-family:'Inter Tight';
  box-shadow:0 0 0 3px #2a2a2e,0 0 0 5px #0a0a0a,0 40px 80px rgba(0,0,0,.55);overflow:hidden}}
