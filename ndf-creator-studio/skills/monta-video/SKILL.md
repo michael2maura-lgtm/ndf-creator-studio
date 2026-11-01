@@ -48,6 +48,8 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    si dice. Dai alla clip il nome dell'oggetto quando c'è (soldi, porta, festa, sveglia, ufficio, fabbrica,
    bollette...): così prende da sola il suo suono. Foto a tutto schermo (scena `immagine`, es. un corpo, un
    prodotto, un luogo): stesso modo, con un link pexels.com/photo/...; finiscono in `DATI/immagini/`.
+   Clip e foto stanno di serie in una finestra arrotondata su fondo scuro (i sottotitoli continuano sopra, se la scena
+   non ha "grande"); "finestra": false solo se serve il tutto schermo.
    Entrate delle scene, campo "entrata": `lampo` (flash bianco all'entrata e al ritorno sulla persona: per clip e
    immagini), `scorri` (entra da destra: per passaggi numerati in fila), `carta` (morbida, sfocata: momenti calmi).
    Senza "entrata" è un taglio netto. Varia tra un video e l'altro (registro). Esempi approvati in `esempi/`:

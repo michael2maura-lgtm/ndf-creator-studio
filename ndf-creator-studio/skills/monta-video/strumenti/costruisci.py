@@ -156,7 +156,8 @@ def main():
     titoli = [x for x in titoli if x["da"] < D - 0.2]
     liste = [x for x in piano.get("liste", []) if x["da"] < D - 0.2]
     chiave = {p.lower() for p in piano.get("parole_chiave", [])}
-    coprono = [x for x in scene_piano if not x.get("finestra")]   # dentro la finestra i sottotitoli continuano
+    # dentro la finestra (clip e foto, di serie) i sottotitoli continuano, a meno che la scena abbia il suo titolo
+    coprono = [x for x in scene_piano if not scene.finestra(x) or x.get("grande")]
 
     def coperto(t):
         return any(x["da"] <= t < x["a"] for x in titoli + coprono + liste
