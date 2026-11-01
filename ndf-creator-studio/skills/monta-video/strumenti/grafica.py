@@ -98,7 +98,18 @@ ICONE = {
                       f'L{32 + r * math.cos(math.radians(g)):.1f} {32 + r * math.sin(math.radians(g)):.1f}" stroke="currentColor" '
                       f'stroke-width="7.5" stroke-linecap="round"/>' for g, r in zip(range(-90, 270, 30), [31, 25, 30, 26, 31, 24, 30, 27, 31, 25, 29, 26])),
 }
-LOGHI = {"claude": ("#D97757", "#FFFFFF")}   # riquadro e segno coi colori dell'app, invece di quelli a giro
+LOGHI = {"claude": ("#D97757", "#FFFFFF")}
+# loghi delle app nei pop-up (disegnati qui, nel loro colore), scelti dal nome dell'app: solo per i video dell'utente
+LOGHI_APP = {
+    "chatgpt": ("#0F0F0F", '<rect x="21" y="9" width="22" height="34" rx="11" transform="rotate(0 32 32)" fill="none" stroke="#fff" stroke-width="4.2"/><rect x="21" y="9" width="22" height="34" rx="11" transform="rotate(60 32 32)" fill="none" stroke="#fff" stroke-width="4.2"/><rect x="21" y="9" width="22" height="34" rx="11" transform="rotate(120 32 32)" fill="none" stroke="#fff" stroke-width="4.2"/><rect x="21" y="9" width="22" height="34" rx="11" transform="rotate(180 32 32)" fill="none" stroke="#fff" stroke-width="4.2"/><rect x="21" y="9" width="22" height="34" rx="11" transform="rotate(240 32 32)" fill="none" stroke="#fff" stroke-width="4.2"/><rect x="21" y="9" width="22" height="34" rx="11" transform="rotate(300 32 32)" fill="none" stroke="#fff" stroke-width="4.2"/>'),
+    "instagram": ("radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285AEB 90%)",
+                  '<rect x="12" y="12" width="40" height="40" rx="12" fill="none" stroke="#fff" stroke-width="4.5"/>'
+                  '<circle cx="32" cy="32" r="9.5" fill="none" stroke="#fff" stroke-width="4.5"/><circle cx="44" cy="20" r="3" fill="#fff"/>'),
+    "claude": ("#D97757", "".join(f'<path d="M{32 + 2 * math.cos(math.radians(g)):.1f} {32 + 2 * math.sin(math.radians(g)):.1f}'
+                                   f'L{32 + r * math.cos(math.radians(g)):.1f} {32 + r * math.sin(math.radians(g)):.1f}" stroke="#fff" '
+                                   f'stroke-width="6" stroke-linecap="round"/>' for g, r in zip(range(-90, 270, 30), [24, 19, 23, 20, 24, 18, 23, 21, 24, 19, 22, 20]))),
+    "whatsapp": ("#25D366", '<path d="M32 12a20 20 0 0 0-17 30l-3 10 10-3a20 20 0 1 0 10-37z" fill="none" stroke="#fff" stroke-width="4"/>'),
+}   # riquadro e segno coi colori dell'app, invece di quelli a giro
 
 PANNELLO = {  # colori dello schermo diviso; uno stile li cambia con "pannello" in stile.json
     "acc": "#FF3DB4", "acc_rgb": "255,61,180", "viola_rgb": "122,92,255", "blu_rgb": "63,123,255",
@@ -954,6 +965,9 @@ class Reel:
         basso = e.get("dove") == "basso"
         y = min(faccia["mento"] + 330, 1420) if basso else 250
         col = e.get("colore", self.stile["colori"]["accento"])
+        logo = LOGHI_APP.get(e.get("app", "").lower().replace(" ", ""))
+        if logo and not e.get("icona"):
+            col = logo[0]
         if e.get("forma") == "adesivo":
             self.corpo.append(f'<div class="pop-ad" id="pop{n}" style="top:{y}px"><div class="pop-ad-t">{html.escape(e.get("testo", "Fammi una domanda"))}</div>'
                               f'<div class="pop-ad-c">Scrivi qualcosa…</div></div>')
@@ -962,8 +976,9 @@ class Reel:
             self.suono("pop", da, 0.35)
             return
         ico = (f'<svg viewBox="0 0 64 64">{ICONE[e["icona"]]}</svg>' if e.get("icona") in ICONE
+               else f'<svg viewBox="0 0 64 64" style="width:58px;height:58px">{logo[1]}</svg>' if logo
                else html.escape(e.get("app", "?")[:1].upper()))
-        self.corpo.append(f'<div class="pop" id="pop{n}" style="top:{y}px"><i class="pop-ico" style="background:{col}">{ico}</i>'
+        self.corpo.append(f'<div class="pop" id="pop{n}" style="top:{y}px"><i class="pop-ico" style="background:{col};{"border-radius:18px" if logo else ""}">{ico}</i>'
                           f'<div class="pop-tx"><b>{html.escape(e.get("app", ""))}</b><span>{html.escape(e.get("testo", ""))}</span></div>'
                           f'<em>ora</em></div>')
         dy = 60 if basso else -60
