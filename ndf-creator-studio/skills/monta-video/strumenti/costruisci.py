@@ -224,6 +224,8 @@ def main():
 
     # scene a tutto schermo (strumenti/scene.py): la scritta può essere grande, c'è tutto lo schermo
     for n, s in enumerate(scene_piano):
+        if s["tipo"] == "racconto":   # le scene animate dello Stile Racconto: le fa grafica.py, qui sotto
+            continue
         if s["tipo"] == "clip":
             shutil.copy2(trova(s["clip"] + ".mp4", "clip"), os.path.join(reel, "assets", f"clip-{s['clip']}.mp4"))
         size = 150 if not s.get("grande") else dimensione_titolo(dict(s, sotto=s.get("sotto")), dict(stile, titoli=dict(tt, dimensione_grande=150,
@@ -274,6 +276,25 @@ def main():
 
     audio_extra = suoni_reel.prepara(piano, stile, cart_stile, reel, D)
 
+    # scene "racconto" (fondo scuro o carta, titolo riga per riga, barrette, timbri, play, pellicola): le disegna il
+    # motore grafica con i caratteri e i suoni dello Stile Racconto; gli id cambiano da sc/s a rc/rs per non scontrarsi
+    css_racc = ""
+    racc = [s for s in scene_piano if s["tipo"] == "racconto"]
+    if racc:
+        cart_r = cartella_stile("racconto")
+        st_r = leggi(os.path.join(cart_r, "stile.json"))
+        r = grafica.Reel(st_r, cart_r, reel, D)
+        for e in racc:
+            r.scena(e, faccia)
+        rinomina = lambda t: re.sub(r'(["#])sc(\d)', r"\1rc\2", t)  # noqa: E731
+        corpo += [rinomina(x) for x in r.corpo]
+        tl += [rinomina(x) for x in r.tl]
+        audio_extra += [re.sub(r'id="s(\d)', r'id="rs\1', x) for x in r.audio]
+        for f in st_r["font"].values():
+            shutil.copy2(os.path.join(cart_r, f["file"]), os.path.join(reel, "assets", os.path.basename(f["file"])))
+        css_racc = "".join(f"@font-face{{font-family:'{f['famiglia']}';src:url('assets/{os.path.basename(f['file'])}');"
+                           f"font-weight:100 900;font-stretch:62% 125%}}" for f in st_r["font"].values()) + grafica.css_scene(st_r)
+
     testo_fin = piano.get("finale_testo", fin["testo"])
     sotto_fin = piano.get("finale_sotto", "qui sotto")
     size_fin = dimensione_titolo({"grande": testo_fin, "sotto": sotto_fin}, stile, cart_stile, larghezza, y_tit, limite,
@@ -316,6 +337,7 @@ html,body{{margin:0;background:#000}}
 {'.grande{{text-shadow:0 0 28px ' + c["accento"] + 'cc,0 0 60px ' + c["accento"] + '77,0 4px 14px rgba(0,0,0,.6)}}' if stile.get("bagliore") else ''}
 {split.CSS if split_on else ''}
 {css_sott}
+{css_racc}
 </style>
 <script src="{GSAP}"></script>
 </head><body>
@@ -333,6 +355,7 @@ function contaNumero(sel, fino, da, dur) {{
   tl.to(o, {{v: fino, duration: dur, ease: "power2.out", onUpdate: () => {{ el.textContent = Math.round(o.v); }}}}, da);
 }}
 {sottotitoli.JS}
+{grafica.JS_CONTA}
 {chr(10).join(tl)}
 tl.set({{}}, {{}}, {D:.3f});
 window.__timelines = window.__timelines || {{}};

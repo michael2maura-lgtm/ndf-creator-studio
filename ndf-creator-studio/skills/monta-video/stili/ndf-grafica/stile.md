@@ -42,3 +42,7 @@ Motore: strumenti/grafica.py (il formato del piano è in cima a quel file).
 - Poche cose fatte bene: una grafica alla volta; se un elemento non aiuta a capire o a sentire, si toglie.
 - Il mirino REC non per tutto il reel: solo in apertura.
 - Il suono della tastiera dura solo mentre il testo si scrive.
+
+## Video semplice (ex Stile Luce, unito qui il 2026-11-01)
+Un pensiero, un consiglio veloce: 1-2 effetti al massimo, riquadro bianco d'apertura ("apertura": {"box": ...}),
+"transizione": "sfumatura" sui cambi di argomento, niente mirino.

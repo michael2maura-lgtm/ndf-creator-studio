@@ -109,6 +109,67 @@ PANNELLO = {  # colori dello schermo diviso; uno stile li cambia con "pannello" 
 }
 
 
+
+def css_scene(stile):
+    """Lo stile delle scene a tutto schermo (Reel.scena): serve qui e a costruisci.py, che le usa nello stile Scene."""
+    c, ft, fm = stile["colori"], stile["font"]["titoli"], stile["font"]["mono"]
+    acc, luce, scuro, banda = c["accento"], c["accento_luce"], c["scuro"], c["banda"]
+    W = f"font-family:'{ft['famiglia']}';font-weight:{ft.get('peso', 900)};font-stretch:{ft.get('larghezza', 100)}%"
+    M = f"font-family:'{fm['famiglia']}';font-weight:700"
+    return f""".scn{{position:absolute;inset:0;z-index:37;opacity:0;overflow:hidden;
+ background:radial-gradient(ellipse 90% 70% at 50% 40%,{banda} 0%,{scuro} 75%);color:#fff}}
+.scn.carta{{background:#F2EEE6;color:{scuro};
+ background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1.2px),radial-gradient(rgba(0,0,0,.025) 1px,transparent 1.2px);
+ background-size:7px 7px,11px 11px;background-position:0 0,3px 5px}}
+.sc-lab{{position:absolute;left:0;right:0;top:200px;text-align:center;{M};font-size:22px;letter-spacing:4px;color:{acc}}}
+.sc-lab.sx{{left:90px;text-align:left}}
+.sc-tit{{position:absolute;left:60px;right:60px;top:240px;text-align:center}}
+.sc-r{{{W};font-size:84px;line-height:1.02;opacity:0}}
+.sc-r.targa-sc{{display:inline-block;background:{acc};color:#fff;padding:2px 18px 6px;border-radius:8px;margin-top:6px}}
+.bar{{position:absolute;border-radius:18px;background:linear-gradient(90deg,#C94A12 0%,{acc} 35%,{luce} 60%,{acc} 100%);
+ box-shadow:0 4px 10px rgba(0,0,0,.25)}}
+.bar.spenta{{background:rgba(255,255,255,.08);box-shadow:none}}
+.bar-on{{position:absolute;inset:0;border-radius:inherit;opacity:0;background:linear-gradient(90deg,#C94A12 0%,{acc} 35%,{luce} 60%,{acc} 100%);
+ box-shadow:0 4px 10px rgba(0,0,0,.25)}}
+.carta .bar.spenta{{background:rgba(0,0,0,.08)}}
+.sc-tel{{position:absolute;left:300px;top:480px;width:480px;height:900px;border:4px solid rgba(255,255,255,.45);border-radius:56px}}
+.carta .sc-tel{{border-color:rgba(0,0,0,.35)}}
+.sc-conta{{position:absolute;left:0;right:0;text-align:center;display:flex;align-items:baseline;justify-content:center;gap:14px}}
+.sc-conta b{{{W};font-size:70px;color:{acc}}}
+.sc-conta span{{{M};font-size:24px;letter-spacing:3px}}
+.sc-timbro{{position:absolute;left:0;right:0;margin:0 auto;top:880px;transform-origin:50% 50%;width:max-content;padding:0 40px 10px;text-align:center;{W};font-size:120px;
+ color:{scuro};background:{acc};border:8px solid {scuro};border-radius:22px;padding:0 0 10px;opacity:0;box-shadow:0 14px 40px rgba(0,0,0,.35)}}
+.sc-timbro.sx{{left:90px;right:auto;margin:0;padding:0 34px 10px}}
+.sc-num{{position:absolute;left:0;right:0;top:980px;text-align:center;opacity:0}}
+.sc-num b{{display:block;{W};font-size:300px;line-height:1;color:{acc}}}
+.sc-num span{{{W};font-size:70px}}
+.sc-riga{{position:absolute;left:90px;right:60px;{W};font-size:118px;line-height:1;opacity:0;white-space:nowrap}}
+.sc-barra{{position:absolute;left:-10px;top:52%;height:14px;width:calc(100% - 50px);max-width:520px;background:{acc};transform:scaleX(0);transform-origin:0 50%}}
+.sc-play{{position:absolute;left:330px;top:560px;width:420px;height:780px;border-radius:50px;background:#fff;border:4px solid rgba(0,0,0,.12);
+ box-shadow:0 20px 50px rgba(0,0,0,.18);overflow:hidden}}
+.sc-pl{{position:absolute;left:34px;top:40px;{M};font-size:18px;letter-spacing:2px;color:rgba(0,0,0,.4)}}
+.sc-tasto{{position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:{acc}}}
+.sc-tasto:after{{content:"";position:absolute;left:44px;top:32px;border-left:34px solid #fff;border-top:23px solid transparent;border-bottom:23px solid transparent}}
+.sc-pronto{{position:absolute;inset:0;background:{scuro};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+ {W};font-size:56px;opacity:0}}
+.sc-pronto b{{width:120px;height:120px;border-radius:50%;background:{acc};color:#fff;font-size:70px;display:flex;align-items:center;justify-content:center}}
+.sc-pell{{position:absolute;left:0;right:0;top:820px;height:400px;background:#0b0b0b;overflow:hidden;
+ border-top:28px dashed #0b0b0b;border-bottom:28px dashed #0b0b0b;
+ background-image:repeating-linear-gradient(90deg,transparent 0 24px,rgba(255,255,255,.25) 24px 40px);background-size:100% 18px;background-repeat:repeat-x}}
+.sc-film{{position:absolute;left:0;top:44px;display:flex;gap:30px}}
+.sc-film img{{width:170px;height:302px;object-fit:cover;border-radius:8px}}
+.sc-adesso-l{{position:absolute;left:538px;top:790px;width:5px;height:460px;background:{acc}}}
+.sc-adesso{{position:absolute;left:50%;top:1280px;transform:translateX(-50%);background:{acc};color:#fff;{M};font-size:28px;letter-spacing:3px;
+ padding:10px 26px;border-radius:30px;opacity:0}}
+"""
+
+
+# il numero che conta (scene "riempi"): serve qui e a costruisci.py
+JS_CONTA = """function contaCon(sel, segno, da_n, a_n, da, dur) {
+  const el = document.querySelector(sel); const o = {v: da_n};
+  tl.to(o, {v: a_n, duration: dur, ease: "power1.out", onUpdate: () => { el.textContent = segno + Math.round(o.v); }}, da);
+}"""
+
 class Reel:
     def __init__(self, stile, cart_stile, reel, D):
         self.stile, self.cart_stile, self.reel, self.D = stile, cart_stile, reel, D
@@ -1807,51 +1868,7 @@ html,body{{margin:0;background:{scuro}}}
 .tbox{{position:absolute;left:0;right:0;text-align:center;z-index:34;opacity:0}}
 .tbox span{{display:inline-block;max-width:820px;padding:16px 30px 18px;background:#fff;color:#111;border-radius:6px;
  font-family:'{ft["famiglia"]}';font-weight:800;font-size:48px;line-height:1.15;box-shadow:0 8px 24px rgba(0,0,0,.25)}}
-.scn{{position:absolute;inset:0;z-index:37;opacity:0;overflow:hidden;
- background:radial-gradient(ellipse 90% 70% at 50% 40%,{banda} 0%,{scuro} 75%);color:#fff}}
-.scn.carta{{background:#F2EEE6;color:{scuro};
- background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1.2px),radial-gradient(rgba(0,0,0,.025) 1px,transparent 1.2px);
- background-size:7px 7px,11px 11px;background-position:0 0,3px 5px}}
-.sc-lab{{position:absolute;left:0;right:0;top:200px;text-align:center;{M};font-size:22px;letter-spacing:4px;color:{acc}}}
-.sc-lab.sx{{left:90px;text-align:left}}
-.sc-tit{{position:absolute;left:60px;right:60px;top:240px;text-align:center}}
-.sc-r{{{W};font-size:84px;line-height:1.02;opacity:0}}
-.sc-r.targa-sc{{display:inline-block;background:{acc};color:#fff;padding:2px 18px 6px;border-radius:8px;margin-top:6px}}
-.bar{{position:absolute;border-radius:18px;background:linear-gradient(90deg,#C94A12 0%,{acc} 35%,{luce} 60%,{acc} 100%);
- box-shadow:0 4px 10px rgba(0,0,0,.25)}}
-.bar.spenta{{background:rgba(255,255,255,.08);box-shadow:none}}
-.bar-on{{position:absolute;inset:0;border-radius:inherit;opacity:0;background:linear-gradient(90deg,#C94A12 0%,{acc} 35%,{luce} 60%,{acc} 100%);
- box-shadow:0 4px 10px rgba(0,0,0,.25)}}
-.carta .bar.spenta{{background:rgba(0,0,0,.08)}}
-.sc-tel{{position:absolute;left:300px;top:480px;width:480px;height:900px;border:4px solid rgba(255,255,255,.45);border-radius:56px}}
-.carta .sc-tel{{border-color:rgba(0,0,0,.35)}}
-.sc-conta{{position:absolute;left:0;right:0;text-align:center;display:flex;align-items:baseline;justify-content:center;gap:14px}}
-.sc-conta b{{{W};font-size:70px;color:{acc}}}
-.sc-conta span{{{M};font-size:24px;letter-spacing:3px}}
-.sc-timbro{{position:absolute;left:0;right:0;margin:0 auto;top:880px;transform-origin:50% 50%;width:max-content;padding:0 40px 10px;text-align:center;{W};font-size:120px;
- color:{scuro};background:{acc};border:8px solid {scuro};border-radius:22px;padding:0 0 10px;opacity:0;box-shadow:0 14px 40px rgba(0,0,0,.35)}}
-.sc-timbro.sx{{left:90px;right:auto;margin:0;padding:0 34px 10px}}
-.sc-num{{position:absolute;left:0;right:0;top:980px;text-align:center;opacity:0}}
-.sc-num b{{display:block;{W};font-size:300px;line-height:1;color:{acc}}}
-.sc-num span{{{W};font-size:70px}}
-.sc-riga{{position:absolute;left:90px;right:60px;{W};font-size:118px;line-height:1;opacity:0;white-space:nowrap}}
-.sc-barra{{position:absolute;left:-10px;top:52%;height:14px;width:calc(100% - 50px);max-width:520px;background:{acc};transform:scaleX(0);transform-origin:0 50%}}
-.sc-play{{position:absolute;left:330px;top:560px;width:420px;height:780px;border-radius:50px;background:#fff;border:4px solid rgba(0,0,0,.12);
- box-shadow:0 20px 50px rgba(0,0,0,.18);overflow:hidden}}
-.sc-pl{{position:absolute;left:34px;top:40px;{M};font-size:18px;letter-spacing:2px;color:rgba(0,0,0,.4)}}
-.sc-tasto{{position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:{acc}}}
-.sc-tasto:after{{content:"";position:absolute;left:44px;top:32px;border-left:34px solid #fff;border-top:23px solid transparent;border-bottom:23px solid transparent}}
-.sc-pronto{{position:absolute;inset:0;background:{scuro};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
- {W};font-size:56px;opacity:0}}
-.sc-pronto b{{width:120px;height:120px;border-radius:50%;background:{acc};color:#fff;font-size:70px;display:flex;align-items:center;justify-content:center}}
-.sc-pell{{position:absolute;left:0;right:0;top:820px;height:400px;background:#0b0b0b;overflow:hidden;
- border-top:28px dashed #0b0b0b;border-bottom:28px dashed #0b0b0b;
- background-image:repeating-linear-gradient(90deg,transparent 0 24px,rgba(255,255,255,.25) 24px 40px);background-size:100% 18px;background-repeat:repeat-x}}
-.sc-film{{position:absolute;left:0;top:44px;display:flex;gap:30px}}
-.sc-film img{{width:170px;height:302px;object-fit:cover;border-radius:8px}}
-.sc-adesso-l{{position:absolute;left:538px;top:790px;width:5px;height:460px;background:{acc}}}
-.sc-adesso{{position:absolute;left:50%;top:1280px;transform:translateX(-50%);background:{acc};color:#fff;{M};font-size:28px;letter-spacing:3px;
- padding:10px 26px;border-radius:30px;opacity:0}}
+{css_scene(stile)}
 .fc-marchio{{position:absolute;left:90px;top:300px;display:flex;align-items:center;gap:18px;{W};font-size:40px;font-stretch:100%}}
 .fc-marchio i{{font-style:normal;{M};font-size:24px;background:#fff;color:{scuro};border-radius:10px;padding:10px 12px}}
 .fc-tit{{position:absolute;left:90px;right:60px;top:430px}}
@@ -1986,10 +2003,7 @@ function orbita(sel, cx, cy, da, a, giri) {{
   posa();
   tl.to(o, {{t: a - da, duration: a - da, ease: "none", onUpdate: posa}}, da);
 }}
-function contaCon(sel, segno, da_n, a_n, da, dur) {{
-  const el = document.querySelector(sel); const o = {{v: da_n}};
-  tl.to(o, {{v: a_n, duration: dur, ease: "power1.out", onUpdate: () => {{ el.textContent = segno + Math.round(o.v); }}}}, da);
-}}
+{JS_CONTA}
 cronometro("#tc", 0, {D:.3f});
 tl.to("#mir", {{opacity: 0, duration: 0.25}}, {MIRINO_FINO if stile.get("mirino", True) else 0});
 {chr(10).join(r.tl)}

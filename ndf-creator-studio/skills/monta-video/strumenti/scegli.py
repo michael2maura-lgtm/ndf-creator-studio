@@ -62,6 +62,8 @@ def raccogli():
             if not os.path.exists(j) or any(s["chiave"] == k for s in stili):
                 continue
             st = leggi(j)
+            if st.get("nascosto"):   # stili uniti in Scene e Grafiche (2026-11-01): si usano ancora, ma la pagina non li mostra
+                continue
             motore = st.get("motore", "")
             di_serie = {}
             for mom, rel in st.get("suoni", {}).items():

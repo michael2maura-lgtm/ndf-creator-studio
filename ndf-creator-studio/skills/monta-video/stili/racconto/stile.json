@@ -33,5 +33,6 @@
  "transizione": "taglio",
  "mirino": false,
  "finale": false,
- "effetti": []
+ "effetti": [],
+ "nascosto": true
 }

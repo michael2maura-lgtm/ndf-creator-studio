@@ -1,5 +1,5 @@
 {
- "nome": "Stile NDF Grafica",
+ "nome": "Stile Grafiche",
  "motore": "grafica",
  "colori": {
   "accento": "#E86530",
@@ -36,7 +36,7 @@
   "click": "suoni/click.mp3",
   "musica": "suoni/musica.wav"
  },
- "descrizione": "Grafiche animate sopra di te: titoli, parola gigante, cornice, telefono, contatore.",
+ "descrizione": "Grafiche animate sopra di te: poche per un video semplice, tante per un video d'impatto.",
  "sottotitoli_nome": "ndf-targhetta",
  "effetti": [
   "titolo",

@@ -48,5 +48,6 @@
   "esempio": "spunto-3",
   "base": "ndf",
   "kit": "scena lavagna del kit Monta le tue Ads"
- }
+ },
+ "nascosto": true
 }
