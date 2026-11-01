@@ -33,7 +33,9 @@
  "transizione": "taglio",
  "mirino": false,
  "finale": false,
- "effetti": [],
+ "effetti": [
+  "orbita"
+ ],
  "fonte": {
   "esempio": "spunto",
   "base": "luce"
