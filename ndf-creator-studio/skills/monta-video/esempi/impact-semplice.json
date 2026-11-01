@@ -1,0 +1,116 @@
+{
+ "stile": "ndf-grafica",
+ "versione": "semplice",
+ "correzioni": {
+  "affiaccamento": "affiancamento"
+ },
+ "parole_chiave": [
+  "caso",
+  "semplice",
+  "15",
+  "domande",
+  "storie"
+ ],
+ "musica": true,
+ "apertura": {
+  "box": "Cosa pubblicare domani",
+  "a": 3.6
+ },
+ "elementi": [
+  {
+   "tipo": "zoom",
+   "mosse": [
+    [
+     0.2,
+     2.6,
+     1.1,
+     "lento"
+    ],
+    [
+     2.8,
+     3.0,
+     1.0,
+     "fuori"
+    ],
+    [
+     3.5,
+     3.65,
+     1.22,
+     "scatto"
+    ],
+    [
+     4.9,
+     5.1,
+     1.0,
+     "fuori"
+    ]
+   ]
+  },
+  {
+   "tipo": "pillole",
+   "a": 10.4,
+   "voci": [
+    [
+     "più semplice",
+     8.1
+    ],
+    [
+     "più intelligente",
+     9.0
+    ]
+   ]
+  },
+  {
+   "tipo": "popup",
+   "da": 9.8,
+   "a": 11.7,
+   "app": "ChatGPT",
+   "testo": "Nuova chat"
+  },
+  {
+   "tipo": "prompt",
+   "da": 11.75,
+   "a": 15.4,
+   "testo": "Quali sono le domande più comuni che si fanno le persone?",
+   "scrivi_da": 11.8,
+   "scrivi_a": 14.7
+  },
+  {
+   "tipo": "numero",
+   "da": 17.6,
+   "a": 21.0,
+   "numero": "15",
+   "righe": [
+    [
+     "DOMANDE",
+     18.1
+    ],
+    [
+     "CONTENUTI PRONTI",
+     19.8
+    ]
+   ]
+  },
+  {
+   "tipo": "popup",
+   "da": 24.3,
+   "a": 27.4,
+   "app": "Instagram",
+   "testo": "Nuova risposta all'adesivo domande"
+  },
+  {
+   "tipo": "popup",
+   "forma": "adesivo",
+   "da": 28.0,
+   "a": 29.3,
+   "testo": "Fammi una domanda",
+   "dove": "basso"
+  }
+ ],
+ "transizioni": [
+  6.4,
+  15.5,
+  22.6,
+  29.3
+ ]
+}
