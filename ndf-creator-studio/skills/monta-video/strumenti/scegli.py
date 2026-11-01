@@ -86,6 +86,7 @@ def raccogli():
             stili.append({"chiave": k, "nome": st.get("nome", k), "descrizione": st.get("descrizione", ""),
                           "effetti": st.get("effetti"), "transizione": st.get("transizione", "bande" if motore == "grafica" else None),
                           "grafiche": motore == "grafica", "anteprima": os.path.exists(anteprima),
+                          "diviso": st.get("layout") == "diviso",
                           "di_serie": di_serie,
                           "momenti": [{"chiave": m, "titolo": MOMENTI[m][0], "quando": MOMENTI[m][1],
                                        "categorie": MOMENTI[m][2]} for m in momenti]})
@@ -130,7 +131,7 @@ def raccogli():
                   "suoni": {m: ("" if v == "" else per_percorso.get(os.path.realpath(v)))
                             for m, v in sc.get("suoni", {}).items()},
                   "sottotitoli": sc.get("sottotitoli"), "effetti": sc.get("effetti"), "colore": sc.get("colore"), "velocita": sc.get("velocita"),
-                  "transizione": sc.get("transizione"),
+                  "transizione": sc.get("transizione"), "diviso": sc.get("diviso"),
                   "musica": "nessuna" if sc.get("musica") == "nessuna" else per_percorso.get(os.path.realpath(sc["musica"]))
                   if sc.get("musica") else None}
     except (OSError, ValueError):
@@ -215,7 +216,9 @@ class Pagina(BaseHTTPRequestHandler):
             tr = corpo.get("transizione") if crea and corpo.get("transizione") in ("sfumatura", "bande", "taglio") else None
             if tr == stili[corpo["stile"]]["transizione"]:
                 tr = None  # quella dello stile
+            div = "fisso" if corpo.get("diviso") == "fisso" and stili[corpo["stile"]]["diviso"] else None  # None = con stacchi
             scrivi(SCELTE, {"strada": "crea" if crea else "pronto", "stile": corpo["stile"], "colore": look, "velocita": vel, "transizione": tr,
+                            "diviso": div,
                             "sottotitoli": sott, "effetti": eff,
                             "suoni": suoni,
                             "musica": musica, "aggiornato": datetime.datetime.now().isoformat(timespec="seconds")})

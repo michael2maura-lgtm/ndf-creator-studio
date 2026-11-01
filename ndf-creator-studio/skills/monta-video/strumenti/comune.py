@@ -76,6 +76,8 @@ def con_le_scelte(nome_stile, stile):
         nuovo["transizione_scelta"] = sc["transizione"]
     if sc.get("velocita"):
         nuovo["velocita"] = sc["velocita"]
+    if sc.get("diviso") == "fisso":   # schermo diviso: sempre in vista, niente stacchi a tutto schermo
+        nuovo["stacchi"] = False
     if sc.get("effetti") is not None:  # None = quelli dello stile; [] = nessuno
         nuovo["effetti_scelti"] = sc["effetti"]
     return nuovo

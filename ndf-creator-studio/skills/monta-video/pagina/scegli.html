@@ -200,6 +200,13 @@ button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
   <div class="griglia vel" id="vel"></div>
 </section>
 
+<section class="sez wrap" id="sez-div" hidden>
+  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Schermo diviso</b> · Pannello</span><span class="etic">Scegline uno</span></div>
+  <h2 class="t">Il tuo schermo diviso.</h2>
+  <p class="aiuto">Le grafiche stanno nel pannello in alto, tu sotto. Scegli se ogni tanto prendono tutto lo schermo.</p>
+  <div class="griglia vel" id="div"></div>
+</section>
+
 <section class="sez wrap" id="sez-col" hidden>
   <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 02</b> · Colore</span><span class="etic">Scegline uno</span></div>
   <h2 class="t">Il tuo colore.</h2>
@@ -278,7 +285,9 @@ const TRANSIZIONI = [{k: "sfumatura", nome: "Sfumatura di luce", per: "Luce cald
                      {k: "taglio", nome: "Taglio netto", per: "Nessun effetto: si passa e basta. Pulita."}];
 const VELOCITA = [{v: 1, nome: "Normale", per: "Com'è girato", tag: "1×"}, {v: 1.12, nome: "Svelta", per: "Più ritmo, la voce suona naturale", tag: "+12%"},
                   {v: 1.2, nome: "Veloce", per: "Ritmo serrato, per reel brevi", tag: "+20%"}];
-let D, stato = {transizione: null, velocita: null, strada: null, stile: null, colore: null, sottotitoli: null, effetti: null, suoni: {}, musica: null, cambia: false};
+const DIVISO = [{k: "stacchi", nome: "Con stacchi", per: "Ogni tanto la grafica prende tutto lo schermo, poi torni tu", tag: "▣"},
+                {k: "fisso", nome: "Sempre in vista", per: "Resti sempre sotto, le grafiche solo nel pannello", tag: "▤"}];
+let D, stato = {diviso: null, transizione: null, velocita: null, strada: null, stile: null, colore: null, sottotitoli: null, effetti: null, suoni: {}, musica: null, cambia: false};
 const modifica = () => stato.strada === "crea" || (stato.strada === "pronto" && stato.cambia);  // si vedono suoni e musica
 const MOSTRA = 24; // suoni visibili per momento prima di "mostra tutti"
 
@@ -368,6 +377,21 @@ function disegnaVel() {
   document.querySelectorAll("#vel .scheda").forEach(b => b.onclick = () => {
     stato.velocita = +b.dataset.vel === 1.12 ? null : +b.dataset.vel;
     document.querySelectorAll("#vel .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
+    aggiorna();
+  });
+}
+
+function disegnaDiv() {
+  const scelta = stato.diviso || "stacchi";
+  $("#div").innerHTML = DIVISO.map(x => `
+    <button class="scheda" data-div="${x.k}" aria-pressed="${x.k === scelta}">
+      <span class="spunta"></span><div class="vuoto t">${x.tag}</div>
+      <div class="corpo"><div class="t">${x.nome}</div><div class="tag">${x.k === "stacchi" ? "di serie" : "pannello"}</div>
+        <p class="desc">${x.per}</p></div>
+    </button>`).join("");
+  document.querySelectorAll("#div .scheda").forEach(b => b.onclick = () => {
+    stato.diviso = b.dataset.div === "stacchi" ? null : b.dataset.div;
+    document.querySelectorAll("#div .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
     aggiorna();
   });
 }
@@ -548,6 +572,9 @@ function aggiorna() {
   }
   const vs = stato.strada !== "replica" && !!s;
   if ($("#sez-vel").hidden === vs) { $("#sez-vel").hidden = !vs; if (vs) disegnaVel(); }
+  const vd = vs && !!s.diviso;
+  if ($("#sez-div").hidden === vd) { $("#sez-div").hidden = !vd; if (vd) disegnaDiv(); }
+  if (ok && vd && stato.diviso) t += " · sempre in vista";
   const vel = VELOCITA.find(x => x.v === (stato.velocita || 1.12));
   if (ok && stato.velocita) t += " · " + vel.nome.toLowerCase();
   if (ok && modifica() && stato.transizione) t += " · " + TRANSIZIONI.find(x => x.k === stato.transizione).nome.toLowerCase();
@@ -587,6 +614,7 @@ fetch("/dati").then(r => r.json()).then(d => {
     stato.colore = sc.colore || null;
     stato.velocita = sc.velocita || null;
     stato.transizione = sc.transizione || null;
+    stato.diviso = sc.diviso || null;
   }
   disegnaStili();
   strada(sc && sc.strada ? sc.strada : "pronto", false);

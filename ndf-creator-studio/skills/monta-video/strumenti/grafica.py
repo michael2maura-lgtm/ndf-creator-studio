@@ -1233,7 +1233,9 @@ class Reel:
         da, a = e["da"], e["a"]
         self.font_extra("InstrumentSerif-Italic.ttf")
         n = len(self.corpo)
-        pieno = e.get("pieno")
+        # "sempre in vista" (scelto nella pagina, o "stacchi": false nello stile): niente grafiche a tutto schermo,
+        # la persona resta sempre sotto il pannello
+        pieno = e.get("pieno") if self.stile.get("stacchi", True) else None
         cy = 560 if pieno else 470            # centro della grafica; a tutto schermo resta in alto, i sottotitoli sotto
         m = e["modulo"]
         dentro = getattr(self, "p_" + m["tipo"])(m, n, da, a, cy)
@@ -1245,7 +1247,7 @@ class Reel:
                  "icone": 1.5 if quante <= 2 else 1.12, "flusso": 1.4 if quante <= 3 else 1.1}.get(m["tipo"], 1.2)
         dentro = f'<div style="position:absolute;inset:0;transform-origin:540px {cy}px;transform:scale({scala})">{dentro}</div>'
         self.corpo.append(f'<div class="pan-el{" pieno " + pieno if pieno else ""}" id="pe{n}">{sfondo}{dentro}</div>')
-        if pieno and m["tipo"] == "titolo":   # una scritta grande a tutto schermo è già il sottotitolo
+        if e.get("pieno") and m["tipo"] == "titolo":   # una scritta grande (anche se resta nel pannello) è già il sottotitolo
             self.nascondi.append((da, a))
         if pieno == "chiaro":   # sul fondo chiaro i sottotitoli diventano scuri, poi tornano bianchi
             self.tl.append(f'tl.set(".st",{{color:"{self.P['testo_chiaro']}",textShadow:"none"}},{da:.3f});'
