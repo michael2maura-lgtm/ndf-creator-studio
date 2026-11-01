@@ -1333,15 +1333,24 @@ class Reel:
 
     def p_schede(self, m, n, da, a, cy):
         """Tre (o più) schede video colorate con il play; "accendi": [[indice, secondo, "etichetta"], ...] ingrandisce
-        quella detta con il bagliore e un'etichetta sopra, le altre si spengono. "nomi": etichette sotto le schede."""
+        quella detta con il bagliore e un'etichetta sopra, le altre si spengono. "nomi": etichette sotto le schede.
+        Per un elenco detto ("3 cose"): "voci": [["mentalità", secondo], ...] -> ogni scheda ha il suo numero grande
+        (1, 2, 3) e il nome compare quando lo dici; niente play (Michael: le schede video vuote "non c'entrano niente")."""
         k = m.get("quante", 3)
+        if m.get("voci"):
+            self.font_extra("InterTight.ttf")
         larg, alt, gap = 200, 330, 30
         x0 = 540 - (k * larg + (k - 1) * gap) / 2
         out = []
         for j in range(k):
             nome = (m.get("nomi") or [None] * k)[j]
+            voce = (m.get("voci") or [None] * k)[j] if j < len(m.get("voci") or [None] * k) else None
+            dentro = (f'<span class="ps-num">{j + 1}</span>' if m.get("voci") else '<i class="ps-play"></i><b></b><b class="corta"></b>')
+            if voce and da <= voce[1] < a:   # il nome della cosa detta, sotto la scheda, quando la dici
+                dentro += f'<span class="ps-nome" id="pe{n}s{j}v" style="opacity:0">{html.escape(voce[0])}</span>'
+                self.tl.append(f'tl.fromTo("#pe{n}s{j}v",{{opacity:0,y:12}},{{opacity:1,y:0,duration:0.22,ease:"power2.out",immediateRender:false}},{voce[1]:.3f});')
             out.append(f'<div class="ps" id="pe{n}s{j}" style="left:{x0 + j * (larg + gap):.0f}px;top:{cy - alt / 2:.0f}px;'
-                       f'background:{self.P["schede"][j % len(self.P["schede"])]}"><i class="ps-play"></i><b></b><b class="corta"></b>'
+                       f'background:{self.P["schede"][j % len(self.P["schede"])]}">{dentro}'
                        + (f'<span class="ps-nome">{html.escape(nome)}</span>' if nome else "") + '<em class="ps-lab"></em></div>')
             self._entra(f"#pe{n}s{j}", da + 0.08 * j)
         for (j, t, lab) in m.get("accendi", []):
@@ -1905,6 +1914,8 @@ html,body{{margin:0;background:{scuro}}}
 .pt-r.forte{{font-weight:800;font-size:100px;letter-spacing:-2px}}
 .pt-r.accento{{font-weight:800;font-size:100px;letter-spacing:-2px;color:{P['acc']};text-shadow:0 0 40px rgba({P['acc_rgb']},.45)}}
 .ps{{position:absolute;width:200px;height:330px;border-radius:30px;opacity:0;box-shadow:0 18px 40px rgba(0,0,0,.4);transform-origin:50% 60%}}
+.ps-num{{position:absolute;left:0;right:0;top:70px;text-align:center;font-family:'Inter Tight';font-weight:900;font-size:150px;line-height:1;color:#fff;
+ text-shadow:0 6px 20px rgba(0,0,0,.25)}}
 .ps-play{{position:absolute;left:78px;top:110px;border-left:52px solid #fff;border-top:32px solid transparent;border-bottom:32px solid transparent}}
 .ps b{{position:absolute;left:26px;right:26px;bottom:72px;height:14px;border-radius:7px;background:rgba(255,255,255,.75)}}
 .ps b.corta{{right:80px;bottom:44px;background:rgba(255,255,255,.5)}}

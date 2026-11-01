@@ -17,3 +17,5 @@ Motore: strumenti/grafica.py.
 ## Note fisse (Michael)
 
 - 2026-10-31 (Michael): colori NDF al posto di blu-viola e magenta: arancio #E86530, scuro caldo #140E0A, fondo chiaro color carta ("pannello" in stile.json).
+
+- Schede: solo per un elenco detto ("3 cose"), con "voci" (numero grande e il nome quando lo dici). Mai schede vuote con il play (Michael, 2026-11-01).
