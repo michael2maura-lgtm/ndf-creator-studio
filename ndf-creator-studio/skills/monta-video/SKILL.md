@@ -70,9 +70,9 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    ascoltare o controllare (le parole corrette a intuito, con il secondo). Tu non senti l'audio: dillo.
 
 Stili pronti, tre: **Scene** (tu che parli e tra una frase e l'altra la scena giusta: clip e foto nella finestra,
-omini, lavagna, scene animate di Racconto), **Grafiche** (`ndf-grafica`: grafiche sopra la persona; poche per un video
+omini, lavagna, scene animate di Racconto), **Impact** (`ndf-grafica`, lo stile Notech dei reel di esempio 01 e 04: grafiche sopra la persona; poche per un video
 semplice, con la sfumatura come passaggio, tante per un video d'impatto) e **Diviso** (pannello in alto, persona sotto).
-NDF, Racconto, Linee, Luce e Ads sono uniti in Scene e Grafiche: la pagina non li mostra ("nascosto": true) ma si
+NDF, Racconto, Linee, Luce e Ads sono uniti in Scene e Impact: la pagina non li mostra ("nascosto": true) ma si
 usano ancora per nome. Ads non è uno stile: se il video è per le ads, finale "CLICCA QUI SOTTO", mai "commenta".
 Stili in `DATI/stili/` (quelli dell'utente) e `STUDIO/stili/` (quelli pronti). L'utente può dire quale
 ("monta questo in stile X"); se non lo dice, usa quello di `DATI/scelte.json` (la pagina qui sotto), se no il suo.
