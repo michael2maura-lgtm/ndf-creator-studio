@@ -40,7 +40,9 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "prompt", "da": 58.0, "a": 63.6, "testo": "trasforma i contenuti in contatti", "scrivi_da": 61.0, "scrivi_a": 63.0},
    {"tipo": "telefono3d", "da": 9.6, "a": 17.1, "app": "ChatGPT", "messaggi": [["Quali sono le domande...", 11.76, "io"]],
     "scheda": {"etichetta": "Risposta", "titolo": "15 domande pronte", "bottone": "Copia", "da": 14.5}, "tocco": 16.2, "fatto": "Copiato"},
-   {"tipo": "bianconero", "da": 28.9, "a": 30.9},                    in bianco e nero, i colori tornano con un lampo
+   {"tipo": "bianconero", "da": 28.9, "a": 30.9},
+   {"tipo": "popup", "da": 9.8, "a": 12.4, "app": "ChatGPT", "testo": "Quali sono le domande più comuni?", "icona": "chat"},
+   "versione": "semplice" nel piano (solo Impact): sfumatura come passaggio, niente mirino, poche grafiche.                    in bianco e nero, i colori tornano con un lampo
    {"tipo": "targhetta", "da": 2.0, "riga1": "Il metodo NDF", "riga2": "spiegato semplice"},   fissa in alto fino alla fine
    {"tipo": "barrate", "da": 6.8, "barra": 9.2, "a": 11.5, "icone": ["forbici", "pellicola", "timeline"]},  "senza..."
    {"tipo": "orbita", "da": 50.0, "a": 55.8},                     con ritaglio: copertine dei reel già montati
@@ -940,6 +942,27 @@ class Reel:
             self.tl.append(f'tl.to("#tg{n}",{{opacity:0,duration:0.25}},{a - 0.25:.3f});')
         self.suono("pop", da, 0.25)
 
+    def popup(self, e, faccia):
+        """Pop-up (dal reel di esempio 05): quando nomini un'app o una cosa, compare una notifica come quelle del
+        telefono, con l'icona, il nome in grassetto, il messaggio e "ora"; scende dall'alto (o sale da sotto i
+        sottotitoli con "dove": "basso") e poi se ne va. e = {"da", "a", "app": "ChatGPT", "testo": "...",
+        "icona": nome di ICONE (facoltativo; se no l'iniziale dell'app), "colore": sfondo dell'icona, "dove": "alto"|"basso"}."""
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        da, a = e["da"], e["a"]
+        basso = e.get("dove") == "basso"
+        y = min(faccia["mento"] + 330, 1420) if basso else 250
+        col = e.get("colore", self.stile["colori"]["accento"])
+        ico = (f'<svg viewBox="0 0 64 64">{ICONE[e["icona"]]}</svg>' if e.get("icona") in ICONE
+               else html.escape(e.get("app", "?")[:1].upper()))
+        self.corpo.append(f'<div class="pop" id="pop{n}" style="top:{y}px"><i class="pop-ico" style="background:{col}">{ico}</i>'
+                          f'<div class="pop-tx"><b>{html.escape(e.get("app", ""))}</b><span>{html.escape(e.get("testo", ""))}</span></div>'
+                          f'<em>ora</em></div>')
+        dy = 60 if basso else -60
+        self.tl.append(f'tl.fromTo("#pop{n}",{{opacity:0,y:{dy},scale:0.96}},{{opacity:1,y:0,scale:1,duration:0.35,ease:"back.out(1.6)",immediateRender:false}},{da:.3f});'
+                       f'tl.to("#pop{n}",{{opacity:0,y:{dy},duration:0.25,ease:"power2.in"}},{a - 0.25:.3f});')
+        self.suono("ding", da, 0.3, se_manca="pop")
+
     def barrate(self, e, faccia):
         """Icone barrate: sopra la testa spuntano i riquadri di alcuni programmi, un po' storti, e poi una X disegnata a
         mano li cancella uno dopo l'altro ("senza nessun programma"). e = {"da": secondo, "barra": secondo della prima X,
@@ -1497,6 +1520,8 @@ class Reel:
 
 
 def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
+    if piano.get("versione") == "semplice":   # Impact semplice (ex Luce): sfumatura come passaggio, niente mirino REC
+        stile = dict(stile, transizione="sfumatura", mirino=False)
     reel = os.path.join(cart, "reel")
     r = Reel(stile, cart_stile, reel, D)
     os.makedirs(r.assets, exist_ok=True)
@@ -1582,6 +1607,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.pillole(e, faccia)
         elif tipo == "prompt":
             r.prompt(e, faccia)
+        elif tipo == "popup":
+            r.popup(e, faccia)
         elif tipo == "bianconero":
             r.bianconero(e, faccia)
         elif tipo == "targhetta":
@@ -1833,6 +1860,15 @@ html,body{{margin:0;background:{scuro}}}
  padding:20px 46px 22px;border-radius:24px;text-align:center;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.28)}}
 .tg b{{display:block;font-family:'Inter Tight';font-weight:800;font-size:64px;line-height:1.05;letter-spacing:-.5px}}
 .tg i{{display:block;font-family:'Instrument Serif Italic';font-style:normal;font-size:80px;line-height:1}}
+.pop{{position:absolute;left:0;right:0;margin:0 auto;width:820px;z-index:36;opacity:0;display:flex;align-items:center;gap:22px;
+ padding:20px 26px;border-radius:30px;background:rgba(250,246,242,.93);box-shadow:0 14px 40px rgba(0,0,0,.3);font-family:'Inter Tight'}}
+.pop-ico{{flex:none;width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
+ font-style:normal;font-weight:900;font-size:40px}}
+.pop-ico svg{{width:46px;height:46px}}
+.pop-tx{{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}}
+.pop-tx b{{font-weight:800;font-size:34px;color:#141414}}
+.pop-tx span{{font-weight:500;font-size:29px;color:#333;line-height:1.2}}
+.pop em{{align-self:flex-start;font-style:normal;font-weight:600;font-size:26px;color:#8a8580}}
 .br{{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:44px;z-index:33;opacity:0}}
 .br-i{{position:relative;width:170px;height:170px}}
 .br-p{{position:absolute;inset:0;border-radius:36px;display:flex;align-items:center;justify-content:center;
