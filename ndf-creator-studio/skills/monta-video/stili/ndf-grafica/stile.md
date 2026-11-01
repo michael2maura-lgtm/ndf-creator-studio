@@ -43,11 +43,8 @@ Motore: strumenti/grafica.py (il formato del piano è in cima a quel file).
 - Il mirino REC non per tutto il reel: solo in apertura.
 - Il suono della tastiera dura solo mentre il testo si scrive.
 
-## Video semplice (ex Stile Luce, unito qui il 2026-11-01)
-Un pensiero, un consiglio veloce: 1-2 effetti al massimo, riquadro bianco d'apertura ("apertura": {"box": ...}),
-"versione": "semplice" nel piano: la sfumatura spesso, ogni 6-9 secondi sull'inizio di una frase nuova (Michael:
-"mettila più spesso"), mai sopra un pop-up. Pop-up notifica quando nomini un'app o una cosa; "forma": "adesivo" quando
-dici "adesivo domande". Niente mirino.
+## Video semplice
+Per i contenuti semplici e organici c'è lo Stile Glow (stili/glow): stessi sottotitoli, sfumatura e pop-up.
 
 ## Scene della pasta (ex Stile Racconto, stesso stile Notech: reel 01 e 04)
 Per un numero, un tempo, un prima e dopo: elemento "scena" (fondo scuro o carta, titolo riga per riga, modulo riempi,

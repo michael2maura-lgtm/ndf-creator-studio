@@ -70,7 +70,7 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    quello che hai usato davvero. Di' in poche righe cosa hai fatto, se hai messo la musica e perché, e cosa deve
    ascoltare o controllare (le parole corrette a intuito, con il secondo). Tu non senti l'audio: dillo.
 
-Stili pronti, tre: **Scene** (tu che parli e tra una frase e l'altra la scena giusta: clip e foto nella finestra,
+Stili pronti, quattro: **Glow** (`glow`: Impact semplice, sfumatura e pop-up, per i contenuti organici), **Scene** (tu che parli e tra una frase e l'altra la scena giusta: clip e foto nella finestra,
 omini, lavagna), **Impact** (`ndf-grafica`, lo stile Notech dei reel di esempio 01 e 04: grafiche sopra la persona e, per numeri e prima/dopo, le scene animate "scena" della pasta; poche per un video
 semplice, con la sfumatura come passaggio, tante per un video d'impatto) e **Diviso** (pannello in alto, persona sotto).
 NDF e Linee sono in Scene, Racconto e Luce in Impact, Ads è solo un finale: la pagina non li mostra ("nascosto": true) ma si

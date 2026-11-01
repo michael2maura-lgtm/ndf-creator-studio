@@ -1543,7 +1543,7 @@ class Reel:
 
 
 def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
-    if piano.get("versione") == "semplice":   # Impact semplice (ex Luce): sfumatura come passaggio, niente mirino REC
+    if piano.get("versione", stile.get("versione")) == "semplice":   # Impact semplice (ex Luce): sfumatura come passaggio, niente mirino REC
         stile = dict(stile, transizione="sfumatura", mirino=False)
     reel = os.path.join(cart, "reel")
     r = Reel(stile, cart_stile, reel, D)
