@@ -7,6 +7,7 @@ Nel piano.json:  "scene": [
 Tipi nuovi (omini, clip vere, telefono...) si aggiungono come funzioni nuove, senza toccare quelle che ci sono.
 """
 import html
+import re
 
 CSS = """
 .scena{position:absolute;inset:0;opacity:0;z-index:20;overflow:hidden;
@@ -333,14 +334,107 @@ def immagine(s, n, colori, size):
     return corpo, "".join(tl)
 
 
+# ---------- lavagna (dal kit "Monta le tue Ads"): schermo scuro, icone a linee che si disegnano, la frase sotto ----------
+# icone piccole a linee (riquadro 100x100): il primo tratto è nel colore d'accento
+LINEE = {
+    "chat": ["M15 20 H85 V64 H46 L28 80 V64 H15 Z", "M29 36 H71", "M29 50 H60"],
+    "persone": ["M40 32 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0", "M31 78 Q50 46 69 78", "M13 42 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0",
+                "M5 74 Q21 55 35 66", "M71 42 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0", "M95 74 Q79 55 65 66"],
+    "rete": ["M50 50 L50 20 M50 50 L79 41 M50 50 L68 76 M50 50 L32 76 M50 50 L21 41", "M43 50 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0",
+             "M44 15 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0", "M78 38 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0", "M64 79 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0",
+             "M24 79 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0", "M10 38 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0"],
+    "domanda": ["M34 34 Q34 16 50 16 Q67 16 67 32 Q67 45 50 50 V62", "M50 76 L50 78"],
+    "calendario": ["M18 24 H82 V84 H18 Z", "M18 40 H82", "M34 16 V30 M66 16 V30", "M31 54 H39 M46 54 H54 M61 54 H69 M31 69 H39 M46 69 H54 M61 69 H69"],
+    "telefono": ["M33 12 H67 Q74 12 74 19 V81 Q74 88 67 88 H33 Q26 88 26 81 V19 Q26 12 33 12 Z", "M45 78 H55"],
+    "play": ["M20 22 H80 Q86 22 86 28 V72 Q86 78 80 78 H20 Q14 78 14 72 V28 Q14 22 20 22 Z", "M42 36 L64 50 L42 64 Z"],
+    "soldi": ["M14 30 H86 V70 H14 Z", "M40 50 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0", "M24 40 V60 M76 40 V60"],
+    # aggiunte per lo Stile Linee
+    "ia": ["M30 30 H70 V70 H30 Z", "M42 42 H58 V58 H42 Z", "M38 30 V20 M50 30 V20 M62 30 V20 M38 70 V80 M50 70 V80 M62 70 V80",
+           "M30 38 H20 M30 50 H20 M30 62 H20 M70 38 H80 M70 50 H80 M70 62 H80"],
+    "orologio": ["M50 50 L50 30 M50 50 L64 58", "M16 50 a34 34 0 1 0 68 0 a34 34 0 1 0 -68 0"],
+    "crescita": ["M14 74 L38 50 L54 62 L84 30", "M68 30 H84 V46", "M12 86 H88"],
+    "lampadina": ["M50 14 Q74 14 74 40 Q74 54 62 62 V72 H38 V62 Q26 54 26 40 Q26 14 50 14 Z", "M40 80 H60 M43 88 H57"],
+    "obiettivo": ["M44 50 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0", "M30 50 a20 20 0 1 0 40 0 a20 20 0 1 0 -40 0",
+                  "M14 50 a36 36 0 1 0 72 0 a36 36 0 1 0 -72 0"],
+    "video": ["M14 28 H66 V72 H14 Z", "M66 42 L86 30 V70 L66 58"],
+    "cuore": ["M50 82 L20 52 Q8 38 20 26 Q34 14 50 32 Q66 14 80 26 Q92 38 80 52 Z"],
+    "casa": ["M16 48 L50 18 L84 48", "M26 40 V82 H74 V40", "M44 82 V60 H56 V82"],
+    "freccia": ["M14 50 H82", "M66 34 L84 50 L66 66"],
+}
+
+
+def lavagna(s, n, colori, size):
+    """Lavagna: fondo quasi nero, un titolino in alto, 1-3 icone a linee che si disegnano da sole (collegate da frecce),
+    con un'etichetta in corsivo sotto, e in basso la frase detta che si scrive parola per parola (le parole chiave nel
+    colore d'accento). s = {"da", "a", "titolo": "IL METODO", "icone": [["persone", secondo, "etichetta"], ...]}.
+    costruisci.py aggiunge "_parole" (le parole dette dentro la scena) e "_chiave"."""
+    acc, luce = colori["accento"], colori.get("accento_luce", colori["accento"])
+    da, a = s["da"], s["a"]
+    icone = s.get("icone") or []
+    k = max(len(icone), 1)
+    L = 440 if k == 1 else 340 if k == 2 else 280
+    passo = (1080 - 120) / k
+    y_ic = 560
+    parti, tl = [], [f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});']
+    if s.get("titolo"):
+        parti.append(f'<div id="sc{n}ti" style="position:absolute;top:300px;left:0;right:0;text-align:center;font-family:\'Plus Jakarta Sans\';'
+                     f'font-weight:700;font-size:30px;letter-spacing:6px;color:#2FA3C7">{html.escape(str(s["titolo"]).upper())}</div>')
+        tl.append(f'tl.fromTo("#sc{n}ti",{{opacity:0}},{{opacity:1,duration:0.35,immediateRender:false}},{da:.3f});')
+    for i, ic in enumerate(icone):
+        nome, t = ic[0], ic[1]
+        etichetta = ic[2] if len(ic) > 2 else None
+        cx = 60 + passo * (i + 0.5)
+        if i > 0:   # freccia dall'icona prima
+            parti.append(f'<svg viewBox="0 0 100 20" style="position:absolute;left:{cx - passo + L / 2 - 10:.0f}px;top:{y_ic + L / 2 - 20:.0f}px;'
+                         f'width:{passo - L + 20:.0f}px;height:40px"><path id="sc{n}f{i}" d="M4 10 L92 10 M82 3 L94 10 L82 17" fill="none" '
+                         f'stroke="rgba(249,247,244,.45)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" pathLength="1" '
+                         f'stroke-dasharray="1" stroke-dashoffset="1"/></svg>')
+            tl.append(f'tl.to("#sc{n}f{i}",{{strokeDashoffset:0,duration:0.33,ease:"none"}},{t - 0.2:.3f});')
+        tratti = "".join(f'<path id="sc{n}i{i}t{j}" d="{d}" fill="none" stroke="{acc if j == 0 else "rgba(249,247,244,.9)"}" '
+                         f'stroke-width="{3.2 if j == 0 else 2.6}" stroke-linecap="round" stroke-linejoin="round" pathLength="1" '
+                         f'stroke-dasharray="1" stroke-dashoffset="1"{f" style=\"filter:drop-shadow(0 0 8px {acc})\"" if j == 0 else ""}/>'
+                         for j, d in enumerate(LINEE.get(nome, LINEE["chat"])))
+        parti.append(f'<svg id="sc{n}i{i}" viewBox="0 0 100 100" style="position:absolute;left:{cx - L / 2:.0f}px;top:{y_ic}px;'
+                     f'width:{L}px;height:{L}px;overflow:visible">{tratti}</svg>')
+        tl.append(f'tl.fromTo("#sc{n}i{i}",{{scale:0.85}},{{scale:1,duration:0.45,ease:"back.out(1.6)",immediateRender:false}},{t:.3f});')
+        for j in range(len(LINEE.get(nome, LINEE["chat"]))):
+            tl.append(f'tl.to("#sc{n}i{i}t{j}",{{strokeDashoffset:0,duration:0.53,ease:"power1.inOut"}},{t + j * 0.1:.3f});')
+        if etichetta:
+            parti.append(f'<div id="sc{n}e{i}" style="position:absolute;left:{cx - passo / 2:.0f}px;width:{passo:.0f}px;top:{y_ic + L + 18}px;'
+                         f'text-align:center;font-family:\'Instrument Serif\';font-style:italic;font-size:52px;color:{luce};opacity:0">'
+                         f'{html.escape(etichetta)}</div>')
+            tl.append(f'tl.to("#sc{n}e{i}",{{opacity:1,duration:0.27}},{t + 0.27:.3f});')
+    # la frase: a pagine di 14 parole al massimo, ogni parola entra sfocata quando la dici
+    parole, chiave = s.get("_parole", []), s.get("_chiave", set())
+    pagine = [parole[i:i + 14] for i in range(0, len(parole), 14)]
+    for p, pag in enumerate(pagine):
+        spans = []
+        for j, w in enumerate(pag):
+            pulita = re.sub(r"[.,;:!?\"«»]", "", w["testo"]).lower()
+            spans.append(f'<span id="sc{n}p{p}w{j}" style="opacity:0;{f"color:{luce}" if pulita in chiave else ""}">{html.escape(w["testo"])} </span>')
+            tl.append(f'tl.fromTo("#sc{n}p{p}w{j}",{{opacity:0,filter:"blur(8px)"}},{{opacity:1,filter:"blur(0px)",duration:0.2,immediateRender:false}},{w["da"]:.3f});')
+        parti.append(f'<div id="sc{n}p{p}" style="position:absolute;top:{s.get("y_frase", 1240)}px;left:90px;right:90px;text-align:center;'
+                     f'font-family:\'Plus Jakarta Sans\';font-weight:700;font-size:54px;line-height:1.3;color:white">{"".join(spans)}</div>')
+        if p + 1 < len(pagine):
+            tl.append(f'tl.set("#sc{n}p{p}",{{opacity:0}},{pagine[p + 1][0]["da"]:.3f});')
+    tl.append(f'tl.to("#sc{n}",{{opacity:0,duration:0.25}},{a - 0.25:.3f});')
+    corpo = (f'<div class="scena" id="sc{n}" style="background:radial-gradient(ellipse at 50% 45%,#161616 0%,#0A0A0A 70%)">'
+             f'{"".join(parti)}</div>')
+    return corpo, "".join(tl)
+
+
 TIPI = {"testo": testo, "capitolo": capitolo, "clip": clip, "omino": omino, "chat": chat, "telefono": telefono,
-        "schema": schema, "immagine": immagine}
+        "schema": schema, "immagine": immagine, "lavagna": lavagna}
 
 # ---------- entrate delle scene (riprese dal kit "Monta le tue Ads") ----------
 # "lampo": un flash bianco quando la scena entra e quando si torna alla persona
 # "scorri": la scena nuova entra da destra spingendo via quella prima
 # "carta": la scena compare sfocata e diventa nitida, morbida
 LAMPO = '<div id="lampo" style="position:absolute;inset:0;background:white;opacity:0;z-index:45;pointer-events:none"></div>'
+# "bruciatura" (dal reel di esempio spunto-3): prima della scena l'immagine si illumina fino al bianco crema, poi taglio
+# netto sulla scena; al ritorno sulla persona un lampo bianco che si spegne piano
+BRUCIA = ('<div id="brucia" style="position:absolute;inset:0;z-index:19;opacity:0;pointer-events:none;'
+          'background:radial-gradient(ellipse at 50% 40%,#FFF6E4 0%,#F4E6CC 60%,#E9D6B4 100%)"></div>')
 
 
 
@@ -435,6 +529,11 @@ def entrata(s, n):
     if tipo == "lampo":
         return (f'tl.fromTo("#lampo",{{opacity:0.75}},{{opacity:0,duration:0.14,ease:"power2.out"}},{da:.3f});'
                 f'tl.fromTo("#lampo",{{opacity:0.6}},{{opacity:0,duration:0.14,ease:"power2.out"}},{a:.3f});')
+    if tipo == "bruciatura":
+        return (f'tl.fromTo("#brucia",{{opacity:0}},{{opacity:0.93,duration:0.33,ease:"power2.in",immediateRender:false}},{max(da - 0.33, 0):.3f});'
+                f'tl.fromTo("#bg",{{filter:"brightness(1)"}},{{filter:"brightness(1.6)",duration:0.33,ease:"power2.in",immediateRender:false}},{max(da - 0.33, 0):.3f});'
+                f'tl.set("#brucia",{{opacity:0}},{da:.3f});tl.set("#bg",{{filter:"none"}},{da:.3f});'
+                f'tl.fromTo("#lampo",{{opacity:0.85}},{{opacity:0,duration:0.4,ease:"power2.out",immediateRender:false}},{a:.3f});')
     if tipo == "scorri":
         return f'tl.fromTo("#sc{n}",{{x:1080}},{{x:0,duration:0.28,ease:"power3.out"}},{da:.3f});'
     if tipo == "carta":

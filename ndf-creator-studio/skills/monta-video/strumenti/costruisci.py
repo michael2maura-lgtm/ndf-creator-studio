@@ -228,11 +228,15 @@ def main():
                                  dimensione_corsivo=78)), cart_stile, 1080 - 240, 600, 1350)
         if s["tipo"] == "immagine":
             shutil.copy2(trova(s["immagine"] + ".jpg", "immagini"), os.path.join(reel, "assets", f"img-{s['immagine']}.jpg"))
+        if s["tipo"] == "lavagna":   # la frase detta dentro la scena, parola per parola
+            s = dict(s, _parole=[w for w in parole if s["da"] - 0.3 <= w["da"] < s["a"]], _chiave=chiave)
         div, anim = scene.costruisci_scena(s, n, stile["colori"], size)
         corpo.append(div)
         tl.append(anim + scene.entrata(s, n))
-    if any(s.get("entrata") == "lampo" for s in scene_piano):
+    if any(s.get("entrata") in ("lampo", "bruciatura") for s in scene_piano):
         corpo.append(scene.LAMPO)
+    if any(s.get("entrata") == "bruciatura" for s in scene_piano):
+        corpo.append(scene.BRUCIA)
 
     # effetti sulla persona (la voce e i sottotitoli continuano): "bianconero" = grigio, sfocato e quasi buio sulle
     # frasi negative; "griglia" = l'inquadratura si moltiplica in una griglia di copie di te
