@@ -946,13 +946,21 @@ class Reel:
         """Pop-up (dal reel di esempio 05): quando nomini un'app o una cosa, compare una notifica come quelle del
         telefono, con l'icona, il nome in grassetto, il messaggio e "ora"; scende dall'alto (o sale da sotto i
         sottotitoli con "dove": "basso") e poi se ne va. e = {"da", "a", "app": "ChatGPT", "testo": "...",
-        "icona": nome di ICONE (facoltativo; se no l'iniziale dell'app), "colore": sfondo dell'icona, "dove": "alto"|"basso"}."""
+        "icona": nome di ICONE (facoltativo; se no l'iniziale dell'app), "colore": sfondo dell'icona, "dove": "alto"|"basso"}.
+        "forma": "adesivo" = l'adesivo domande delle storie Instagram ("testo" in alto, "Scrivi qualcosa..." sotto)."""
         self.font_extra("InterTight.ttf")
         n = len(self.corpo)
         da, a = e["da"], e["a"]
         basso = e.get("dove") == "basso"
         y = min(faccia["mento"] + 330, 1420) if basso else 250
         col = e.get("colore", self.stile["colori"]["accento"])
+        if e.get("forma") == "adesivo":
+            self.corpo.append(f'<div class="pop-ad" id="pop{n}" style="top:{y}px"><div class="pop-ad-t">{html.escape(e.get("testo", "Fammi una domanda"))}</div>'
+                              f'<div class="pop-ad-c">Scrivi qualcosa…</div></div>')
+            self.tl.append(f'tl.fromTo("#pop{n}",{{opacity:0,scale:0.4,rotate:-6}},{{opacity:1,scale:1,rotate:-3,duration:0.4,ease:"back.out(2)",immediateRender:false}},{da:.3f});'
+                           f'tl.to("#pop{n}",{{opacity:0,scale:0.8,duration:0.22,ease:"power2.in"}},{a - 0.22:.3f});')
+            self.suono("pop", da, 0.35)
+            return
         ico = (f'<svg viewBox="0 0 64 64">{ICONE[e["icona"]]}</svg>' if e.get("icona") in ICONE
                else html.escape(e.get("app", "?")[:1].upper()))
         self.corpo.append(f'<div class="pop" id="pop{n}" style="top:{y}px"><i class="pop-ico" style="background:{col}">{ico}</i>'
@@ -1862,6 +1870,11 @@ html,body{{margin:0;background:{scuro}}}
 .tg i{{display:block;font-family:'Instrument Serif Italic';font-style:normal;font-size:80px;line-height:1}}
 .pop{{position:absolute;left:0;right:0;margin:0 auto;width:820px;z-index:36;opacity:0;display:flex;align-items:center;gap:22px;
  padding:20px 26px;border-radius:30px;background:rgba(250,246,242,.93);box-shadow:0 14px 40px rgba(0,0,0,.3);font-family:'Inter Tight'}}
+.pop-ad{{position:absolute;left:0;right:0;margin:0 auto;width:640px;z-index:36;opacity:0;border-radius:34px;overflow:hidden;background:#fff;
+ box-shadow:0 18px 50px rgba(0,0,0,.35);font-family:'Inter Tight';text-align:center}}
+.pop-ad-t{{padding:34px 30px;background:linear-gradient(90deg,#833AB4,#E1306C 55%,#F77737);color:#fff;font-weight:800;font-size:44px;line-height:1.1;
+ text-transform:uppercase}}
+.pop-ad-c{{padding:30px;font-weight:600;font-size:34px;color:#9A918A}}
 .pop-ico{{flex:none;width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
  font-style:normal;font-weight:900;font-size:40px}}
 .pop-ico svg{{width:46px;height:46px}}

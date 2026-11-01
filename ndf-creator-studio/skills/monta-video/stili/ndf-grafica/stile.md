@@ -45,4 +45,6 @@ Motore: strumenti/grafica.py (il formato del piano è in cima a quel file).
 
 ## Video semplice (ex Stile Luce, unito qui il 2026-11-01)
 Un pensiero, un consiglio veloce: 1-2 effetti al massimo, riquadro bianco d'apertura ("apertura": {"box": ...}),
-"transizione": "sfumatura" sui cambi di argomento, niente mirino.
+"versione": "semplice" nel piano: la sfumatura spesso, ogni 6-9 secondi sull'inizio di una frase nuova (Michael:
+"mettila più spesso"), mai sopra un pop-up. Pop-up notifica quando nomini un'app o una cosa; "forma": "adesivo" quando
+dici "adesivo domande". Niente mirino.
