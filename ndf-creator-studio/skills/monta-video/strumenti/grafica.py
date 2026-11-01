@@ -302,10 +302,23 @@ class Reel:
         dest = os.path.join(self.assets, os.path.basename(p))
         if not os.path.exists(dest):
             shutil.copy2(p, dest)
+        self.ultimo_ritaglio = dest
         n = len(self.camera)
         self.camera.append(f'<video id="r{n}" class="rit" src="assets/{os.path.basename(p)}" muted playsinline '
                            f'data-start="{da:.3f}" data-media-start="0" data-duration="{a - da:.3f}"></video>')
         return f"#r{n}"
+
+    def cima_testa(self, video, t):
+        """La cima vera della testa (y in pixel) dal ritaglio trasparente al secondo t: più precisa di occhi e mento,
+        che con capelli alti o barba lunga sbagliano anche di 150 px. None se non si legge."""
+        import numpy as np
+        r = subprocess.run([FFMPEG, "-v", "error", "-c:v", "libvpx-vp9", "-ss", f"{max(t, 0):.2f}", "-i", video,
+                            "-frames:v", "1", "-vf", "alphaextract,scale=270:480", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                           capture_output=True)
+        if len(r.stdout) != 270 * 480:
+            return None
+        righe = np.where((np.frombuffer(r.stdout, np.uint8).reshape(480, 270) > 128).sum(1) > 8)[0]
+        return int(righe[0]) * 4 if len(righe) else None
 
     def font_extra(self, nome):
         dest = os.path.join(self.assets, nome)
@@ -497,8 +510,9 @@ class Reel:
         testo = e["parola"].upper()
         largo = self.stile["font"]["titoli"].get("larghezza", 100) / 100   # un font allargato occupa di più
         dim = min(320, int(940 / (max(len(testo), 3) * 0.88 * largo)))
-        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95  # dove finisce la testa
-        y = max(cima - dim * 0.3, 230)  # la testa copre la parte bassa della parola
+        cima = self.cima_testa(self.ultimo_ritaglio, quando - da + 0.1) \
+            or faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95   # dove finisce la testa
+        y = max(cima - dim * 0.55, 230)  # la testa copre la parte bassa della parola
         n = len(self.camera)
         self.camera.insert(0, f'<div class="pdietro" id="p{n}" style="top:{y:.0f}px;font-size:{dim}px;color:{c["accento"]};'
                               f'text-shadow:0 0 50px {c["accento_luce"]}99">{html.escape(testo)}</div>')

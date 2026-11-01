@@ -23,7 +23,10 @@ FPS = 30
 DISSOLVENZA = 0.03  # 30 ms: niente "click" sui tagli
 # ripresi dal kit "Monta le tue Ads":
 # video girati in HDR (iPhone con HDR acceso): senza correzione i colori escono slavati
-COLORE_HDR = "eq=contrast=1.12:saturation=1.3:gamma=0.95,colorbalance=rm=0.04:bm=-0.03"
+# HDR dell'iPhone (HLG o PQ) portato ai colori normali: si passa dalla luce vera e si comprime piano verso il bianco,
+# così la pelle non diventa bianchissima (prima bastava un ritocco di contrasto, e il viso usciva sbiadito)
+COLORE_HDR = ("zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=mobius:desat=0:param=0.3,"
+              "zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
 # voce pulita: via i rumori bassi e il fruscio, volume più uniforme (il volume finale lo fa rendi.py)
 VOCE = "highpass=f=80,afftdn=nf=-25,acompressor=threshold=-20dB:ratio=3:attack=5:release=80"
 
@@ -71,7 +74,8 @@ def main():
     dest = os.path.join(cart, "tagliato.mp4")
     print(f"Taglio {n} pezzi dall'originale...")
     esegui([FFMPEG, "-v", "error", "-y", "-i", sorgente["video"], "-filter_complex", ";".join(filtri),
-            "-map", "[v]", "-map", "[a]", *codec_video(), "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+            "-map", "[v]", "-map", "[a]", *codec_video(),
+            *(["-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"] if hdr else []), "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
             "-movflags", "+faststart", dest])
     scrivi(os.path.join(cart, "segmenti.json"), segmenti)
     finale = durata(dest)
