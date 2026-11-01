@@ -50,6 +50,8 @@ CATALOGO = {
                    "descrizione": "Un telefono vero vola accanto a te e mostra la chat, con il bottone che viene toccato."},
     "orbita": {"nome": "Orbita", "per": "Far vedere i tuoi reel, i tuoi lavori",
                "descrizione": "Le copertine dei tuoi reel ti girano attorno, passando dietro e davanti a te."},
+    "bianconero": {"nome": "Bianco e nero", "per": "Un momento serio, un prima e dopo",
+                   "descrizione": "Il video perde i colori e resta in bianco e nero, poi i colori tornano con un lampo."},
     "targhetta": {"nome": "Targhetta in alto", "per": "Dire subito di cosa parla il video",
                   "descrizione": "Sopra la testa un riquadro colorato con il tema del video su due righe, fisso fino alla fine."},
     "barrate": {"nome": "Icone barrate", "per": "Senza questo, senza quello",

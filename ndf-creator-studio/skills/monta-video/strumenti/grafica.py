@@ -40,6 +40,7 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "prompt", "da": 58.0, "a": 63.6, "testo": "trasforma i contenuti in contatti", "scrivi_da": 61.0, "scrivi_a": 63.0},
    {"tipo": "telefono3d", "da": 9.6, "a": 17.1, "app": "ChatGPT", "messaggi": [["Quali sono le domande...", 11.76, "io"]],
     "scheda": {"etichetta": "Risposta", "titolo": "15 domande pronte", "bottone": "Copia", "da": 14.5}, "tocco": 16.2, "fatto": "Copiato"},
+   {"tipo": "bianconero", "da": 28.9, "a": 30.9},                    in bianco e nero, i colori tornano con un lampo
    {"tipo": "targhetta", "da": 2.0, "riga1": "Il metodo NDF", "riga2": "spiegato semplice"},   fissa in alto fino alla fine
    {"tipo": "barrate", "da": 6.8, "barra": 9.2, "a": 11.5, "icone": ["forbici", "pellicola", "timeline"]},  "senza..."
    {"tipo": "orbita", "da": 50.0, "a": 55.8},                     con ritaglio: copertine dei reel già montati
@@ -475,6 +476,17 @@ class Reel:
         self.corpo.append(f'<div class="lampo" id="f{n}" style="background:{colore}"></div>')
         self.tl.append(f'tl.fromTo("#f{n}",{{opacity:{forza}}},{{opacity:0,duration:0.28,ease:"power2.out",immediateRender:false}},{da:.3f});')
 
+    def bianconero(self, e, faccia):
+        """Bianco e nero: il video perde i colori in un attimo e resta in bianco e nero; ad "a" i colori tornano di
+        colpo con un lampo bianco. e = {"da": secondo, "a": secondo}."""
+        da, a = e["da"], e["a"]
+        self.tl.append(f'tl.fromTo("#bg",{{filter:"grayscale(0) contrast(1)"}},{{filter:"grayscale(1) contrast(1.12)",duration:0.3,ease:"power2.out",immediateRender:false}},{da:.3f});'
+                       f'tl.fromTo("#bg",{{filter:"grayscale(1) contrast(1.12)"}},{{filter:"grayscale(0) contrast(1)",duration:0.12,ease:"none",immediateRender:false}},{a:.3f});'
+                       f'tl.set("#bg",{{filter:"none"}},{a + 0.13:.3f});')
+        self.flash(a, 0.55, "#FFFFFF")
+        self.suono("transizione", da, 0.3)
+        self.suono("transizione", a, 0.35)
+
     def dietro(self, e, faccia):
         """Parola dietro la testa: la stanza si spegne mentre tu resti illuminato, la parola forte sbatte dietro la
         tua testa con un lampo e un colpo di camera, le luci tornano di scatto. e = {"da": inizio della frase,
@@ -483,7 +495,8 @@ class Reel:
         da, quando, a = e["da"], e["quando"], e["a"]
         sel = self.ritaglio(da - 0.1, a + 0.1)
         testo = e["parola"].upper()
-        dim = min(320, int(980 / (max(len(testo), 3) * 0.88)))
+        largo = self.stile["font"]["titoli"].get("larghezza", 100) / 100   # un font allargato occupa di più
+        dim = min(320, int(940 / (max(len(testo), 3) * 0.88 * largo)))
         cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95  # dove finisce la testa
         y = max(cima - dim * 0.3, 230)  # la testa copre la parte bassa della parola
         n = len(self.camera)
@@ -1483,6 +1496,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.pillole(e, faccia)
         elif tipo == "prompt":
             r.prompt(e, faccia)
+        elif tipo == "bianconero":
+            r.bianconero(e, faccia)
         elif tipo == "targhetta":
             r.targhetta(e, faccia)
         elif tipo == "barrate":

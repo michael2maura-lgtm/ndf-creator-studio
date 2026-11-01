@@ -109,6 +109,7 @@ def main():
     # a volte il browser che crea i fotogrammi si inceppa: si riprova una volta, con meno lavoro in parallelo
     for workers in ("4", "2"):
         r = subprocess.run([NPX, "--yes", HYPERFRAMES, "render", reel, "-o", grezzo, "-q", qualita, "-f", "30",
+                            "--sdr",   # i video HDR dell'iPhone chiederebbero 20+ GB di disco; Instagram è comunque SDR
                             "-w", "1" if poco_spazio else workers], capture_output=True, text=True,
                            env=env_node() | ({"PRODUCER_ENABLE_STREAMING_ENCODE": "true",
                                              "PRODUCER_STREAMING_ENCODE_MAX_DURATION_SECONDS": "900"} if poco_spazio else {}))
