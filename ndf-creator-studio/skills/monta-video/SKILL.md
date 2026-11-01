@@ -58,6 +58,7 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    titoli che si decodificano, targhette, parola gigante, cornice, telefono, contatore). Formato in cima a
    `strumenti/grafica.py`, quando usare cosa nello `stile.md` dello stile, esempio approvato in `esempi/grafica.json`.
    Ogni 4-8 secondi una grafica, sempre nata da una frase detta in quel momento.
+   Zoom: decidilo sempre tu, in ogni video, seguendo `regole/zoom.md` (l'utente non deve chiederlo).
    **Poche cose fatte bene**: una grafica alla volta, mai lampi, adesivi o pillole su ogni parola. Se un elemento non
    aiuta a capire o a sentire, toglilo.
 6. `PY STUDIO/strumenti/costruisci.py NOME --zone`, poi `PY STUDIO/strumenti/foto.py NOME <6-8 momenti>`

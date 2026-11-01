@@ -34,7 +34,8 @@
  "mirino": false,
  "finale": false,
  "effetti": [
-  "orbita"
+  "orbita",
+  "zoom"
  ],
  "fonte": {
   "esempio": "spunto",
