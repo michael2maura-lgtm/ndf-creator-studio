@@ -90,7 +90,12 @@ ICONE = {
     "pellicola": f'<rect x="10" y="12" width="44" height="40" rx="4" {_L}/><path d="M20 12v40M44 12v40M10 24h10M10 40h10M44 24h10M44 40h10" {_L}/>',
     "timeline": f'<path d="M10 18h28M18 32h36M10 46h22" stroke-width="7" stroke-linecap="round" stroke="currentColor"/>',
     "play": f'<rect x="8" y="12" width="48" height="40" rx="8" {_L}/><path d="M27 23v18l15-9z" fill="currentColor"/>',
+    # stellina di Claude: raggi di lunghezza diversa attorno al centro (per i video di chi usa Claude, non nel prodotto)
+    "claude": "".join(f'<path d="M{32 + 2 * math.cos(math.radians(g)):.1f} {32 + 2 * math.sin(math.radians(g)):.1f}'
+                      f'L{32 + r * math.cos(math.radians(g)):.1f} {32 + r * math.sin(math.radians(g)):.1f}" stroke="currentColor" '
+                      f'stroke-width="7.5" stroke-linecap="round"/>' for g, r in zip(range(-90, 270, 30), [31, 25, 30, 26, 31, 24, 30, 27, 31, 25, 29, 26])),
 }
+LOGHI = {"claude": ("#D97757", "#FFFFFF")}   # riquadro e segno coi colori dell'app, invece di quelli a giro
 
 PANNELLO = {  # colori dello schermo diviso; uno stile li cambia con "pannello" in stile.json
     "acc": "#FF3DB4", "acc_rgb": "255,61,180", "viola_rgb": "122,92,255", "blu_rgb": "63,123,255",
@@ -850,7 +855,8 @@ class Reel:
     def barrate(self, e, faccia):
         """Icone barrate: sopra la testa spuntano i riquadri di alcuni programmi, un po' storti, e poi una X disegnata a
         mano li cancella uno dopo l'altro ("senza nessun programma"). e = {"da": secondo, "barra": secondo della prima X,
-        "a": fine, "icone": ["forbici", "pellicola", "timeline"]} (icone: nomi di ICONE, 2-4)."""
+        "a": fine, "icone": ["forbici", "pellicola", "timeline"]} (icone: nomi di ICONE, 1-4).
+        Con "barra": false le icone spuntano e basta, senza X: "l'ho fatto con Claude" -> "icone": ["claude"]."""
         n = len(self.corpo)
         da, a = e["da"], e["a"]
         nomi = (e.get("icone") or ["forbici", "pellicola", "timeline"])[:4]
@@ -861,7 +867,7 @@ class Reel:
         x_col = e.get("colore", self.P["acc"])
         pezzi = []
         for j, nome in enumerate(nomi):
-            fondo, segno = piastre[j % 4]
+            fondo, segno = LOGHI.get(nome, piastre[j % 4])
             pezzi.append(f'<div class="br-i" id="br{n}i{j}" style="transform:rotate({storti[j % 4]}deg)">'
                          f'<div class="br-p" style="background:{fondo};color:{segno}"><svg viewBox="0 0 64 64">{ICONE.get(nome, ICONE["stella"])}</svg></div>'
                          f'<svg class="br-x" viewBox="0 0 100 100"><path id="br{n}i{j}a" d="M10 12L90 88" pathLength="1" stroke="{x_col}"/>'
@@ -872,6 +878,8 @@ class Reel:
         barra = e.get("barra", da + 1.0)
         for j in range(len(nomi)):
             T(f'tl.fromTo("#br{n}i{j}",{{opacity:0,scale:0.4}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(2.2)",immediateRender:false}},{da + j * 0.08:.3f});')
+            if barra is False:
+                continue
             t = barra + j * 0.2
             T(f'tl.fromTo("#br{n}i{j}a",{{strokeDashoffset:1}},{{strokeDashoffset:0,duration:0.1,ease:"none",immediateRender:false}},{t:.3f});'
               f'tl.fromTo("#br{n}i{j}b",{{strokeDashoffset:1}},{{strokeDashoffset:0,duration:0.1,ease:"none",immediateRender:false}},{t + 0.1:.3f});')
