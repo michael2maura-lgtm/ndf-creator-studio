@@ -48,3 +48,7 @@ Un pensiero, un consiglio veloce: 1-2 effetti al massimo, riquadro bianco d'aper
 "versione": "semplice" nel piano: la sfumatura spesso, ogni 6-9 secondi sull'inizio di una frase nuova (Michael:
 "mettila più spesso"), mai sopra un pop-up. Pop-up notifica quando nomini un'app o una cosa; "forma": "adesivo" quando
 dici "adesivo domande". Niente mirino.
+
+## Scene della pasta (ex Stile Racconto, stesso stile Notech: reel 01 e 04)
+Per un numero, un tempo, un prima e dopo: elemento "scena" (fondo scuro o carta, titolo riga per riga, modulo riempi,
+esplodi, righe, play, pellicola). Solo quando lo dici davvero, mai forzato.
