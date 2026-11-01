@@ -67,6 +67,18 @@ def _animazione(s, n, numero):
     return "".join(tl)
 
 
+def _finestra(s, n, colori):
+    """"finestra": true (dal reel di esempio spunto-4): la clip o la foto non riempie lo schermo ma sta dentro una
+    finestra molto arrotondata, sopra un fondo scuro con aloni del colore d'accento. Niente titolo sopra: i sottotitoli
+    continuano. Si entra e si esce con un taglio netto; al ritorno la persona arriva un attimo sfocata."""
+    sc = colori.get("scuro", "#140E0A")
+    fondo = (f"radial-gradient(60% 35% at 0% 55%,{colori['accento']}88,transparent 70%),"
+             f"radial-gradient(70% 30% at 100% 0%,{colori.get('accento_luce', colori['accento'])}55,transparent 70%),"
+             f"linear-gradient(180deg,{sc} 0%,#0b0806 100%)")
+    stile_media = "left:40px;top:175px;width:1000px;height:1575px;border-radius:150px;box-shadow:0 30px 80px rgba(0,0,0,.55)"
+    return fondo, stile_media
+
+
 def clip(s, n, colori, size):
     """Clip vera a tutto schermo (cartella clip/), titolo in alto, e se serve la X rossa ("x": true)."""
     nome = s["clip"]
@@ -74,10 +86,16 @@ def clip(s, n, colori, size):
     x = ""
     if s.get("x"):
         x = f'<div class="xrossa" id="sc{n}x1"></div><div class="xrossa" id="sc{n}x2"></div>'
-    corpo = (f'<div class="scena" id="sc{n}"><video class="clipv" id="sc{n}v" src="assets/clip-{nome}.mp4" muted playsinline '
-             f'data-start="{da:.3f}" data-media-start="0" data-duration="{a - da:.3f}"></video>'
-             f'<div class="ombra-alto"></div>{x}'
-             f'<div class="blocco alto" id="sc{n}b">{_righe(s, colori, "", min(size, 120))}</div></div>')
+    if s.get("finestra"):
+        fondo, media = _finestra(s, n, colori)
+        corpo = (f'<div class="scena" id="sc{n}" style="background:{fondo}"><video class="clipv" id="sc{n}v" src="assets/clip-{nome}.mp4" '
+                 f'muted playsinline style="{media}" data-start="{da:.3f}" data-media-start="0" data-duration="{a - da:.3f}"></video>{x}'
+                 f'<div id="sc{n}b"></div></div>')
+    else:
+        corpo = (f'<div class="scena" id="sc{n}"><video class="clipv" id="sc{n}v" src="assets/clip-{nome}.mp4" muted playsinline '
+                 f'data-start="{da:.3f}" data-media-start="0" data-duration="{a - da:.3f}"></video>'
+                 f'<div class="ombra-alto"></div>{x}'
+                 f'<div class="blocco alto" id="sc{n}b">{_righe(s, colori, "", min(size, 120))}</div></div>')
     tl = [f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});',
           f'tl.fromTo("#sc{n}v",{{scale:1.12}},{{scale:1.0,duration:{a - da:.3f},ease:"power1.out"}},{da:.3f});',
           f'tl.fromTo("#sc{n}b",{{opacity:0,y:40,scale:1.1}},{{opacity:1,y:0,scale:1,duration:0.32,ease:"power3.out"}},{da + 0.05:.3f});',
@@ -324,6 +342,14 @@ def schema(s, n, colori, size):
 def immagine(s, n, colori, size):
     """Foto a tutto schermo (DATI/immagini/<nome>.jpg) che si avvicina piano, con il titolo in alto."""
     da, a = s["da"], s["a"]
+    if s.get("finestra"):
+        fondo, media = _finestra(s, n, colori)
+        corpo = (f'<div class="scena" id="sc{n}" style="background:{fondo}"><img class="clipv" id="sc{n}v" style="{media}" '
+                 f'src="assets/img-{s["immagine"]}.jpg"><div id="sc{n}b"></div></div>')
+        tl = [f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});',
+              f'tl.fromTo("#sc{n}v",{{scale:1.0}},{{scale:1.06,duration:{a - da:.3f},ease:"none"}},{da:.3f});',
+              f'tl.set("#sc{n}",{{opacity:0}},{a:.3f});']
+        return corpo, "".join(tl)
     corpo = (f'<div class="scena" id="sc{n}"><img class="clipv" id="sc{n}v" src="assets/img-{s["immagine"]}.jpg">'
              f'<div class="ombra-alto"></div>'
              f'<div class="blocco alto" id="sc{n}b">{_righe(s, colori, "", min(size, 120))}</div></div>')
@@ -526,6 +552,8 @@ TIPI.update({"luce": luce, "persona": persona, "carta": carta})
 
 def entrata(s, n):
     tipo, da, a = s.get("entrata"), s["da"], s["a"]
+    if s.get("finestra") and not tipo:   # taglio netto, e al ritorno la persona arriva un attimo sfocata
+        return f'tl.fromTo("#bg",{{filter:"blur(12px)"}},{{filter:"blur(0px)",duration:0.12,ease:"none",immediateRender:false}},{a:.3f});'
     if tipo == "lampo":
         return (f'tl.fromTo("#lampo",{{opacity:0.75}},{{opacity:0,duration:0.14,ease:"power2.out"}},{da:.3f});'
                 f'tl.fromTo("#lampo",{{opacity:0.6}},{{opacity:0,duration:0.14,ease:"power2.out"}},{a:.3f});')

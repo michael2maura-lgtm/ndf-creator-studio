@@ -156,9 +156,10 @@ def main():
     titoli = [x for x in titoli if x["da"] < D - 0.2]
     liste = [x for x in piano.get("liste", []) if x["da"] < D - 0.2]
     chiave = {p.lower() for p in piano.get("parole_chiave", [])}
+    coprono = [x for x in scene_piano if not x.get("finestra")]   # dentro la finestra i sottotitoli continuano
 
     def coperto(t):
-        return any(x["da"] <= t < x["a"] for x in titoli + scene_piano + liste
+        return any(x["da"] <= t < x["a"] for x in titoli + coprono + liste
                    + [p for p in piano.get("pannelli", []) if p.get("frase") or p.get("pieno")]) or t >= finale_da
 
     margine = 1080 - ZONA["destra_pulsanti"] + 10  # stesso margine a sinistra e a destra: mai sotto i pulsanti
@@ -168,7 +169,7 @@ def main():
     css_sott = ""
     propri = stile.get("sottotitoli_nome") if stile.get("sottotitoli_nome") not in (None, "ndf-classico") else None
     if stile.get("sottotitoli_scelti") or propri:  # scelti nella pagina, o quelli dello stile (strumenti/sottotitoli.py)
-        nascondi = [(x["da"], x["a"]) for x in titoli + scene_piano + liste
+        nascondi = [(x["da"], x["a"]) for x in titoli + coprono + liste
                     + [p for p in piano.get("pannelli", []) if p.get("frase") or p.get("pieno")]] + [(finale_da, D + 1)]
         css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile.get("sottotitoli_scelti") or propri, parole, chiave, y_sub + 40,
                                                             nascondi, stile["colori"])
