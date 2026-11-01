@@ -310,8 +310,8 @@ def schema(s, n, colori, size):
                   f'tl.fromTo("#sc{n}x{i}",{{opacity:0,y:20}},{{opacity:1,y:0,duration:0.3,ease:"back.out(1.5)"}},{t + 0.27:.3f});')
         if not ultimo:
             parti.append(f'<path id="sc{n}f{i}" d="M540 {y + H - 40} L540 {y + H + 40} M515 {y + H + 15} L540 {y + H + 40} L565 {y + H + 15}" fill="none" '
-                         f'stroke="{teal}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>')
-            tl.append(f'tl.to("#sc{n}f{i}",{{strokeDashoffset:0,duration:0.4,ease:"none"}},{passi[i + 1][2] - 0.33:.3f});')
+                         f'stroke="{teal}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" opacity="0"/>')
+            tl.append(f'tl.set("#sc{n}f{i}",{{opacity:1}},{passi[i + 1][2] - 0.33:.3f});tl.to("#sc{n}f{i}",{{strokeDashoffset:0,duration:0.4,ease:"none"}},{passi[i + 1][2] - 0.33:.3f});')
     fondo = "#F9F7F4" if chiaro else "radial-gradient(ellipse at 50% 40%, #1E1712 0%, #0B0807 72%)"
     corpo = (f'<div class="scena" id="sc{n}" style="background:{fondo}">'
              f'<div id="sc{n}ti" style="position:absolute;top:210px;left:0;right:0;text-align:center;font-family:\'Plus Jakarta Sans\';'
@@ -385,20 +385,20 @@ def lavagna(s, n, colori, size):
         etichetta = ic[2] if len(ic) > 2 else None
         cx = 60 + passo * (i + 0.5)
         if i > 0:   # freccia dall'icona prima
-            parti.append(f'<svg viewBox="0 0 100 20" style="position:absolute;left:{cx - passo + L / 2 - 10:.0f}px;top:{y_ic + L / 2 - 20:.0f}px;'
-                         f'width:{passo - L + 20:.0f}px;height:40px"><path id="sc{n}f{i}" d="M4 10 L92 10 M82 3 L94 10 L82 17" fill="none" '
+            parti.append(f'<svg id="sc{n}fs{i}" viewBox="0 0 100 20" style="position:absolute;left:{cx - passo + L / 2 - 10:.0f}px;top:{y_ic + L / 2 - 20:.0f}px;'
+                         f'width:{passo - L + 20:.0f}px;height:40px;opacity:0"><path id="sc{n}f{i}" d="M4 10 L92 10 M82 3 L94 10 L82 17" fill="none" '
                          f'stroke="rgba(249,247,244,.45)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" pathLength="1" '
                          f'stroke-dasharray="1" stroke-dashoffset="1"/></svg>')
-            tl.append(f'tl.to("#sc{n}f{i}",{{strokeDashoffset:0,duration:0.33,ease:"none"}},{t - 0.2:.3f});')
+            tl.append(f'tl.set("#sc{n}fs{i}",{{opacity:1}},{t - 0.2:.3f});tl.to("#sc{n}f{i}",{{strokeDashoffset:0,duration:0.33,ease:"none"}},{t - 0.2:.3f});')
         tratti = "".join(f'<path id="sc{n}i{i}t{j}" d="{d}" fill="none" stroke="{acc if j == 0 else "rgba(249,247,244,.9)"}" '
                          f'stroke-width="{3.2 if j == 0 else 2.6}" stroke-linecap="round" stroke-linejoin="round" pathLength="1" '
-                         f'stroke-dasharray="1" stroke-dashoffset="1"{f" style=\"filter:drop-shadow(0 0 8px {acc})\"" if j == 0 else ""}/>'
+                         f'stroke-dasharray="1" stroke-dashoffset="1" opacity="0"{f" style=\"filter:drop-shadow(0 0 8px {acc})\"" if j == 0 else ""}/>'
                          for j, d in enumerate(LINEE.get(nome, LINEE["chat"])))
         parti.append(f'<svg id="sc{n}i{i}" viewBox="0 0 100 100" style="position:absolute;left:{cx - L / 2:.0f}px;top:{y_ic}px;'
-                     f'width:{L}px;height:{L}px;overflow:visible">{tratti}</svg>')
-        tl.append(f'tl.fromTo("#sc{n}i{i}",{{scale:0.85}},{{scale:1,duration:0.45,ease:"back.out(1.6)",immediateRender:false}},{t:.3f});')
+                     f'width:{L}px;height:{L}px;overflow:visible;opacity:0">{tratti}</svg>')
+        tl.append(f'tl.set("#sc{n}i{i}",{{opacity:1}},{t:.3f});tl.fromTo("#sc{n}i{i}",{{scale:0.85}},{{scale:1,duration:0.45,ease:"back.out(1.6)",immediateRender:false}},{t:.3f});')
         for j in range(len(LINEE.get(nome, LINEE["chat"]))):
-            tl.append(f'tl.to("#sc{n}i{i}t{j}",{{strokeDashoffset:0,duration:0.53,ease:"power1.inOut"}},{t + j * 0.1:.3f});')
+            tl.append(f'tl.set("#sc{n}i{i}t{j}",{{opacity:1}},{t + j * 0.1:.3f});tl.to("#sc{n}i{i}t{j}",{{strokeDashoffset:0,duration:0.53,ease:"power1.inOut"}},{t + j * 0.1:.3f});')
         if etichetta:
             parti.append(f'<div id="sc{n}e{i}" style="position:absolute;left:{cx - passo / 2:.0f}px;width:{passo:.0f}px;top:{y_ic + L + 18}px;'
                          f'text-align:center;font-family:\'Instrument Serif\';font-style:italic;font-size:52px;color:{luce};opacity:0">'
