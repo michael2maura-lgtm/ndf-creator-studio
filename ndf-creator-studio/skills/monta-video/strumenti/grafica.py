@@ -68,6 +68,7 @@ import subprocess
 
 import effetti
 import sottotitoli
+import suoni_reel
 from comune import DATI, FFMPEG, STUDIO, durata, girato, trova
 
 GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
@@ -222,8 +223,21 @@ class Reel:
         dest = os.path.join(self.assets, "musica.m4a")
         subprocess.run([FFMPEG, "-v", "error", "-y", "-stream_loop", "-1", "-i", os.path.join(self.cart_stile, rel),
                         "-t", f"{self.D:.2f}", "-af", f"afade=t=out:st={self.D - 1.5:.2f}:d=1.5", "-c:a", "aac", dest], check=True)
+        stop = f' data-stop="{self.stop}"' if getattr(self, "stop", "") else ""
         self.audio.append(f'<audio id="musica" src="assets/musica.m4a" data-start="0" data-media-start="0" '
-                          f'data-duration="{self.D:.3f}" data-volume="{vol}"></audio>')
+                          f'data-duration="{self.D:.3f}" data-volume="{vol}"{stop}></audio>')
+
+    def frasi_chiave(self, piano):
+        """Frasi chiave: risalita, silenzio, frase senza musica, la musica riparte con un colpo (suoni_reel.frasi_chiave)."""
+        frasi, self.stop = suoni_reel.frasi_chiave(piano, self.D)
+        if not frasi:
+            return
+        src, dur = suoni_reel.risalita(self.assets)
+        for da, a in frasi:
+            n = len(self.audio)
+            self.audio.append(f'<audio id="ri{n}" src="{src}" data-start="{da - suoni_reel.SILENZIO - dur:.3f}" '
+                              f'data-media-start="0" data-duration="{dur:.3f}" data-volume="{suoni_reel.VOL_RISALITA}"></audio>')
+            self.suono("impatto", a, 0.5, se_manca="colpo")
 
     # ---------- pezzi grafici ----------
     def decodifica(self, sel, testo, da, dur=0.45):
@@ -1655,6 +1669,7 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     elif finale_da < D:
         r.finale(piano, finale_da)
     if piano.get("musica", True):
+        r.frasi_chiave(piano)
         r.musica()
     chiave = {p.lower() for p in piano.get("parole_chiave", [])}
     css_sott = ""

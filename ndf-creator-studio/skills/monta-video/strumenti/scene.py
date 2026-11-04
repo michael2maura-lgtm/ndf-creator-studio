@@ -459,8 +459,102 @@ def lavagna(s, n, colori, size):
     return corpo, "".join(tl)
 
 
+def _scrivi(id_, testo, da, colore, size):
+    """Una riga che si scrive lettera per lettera (ogni lettera entra sfocata), circa 28 lettere al secondo."""
+    lettere = "".join(f'<span id="{id_}l{j}" style="opacity:0">{html.escape(c) if c != " " else "&nbsp;"}</span>'
+                      for j, c in enumerate(testo))
+    riga = f'<div style="font-size:{size}px;color:{colore};white-space:nowrap">{lettere}</div>'
+    tl = "".join(f'tl.fromTo("#{id_}l{j}",{{opacity:0,filter:"blur(6px)"}},{{opacity:1,filter:"blur(0px)",duration:0.12,'
+                 f'immediateRender:false}},{da + j * 0.035:.3f});' for j in range(len(testo)))
+    return riga, tl, da + len(testo) * 0.035
+
+
+def bianca(s, n, colori, size):
+    """Lavagna bianca (dal reel esempi/spunto-7): fondo bianco, in alto la frase che si scrive (riga1 scura, riga2 nel
+    colore d'accento), sotto 1-3 schede bianche con l'ombra morbida che entrano quando le dici.
+    s = {"da", "a", "riga1": "pubblichi reel,", "riga2": "storie e post", "t2": secondo della riga2,
+         "schede": [{"t": secondo, "icona": "play", "sotto": "reel"},          # icona a linee
+                    {"t": .., "numero": "0€", "sotto": "rischiati"},             # numero grande
+                    {"t": .., "chat": "Quanto costa?", "barra": secondo, "badge": "0"},  # messaggio, poi barrato
+                    ...], "acceso": [[indice, secondo], ...]  (la scheda si illumina col bordo),
+         "timbri": [["NO", secondo], ...]}"""
+    acc, scuro = colori["accento"], "#17120F"
+    da, a = s["da"], s["a"]
+    parti, tl = [], [f'tl.set("#sc{n}",{{opacity:1}},{da:.3f});']
+    r1, t1, fine1 = _scrivi(f"sc{n}r1", s.get("riga1", ""), da + 0.05, scuro, 80)
+    r2, t2, _ = _scrivi(f"sc{n}r2", s.get("riga2", ""), s.get("t2", fine1 + 0.05), acc, 80)
+    parti.append(f'<div style="position:absolute;top:360px;left:0;right:0;display:flex;flex-direction:column;align-items:center;'
+                 f'font-family:\'Plus Jakarta Sans\';font-weight:800;line-height:1.12;letter-spacing:-1px">{r1}{r2}</div>')
+    tl += [t1, t2]
+    schede = s.get("schede", [])
+    k = max(len(schede), 1)
+    grande = any(sc.get("chat") for sc in schede)
+    W = 700 if grande else 380 if k == 1 else 340 if k == 2 else 270
+    H = 460 if grande else int(W * 1.12) if any(sc.get("numero") for sc in schede) else W
+    gap = 70 if k <= 2 else 60
+    x0 = (1080 - (k * W + (k - 1) * gap)) / 2
+    y = 720
+    for i, sc in enumerate(schede):
+        t = sc.get("t", da + 0.6 + i * 0.4)
+        x = x0 + i * (W + gap)
+        dentro = ""
+        if sc.get("chat"):
+            dentro = (f'<div style="display:flex;align-items:center;gap:18px;padding:30px 34px;border-bottom:2px solid #EEE9E4;'
+                      f'font-size:34px;font-weight:700;color:{scuro}"><svg viewBox="0 0 100 100" width="50" height="50">'
+                      f'<path d="M50 18 a16 16 0 1 0 0.1 0 M18 92 Q50 50 82 92" fill="none" stroke="{scuro}" stroke-width="7" '
+                      f'stroke-linecap="round"/></svg>Messaggi</div>'
+                      f'<div id="sc{n}c{i}" style="position:relative;display:inline-block;margin:34px;padding:20px 30px;border-radius:22px;'
+                      f'background:#fff;box-shadow:0 6px 22px rgba(0,0,0,.12);font-size:40px;font-weight:700;color:{scuro};opacity:0">'
+                      f'{html.escape(sc["chat"])}<div id="sc{n}cb{i}" style="position:absolute;left:24px;right:24px;top:50%;height:4px;'
+                      f'background:{scuro};transform:scaleX(0);transform-origin:left"></div></div>')
+            tl.append(f'tl.fromTo("#sc{n}c{i}",{{opacity:0,y:20}},{{opacity:1,y:0,duration:0.3,ease:"back.out(1.6)",immediateRender:false}},{t + 0.35:.3f});')
+            if sc.get("barra"):
+                tl.append(f'tl.to("#sc{n}cb{i}",{{scaleX:1,duration:0.3,ease:"power2.out"}},{sc["barra"]:.3f});'
+                          f'tl.to("#sc{n}c{i}",{{opacity:0.45,duration:0.3}},{sc["barra"]:.3f});')
+            if sc.get("badge") is not None:
+                parti.append(f'<div id="sc{n}bg{i}" style="position:absolute;left:{x + W - 50:.0f}px;top:{y - 40}px;width:90px;height:90px;'
+                             f'border-radius:50%;background:{acc};color:#fff;display:flex;align-items:center;justify-content:center;'
+                             f'font-family:\'Plus Jakarta Sans\';font-weight:800;font-size:46px;z-index:3;opacity:0">{html.escape(str(sc["badge"]))}</div>')
+                tb = sc.get("barra", t + 0.8)
+                tl.append(f'tl.fromTo("#sc{n}bg{i}",{{opacity:0,scale:0}},{{opacity:1,scale:1,duration:0.35,ease:"back.out(2.4)",immediateRender:false}},{tb:.3f});')
+        elif sc.get("numero") is not None:
+            ic = ""
+            if sc.get("icona"):
+                ic = "".join(f'<path d="{d}" fill="none" stroke="{scuro}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>'
+                             for d in LINEE.get(sc["icona"], LINEE["chat"]))
+                ic = f'<svg viewBox="0 0 100 100" width="80" height="80" style="margin-top:6px">{ic}</svg>'
+            dentro = (f'<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">'
+                      f'<div style="font-size:{150 if len(str(sc["numero"])) < 3 else 120}px;font-weight:800;line-height:1;color:{acc}">'
+                      f'{html.escape(str(sc["numero"]))}</div>{ic}</div>')
+        else:
+            ic = "".join(f'<path d="{d}" fill="none" stroke="{acc if j == 0 else scuro}" stroke-width="{6 if j == 0 else 5}" '
+                         f'stroke-linecap="round" stroke-linejoin="round"/>' for j, d in enumerate(LINEE.get(sc.get("icona"), LINEE["chat"])))
+            dentro = (f'<div style="height:100%;display:flex;align-items:center;justify-content:center">'
+                      f'<svg viewBox="0 0 100 100" width="{W * 0.5:.0f}" height="{W * 0.5:.0f}">{ic}</svg></div>')
+        parti.append(f'<div id="sc{n}s{i}" style="position:absolute;left:{x:.0f}px;top:{y}px;width:{W}px;height:{H}px;border-radius:36px;'
+                     f'background:linear-gradient(#FFFFFF,#F7F5F2);box-shadow:0 18px 50px rgba(30,20,10,.14);border:4px solid transparent;'
+                     f'font-family:\'Plus Jakarta Sans\';overflow:visible;opacity:0">{dentro}</div>')
+        if sc.get("sotto"):
+            parti.append(f'<div id="sc{n}st{i}" style="position:absolute;left:{x - 40:.0f}px;width:{W + 80}px;top:{y + H + 26}px;text-align:center;'
+                         f'font-family:\'Plus Jakarta Sans\';font-weight:700;font-size:42px;color:#5C534C;opacity:0">{html.escape(sc["sotto"])}</div>')
+            tl.append(f'tl.to("#sc{n}st{i}",{{opacity:1,duration:0.25}},{t + 0.2:.3f});')
+        tl.append(f'tl.fromTo("#sc{n}s{i}",{{opacity:0,scale:0.8,filter:"blur(10px)"}},{{opacity:1,scale:1,filter:"blur(0px)",duration:0.35,'
+                  f'ease:"back.out(1.7)",immediateRender:false}},{t:.3f});')
+    for i, ta in s.get("acceso", []):
+        tl.append(f'tl.to("#sc{n}s{int(i)}",{{borderColor:"{acc}",scale:1.06,duration:0.25,ease:"power2.out"}},{ta:.3f});')
+    for j, (parola, tt) in enumerate(s.get("timbri", [])):
+        xs, ys, rot = [(170, y + H + 130, -8), (640, y + H + 150, 6), (400, y + H + 260, -4)][j % 3]
+        parti.append(f'<div id="sc{n}tb{j}" style="position:absolute;left:{xs}px;top:{ys}px;padding:10px 30px;border:5px solid {acc};'
+                     f'border-radius:16px;color:{acc};background:#fff;font-family:\'Plus Jakarta Sans\';font-weight:800;font-size:64px;'
+                     f'transform:rotate({rot}deg);opacity:0;z-index:4">{html.escape(parola)}</div>')
+        tl.append(f'tl.fromTo("#sc{n}tb{j}",{{opacity:0,scale:1.8}},{{opacity:1,scale:1,duration:0.22,ease:"power3.in",immediateRender:false}},{tt:.3f});')
+    tl.append(f'tl.to("#sc{n}",{{opacity:0,filter:"blur(8px)",duration:0.2}},{a - 0.2:.3f});')
+    corpo = f'<div class="scena" id="sc{n}" style="background:radial-gradient(ellipse at 50% 40%,#FFFFFF 0%,#F4F1ED 100%)">{"".join(parti)}</div>'
+    return corpo, "".join(tl)
+
+
 TIPI = {"testo": testo, "capitolo": capitolo, "clip": clip, "omino": omino, "chat": chat, "telefono": telefono,
-        "schema": schema, "immagine": immagine, "lavagna": lavagna}
+        "schema": schema, "immagine": immagine, "lavagna": lavagna, "bianca": bianca}
 
 # ---------- entrate delle scene (riprese dal kit "Monta le tue Ads") ----------
 # "lampo": un flash bianco quando la scena entra e quando si torna alla persona

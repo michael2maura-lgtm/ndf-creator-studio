@@ -71,10 +71,12 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    ascoltare o controllare (le parole corrette a intuito, con il secondo). Tu non senti l'audio: dillo.
 
 Stili pronti, quattro: **Glow** (`glow`: Impact semplice, sfumatura e pop-up, per i contenuti organici), **Scene** (tu che parli e tra una frase e l'altra la scena giusta: clip e foto nella finestra,
-omini, lavagna), **Impact** (`ndf-grafica`, lo stile Notech dei reel di esempio 01 e 04: grafiche sopra la persona e, per numeri e prima/dopo, le scene animate "scena" della pasta; poche per un video
+lavagna, lavagna bianca a schede "bianca"; niente omini), **Impact** (`ndf-grafica`, lo stile Notech dei reel di esempio 01 e 04: grafiche sopra la persona e, per numeri e prima/dopo, le scene animate "scena" della pasta; poche per un video
 semplice, con la sfumatura come passaggio, tante per un video d'impatto) e **Diviso** (pannello in alto, persona sotto).
 NDF e Linee sono in Scene, Racconto e Luce in Impact, Ads è solo un finale: la pagina non li mostra ("nascosto": true) ma si
 usano ancora per nome. Ads non è uno stile: se il video è per le ads, finale "CLICCA QUI SOTTO", mai "commenta".
+"Come il 22" (Michael) non è uno stile ma un modo di montare, in qualsiasi stile: grafica forte nei primi 15-20 s,
+poi persona pulita, finale forte sul "commenta". Scheda in `DATI/esempi/come-il-22/analisi.md` (solo sul computer di Michael).
 Stili in `DATI/stili/` (quelli dell'utente) e `STUDIO/stili/` (quelli pronti). L'utente può dire quale
 ("monta questo in stile X"); se non lo dice, usa quello di `DATI/scelte.json` (la pagina qui sotto), se no il suo.
 

@@ -19,6 +19,50 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import FFMPEG, HYPERFRAMES, NPX, VELOCITA, cartella_lavoro, codec_video, con_le_scelte, durata, env_node, esegui, leggi  # noqa: E402
 
 OBIETTIVO = "I=-14:TP=-2:LRA=11"
+# Effetti corti (regole/suoni.md): quanto suonano dopo il loro picco, poi sfumano in 0,1 s. Mai file lunghi lasciati andare.
+CORTI = (("pop", "click", "tick", "ping", "key", "notifica", "notification", "ding", "chime", "sparkle"), 0.35)
+COLPI = (("impatto", "impact", "colpo", "boom", "bass"), 0.9)
+DOPO_PICCO = 0.7  # whoosh, transizioni, livello, glitch
+# suoni che devono durare (tastiera mentre scrive, oggetti delle scene, tic tac, la risalita): solo la sfumatura
+LUNGHI = ("tastiera", "typing", "tictac", "orologio", "festa", "fabbrica", "applauso", "triste", "risalita")
+SFUMA = 0.1
+SOTTO_VOCE = 20  # dB: la musica sta sempre così sotto la voce (misurate tutte e due), poi il ducking la abbassa ancora
+
+
+def lufs(src):
+    """Volume medio di un file (LUFS integrati)."""
+    import re
+    err = subprocess.run([FFMPEG, "-i", src, "-af", "ebur128", "-f", "null", "-"], capture_output=True, text=True).stderr
+    return float(re.findall(r"I:\s+(-?[\d.]+) LUFS", err)[-1])
+
+
+def picco(src, da, dur):
+    """Secondi dall'inizio del pezzo al punto più forte del suono."""
+    import numpy as np
+    pcm = subprocess.run([FFMPEG, "-v", "error", "-ss", f"{da:.3f}", "-t", f"{dur:.3f}", "-i", src, "-ac", "1", "-ar", "8000",
+                          "-f", "f32le", "-"], capture_output=True).stdout
+    a = np.abs(np.frombuffer(pcm, np.float32))
+    return float(a.argmax()) / 8000 if len(a) else 0.0
+
+
+def corto(id_, src, ms, dur):
+    """Durata giusta di un effetto: fino al picco più il tempo del suo tipo, mai oltre il pezzo scelto."""
+    nome = os.path.basename(src).lower()
+    if id_ in ("voce", "musica"):
+        return dur
+    if id_.startswith(("ts", "og")) or any(k in nome for k in LUNGHI):
+        return dur
+    dopo = next((s for chiavi, s in (CORTI, COLPI) if any(k in nome for k in chiavi)), DOPO_PICCO)
+    return min(dur, picco(src, ms, dur) + dopo + SFUMA)
+
+
+def ferma_musica(stop):
+    """La musica si spegne sulle frasi chiave (riparte di colpo alla fine della frase): "a:b,c:d" in data-stop."""
+    termini = []
+    for pezzo in filter(None, stop.split(",")):
+        a, b = (float(x) for x in pezzo.split(":"))
+        termini.append(f"clip(max(({a:.3f}-t)/0.15,(t-{b:.3f})/0.04),0,1)")
+    return f",volume='{'*'.join(termini)}':eval=frame" if termini else ""
 
 
 def volume_giusto(entrata, uscita):
@@ -44,13 +88,18 @@ def solo_audio(reel, video_prima, finito, vel=1.0, gia_veloce=False):
     for tag in re.findall(r"<audio [^>]*>", pagina):
         att = dict(re.findall(r'([\w-]+)="([^"]*)"', tag))
         tracce.append((att.get("id", ""), os.path.join(reel, att["src"]), float(att["data-start"]), float(att.get("data-media-start", 0)),
-                       float(att["data-duration"]), float(att.get("data-volume", 1))))
+                       float(att["data-duration"]), float(att.get("data-volume", 1)), att.get("data-stop", "")))
     ingressi, filtri, nomi = [], [], []
     i_voce = i_musica = None
-    for i, (id_, src, da, ms, dur, vol) in enumerate(tracce):
+    voce = next((src for id_, src, *_ in tracce if id_ == "voce"), None)
+    for i, (id_, src, da, ms, dur, vol, stop) in enumerate(tracce):
+        if id_ == "musica" and voce:  # ogni brano e ogni voce hanno un volume diverso: si misura, non si indovina
+            vol = 10 ** ((lufs(voce) - SOTTO_VOCE - lufs(src)) / 20)
         ingressi += ["-i", src]
+        dur = corto(id_, src, ms, dur)
+        sfuma = f",afade=t=out:st={max(dur - SFUMA, 0):.3f}:d={SFUMA}" if id_ not in ("voce", "musica") else ""
         filtri.append(f"[{i}:a]aformat=sample_rates=48000:channel_layouts=stereo,atrim={ms:.3f}:{ms + dur:.3f},"
-                      f"asetpts=PTS-STARTPTS,volume={vol},adelay={int(da * 1000)}|{int(da * 1000)}[a{i}]")
+                      f"asetpts=PTS-STARTPTS{sfuma},volume={vol},adelay={int(da * 1000)}|{int(da * 1000)}{ferma_musica(stop)}[a{i}]")
         i_voce = i if id_ == "voce" else i_voce
         i_musica = i if id_ == "musica" else i_musica
         nomi.append(f"[a{i}]")

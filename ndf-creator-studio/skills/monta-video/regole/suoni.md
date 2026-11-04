@@ -20,8 +20,13 @@ Si sceglie in base a quello che viene detto e a quello che si vede in quel momen
   - Se l'utente lo dice ("con la musica", "senza musica", "monta semplice"), vale quello. Nel messaggio finale
     di' in una riga cosa hai scelto, così può cambiarlo.
 - Mai due suoni forti nello stesso istante, mai un suono sopra una parola importante.
+- **Frasi chiave (solo con la musica):** 1-3 per video (il gancio, il problema, la svolta). Nel piano
+  `"frasi_chiave": [[da, a]]` con i secondi della frase detta: lo studio mette da solo la risalita prima, spegne la
+  musica 0,3 s prima della frase, la fa ripartire alla fine con un colpo. Mai due a meno di 10 s, mai nei primi 2,5 s.
+- **Effetti corti:** li taglia da soli `rendi.py`: pop e click 0,35 s dopo il picco, colpi 0,9 s, whoosh e
+  transizioni 0,7 s, poi sfumatura di 0,1 s. Tastiera, tic tac e suoni degli oggetti durano quanto serve.
 
-Volumi: effetti circa 7 dB sotto la voce, musica molto più bassa; il volume finale lo sistema `rendi.py` (-14 LUFS).
+Volumi: effetti circa 7 dB sotto la voce, musica 20 dB sotto la voce misurata (`rendi.py`, SOTTO_VOCE) e più giù quando parli; il volume finale lo sistema `rendi.py` (-14 LUFS).
 
 Se all'utente non piace un suono, si cambia solo quello, in quel video. Diventa una regola dello stile solo se dice
 "sempre" o "d'ora in poi".

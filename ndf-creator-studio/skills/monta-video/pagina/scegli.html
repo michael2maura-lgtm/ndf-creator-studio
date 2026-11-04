@@ -335,7 +335,7 @@ function disegnaStili() {
                       <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
                     : `<div class="vuoto t">${esc(s.nome)}</div>`}
       <div class="corpo"><div class="t">${esc(s.nome)}</div>
-        <div class="tag">${s.grafiche ? "Grafiche animate" : "Scene e omini"}</div>
+        <div class="tag">${s.grafiche ? "Grafiche animate" : "Scene e lavagna"}</div>
         <p class="desc">${esc(s.descrizione)}</p></div>
     </button>`).join("");
   document.querySelectorAll("#stili .scheda").forEach(b => {
@@ -473,7 +473,7 @@ function disegnaEff() {
   const altro = D.stili.find(x => x.grafiche);
   $("#eff-avviso").hidden = !spento;
   if (spento) {
-    $("#eff-avviso-testo").textContent = `Lo stile "${s.nome}" usa scene e omini, non questi effetti.` +
+    $("#eff-avviso-testo").textContent = `Lo stile "${s.nome}" usa scene e lavagna, non questi effetti.` +
       (altro ? ` Funzionano con lo stile "${altro.nome}".` : "");
     $("#eff-passa").hidden = !altro;
     if (altro) { $("#eff-passa").textContent = `Passa a ${altro.nome}`;

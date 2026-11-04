@@ -15,6 +15,24 @@ from comune import FFMPEG, trova
 VOL_EFFETTI = 0.45  # circa 7 dB sotto la voce
 VOL_COLPO = 0.5
 VOL_MUSICA = 0.2    # nelle pause; quando la persona parla scende da sola di circa 8 dB (ducking in rendi.py)
+VOL_RISALITA = 0.35
+SILENZIO = 0.3      # la musica tace un attimo prima della frase chiave
+
+
+def risalita(assets):
+    """La parte che sale del riser (2 s, finisce di colpo), allo stesso volume degli altri effetti."""
+    dest = os.path.join(assets, "risalita.wav")
+    if not os.path.exists(dest):
+        subprocess.run([FFMPEG, "-v", "error", "-y", "-ss", "2.2", "-t", "2.0", "-i", trova("hyperframes/riser.mp3"), "-af",
+                        "loudnorm=I=-16:TP=-1.5,aresample=48000", dest], check=True)
+    return "assets/risalita.wav", 2.0
+
+
+def frasi_chiave(piano, D):
+    """Le 1-3 frasi chiave del piano ("frasi_chiave": [[da, a], ...]): risalita, silenzio, frase senza musica,
+    la musica riparte con un colpo. Restituisce le frasi buone e il data-stop per la musica."""
+    frasi = [(da, a) for da, a in piano.get("frasi_chiave", []) if 2.5 < da < a < D - 0.5]
+    return frasi, ",".join(f"{da - SILENZIO:.3f}:{a:.3f}" for da, a in frasi)
 
 
 
@@ -53,6 +71,16 @@ def suoni_scena(s):
         out += [["mixkit/notifica.mp3", 1.33 + i * 0.87, 0.4] for i in range(len(s.get("domande", [])))]
     if s["tipo"] == "schema":
         out += [["kit/pop.wav", p[2] - s["da"] + 0.27, 0.45] for p in s["passi"]]
+    if s["tipo"] == "bianca":
+        # un pop per ogni scheda che entra, una notifica per il messaggio, un colpo secco per ogni timbro
+        for i, sc in enumerate(s.get("schede", [])):
+            t = sc.get("t", s["da"] + 0.6 + i * 0.4) - s["da"]
+            out.append(["kit/pop.wav", t, 0.4])
+            if sc.get("chat"):
+                out.append(["mixkit/notifica.mp3", t + 0.35, 0.35])
+            if sc.get("barra"):
+                out.append(["hyperframes/error.mp3", sc["barra"] - s["da"], 0.35])
+        out += [["kit/boom.wav", tt - s["da"] + 0.2, 0.3] for _, tt in s.get("timbri", [])]
     return out
 
 
@@ -123,4 +151,13 @@ def prepara(piano, stile, cart_stile, reel, D):
                         "-t", f"{D:.3f}", "-af", f"afade=t=in:d=0.8,afade=t=out:st={max(D - 1.5, 0):.3f}:d=1.5",
                         "-c:a", "aac", "-b:a", "160k", dest], check=True)
         audio("musica", "assets/musica.m4a", 0, D, VOL_MUSICA)
+        frasi, stop = frasi_chiave(piano, D)
+        if frasi:
+            tag[-1] = tag[-1].replace("<audio ", f'<audio data-stop="{stop}" ', 1)
+            src_r, dur_r = risalita(assets)
+            colpo = suoni.get("colpo") and copia(suoni["colpo"], "colpo" + os.path.splitext(suoni["colpo"])[1])
+            for k, (da, a) in enumerate(frasi):
+                audio(f"ri{k}", src_r, da - SILENZIO - dur_r, dur_r, VOL_RISALITA)
+                if colpo:
+                    audio(f"fc{k}", colpo, a, 1.5, VOL_COLPO)
     return tag
