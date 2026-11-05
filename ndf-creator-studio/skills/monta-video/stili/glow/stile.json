@@ -54,7 +54,11 @@
     "timbro",
     "segui",
     "tessere",
-    "classifica"
+    "classifica",
+    "prima_dopo",
+    "grafico",
+    "muro",
+    "etichetta"
   ],
   "versione": "semplice",
   "transizione": "sfumatura",

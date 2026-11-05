@@ -1078,6 +1078,193 @@ class Reel:
         self.suono("ding", quando + 0.2, 0.35, se_manca="pop")
         self.nascondi.append((da, a))
 
+    def prima_dopo(self, e, faccia):
+        """Prima e dopo: lo schermo mostra il "prima" (senza colori e senza grafica, o un video/foto dato) con la targhetta
+        scura "prima"; una linea bianca con la maniglia sbuca da destra, torna indietro e poi spazza verso sinistra
+        scoprendo il "dopo" (il reel vero) con la targhetta gialla. e = {"da": quando appare il prima, "quando": la parola
+        dello scambio, "prima": file video o foto (facoltativo), "testi": ["prima", "dopo"]}."""
+        self.font_extra("InterTight.ttf")
+        n = len(self.camera)
+        da, quando = e["da"], e["quando"]
+        fine = quando + 0.95
+        t1, t2 = (e.get("testi") or ["prima", "dopo"])[:2]
+        src = e.get("prima")
+        if src and not os.path.isabs(src):
+            src = trova(src)
+        if src and os.path.exists(src) and src.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+            nome = f"prima-{n}{os.path.splitext(src)[1]}"
+            shutil.copy2(src, os.path.join(self.assets, nome))
+            strato = f'<img class="pd-v" src="assets/{nome}">'
+        elif src and os.path.exists(src):
+            nome = f"prima-{n}.mp4"
+            shutil.copy2(src, os.path.join(self.assets, nome))
+            strato = (f'<video class="pd-v" src="assets/{nome}" muted playsinline data-start="{da:.3f}" data-media-start="0" '
+                      f'data-duration="{fine - da:.3f}"></video>')
+        else:   # il prima di serie: lo stesso video, spento, come appena girato
+            strato = (f'<video class="pd-v pd-spento" src="assets/tagliato.mp4" muted playsinline data-start="{da:.3f}" '
+                      f'data-media-start="{da:.3f}" data-duration="{fine - da:.3f}"></video>')
+        self.camera.append(f'<div class="pd" id="pd{n}" style="--x:1080px">{strato}<i class="pd-l"></i><b class="pd-m">‹ ›</b>'
+                           f'<span class="pd-t1">{html.escape(t1)}</span><span class="pd-t2">{html.escape(t2)}</span></div>')
+        self.tl.append(f'tl.set("#pd{n}",{{opacity:1}},{da:.3f});'
+                       f'tl.to("#pd{n}",{{"--x":"860px",duration:0.35,ease:"power2.out"}},{quando - 0.75:.3f});'
+                       f'tl.to("#pd{n}",{{"--x":"990px",duration:0.3,ease:"power2.inOut"}},{quando - 0.4:.3f});'
+                       f'tl.to("#pd{n}",{{"--x":"-60px",duration:0.85,ease:"power2.inOut"}},{quando - 0.1:.3f});'
+                       f'tl.set("#pd{n}",{{opacity:0}},{fine:.3f});')
+        self.suono("click", quando - 0.75, 0.25)
+        self.suono("transizione", quando - 0.1, 0.3)
+
+    def grafico(self, e, faccia):
+        """Grafico che sale: sul muro dietro di te si disegna un grafico con i giorni in alto e la griglia; la linea
+        bianca va piatta con piccole onde, poi sulla parola piega e sale gialla e luminosa fino in cima, con una
+        targhetta gialla. e = {"da", "a", "quando": la parola della salita, "etichetta": "CRESCITA ↗",
+        "giorni": ["L","M","M","G","V","S","D"]}."""
+        self.font_extra("InterTight.ttf")
+        da, a, quando = e["da"], e["a"], e["quando"]
+        giorni = e.get("giorni") or ["L", "M", "M", "G", "V", "S", "D"]
+        k = len(giorni)
+        sel = self.ritaglio(da, a)
+        n = len(self.camera)
+        x0, x1, ytop, ybase = 110, 970, 345, 1080
+        xs = [x0 + j * (x1 - x0) / (k - 1) for j in range(k)]
+        piega = k - 2   # la salita sta a destra della testa, non dietro
+        ys = [820 + (14 if j % 2 else -10) * (j > 0) for j in range(piega + 1)]
+        ys += [440]
+        griglia = "".join(f'<line x1="{x:.0f}" y1="{ytop + 40}" x2="{x:.0f}" y2="{ybase}"/>' for x in xs)
+        griglia += "".join(f'<line x1="{x0 - 30}" y1="{y}" x2="{x1 + 30}" y2="{y}"/>' for y in range(ytop + 80, ybase + 1, 110))
+        lettere = "".join(f'<text id="gf{n}g{j}" x="{x:.0f}" y="{ytop}">{html.escape(g)}</text>' for j, (g, x) in enumerate(zip(giorni, xs)))
+        piatta = " ".join(f"{x:.0f},{y:.0f}" for x, y in zip(xs[:piega + 1], ys[:piega + 1]))
+        sale = " ".join(f"{x:.0f},{y:.0f}" for x, y in zip(xs[piega:], ys[piega:]))
+        luce = sale + f" {xs[-1]:.0f},{ybase} {xs[piega]:.0f},{ybase}"
+        lp = sum(math.hypot(xs[j + 1] - xs[j], ys[j + 1] - ys[j]) for j in range(piega))
+        ls = sum(math.hypot(xs[j + 1] - xs[j], ys[j + 1] - ys[j]) for j in range(piega, k - 1))
+        punti = "".join(f'<circle id="gf{n}p{j}" cx="{x:.0f}" cy="{y:.0f}" r="9" class="{"gf-pg" if j >= piega else "gf-pb"}"/>' for j, (x, y) in enumerate(zip(xs, ys)))
+        et = html.escape(e.get("etichetta", "CRESCITA ↗"))
+        self.camera.insert(0, f'<div class="gf" id="gf{n}"><svg viewBox="0 0 1080 1920" width="1080" height="1920">'
+                              f'<defs><linearGradient id="gf{n}lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E46A" stop-opacity=".35"/>'
+                              f'<stop offset="1" stop-color="#F6E46A" stop-opacity="0"/></linearGradient></defs>'
+                              f'<g class="gf-gr">{griglia}</g><g class="gf-le">{lettere}</g>'
+                              f'<polygon id="gf{n}lu" points="{luce}" fill="url(#gf{n}lg)" opacity="0"/>'
+                              f'<polyline id="gf{n}a" points="{piatta}" class="gf-a" stroke-dasharray="{lp:.0f}" stroke-dashoffset="{lp:.0f}"/>'
+                              f'<polyline id="gf{n}b" points="{sale}" class="gf-b" stroke-dasharray="{ls:.0f}" stroke-dashoffset="{ls:.0f}"/>'
+                              f'<line id="gf{n}d" x1="{xs[piega]:.0f}" y1="{ytop + 70}" x2="{xs[piega]:.0f}" y2="{ys[piega]:.0f}" class="gf-d" opacity="0"/>'
+                              f'{punti}</svg><span class="gf-et" id="gf{n}e" style="left:{xs[piega]:.0f}px;top:{ytop + 25}px">{et}</span></div>')
+        tl = [f'tl.set("{sel}",{{opacity:1}},{da:.3f});tl.set("{sel}",{{opacity:0}},{a:.3f});',
+              f'tl.fromTo("#gf{n}",{{opacity:0}},{{opacity:1,duration:0.35}},{da:.3f});',
+              f'tl.to("#gf{n}a",{{strokeDashoffset:0,duration:{max(quando - da - 0.4, 0.4):.2f},ease:"none"}},{da + 0.3:.3f});',
+              f'tl.to("#gf{n}b",{{strokeDashoffset:0,duration:0.6,ease:"power2.in"}},{quando:.3f});',
+              f'tl.to("#gf{n}lu",{{opacity:1,duration:0.4}},{quando + 0.3:.3f});',
+              f'tl.set("#gf{n}g{piega}",{{fill:"#F6E46A"}},{quando:.3f});',
+              f'tl.to("#gf{n}d",{{opacity:1,duration:0.2}},{quando + 0.35:.3f});',
+              f'tl.fromTo("#gf{n}e",{{opacity:0,scale:0.5}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(2)",immediateRender:false}},{quando + 0.4:.3f});',
+              f'tl.to("#gf{n}",{{opacity:0,duration:0.3}},{a - 0.3:.3f});']
+        span = max(quando - da - 0.4, 0.4)
+        for j in range(k):
+            t = da + 0.3 + span * j / piega if j <= piega else quando + 0.6
+            tl.append(f'tl.fromTo("#gf{n}p{j}",{{opacity:0,scale:0}},{{opacity:1,scale:1,duration:0.15,transformOrigin:"center",immediateRender:false}},{t:.3f});')
+        self.tl.append("".join(tl))
+        self.suono_libreria("hyperframes/riser.mp3", quando - 0.3, 0.22)
+        self.suono("ding", quando + 0.4, 0.3, se_manca="pop")
+
+    def muro(self, e, faccia):
+        """Muro di titoli: il muro dietro di te si riempie di ritagli che dicono tutti la stessa cosa: titoli di giornale,
+        una chat di gruppo, una ricerca che si scrive, il post di qualcuno, con la parola chiave evidenziata in giallo.
+        Dietro piccoli e sfocati, davanti grandi. e = {"da", "a", "chiave": "networker", "titoli": ["...", ...] (4-8),
+        "cerca": "testo della ricerca"}."""
+        self.font_extra("InterTight.ttf")
+        self.font_extra("PlayfairDisplay.ttf")
+        da, a = e["da"], e["a"]
+        chiave = e.get("chiave", "")
+        titoli = e["titoli"][:8]
+        sel = self.ritaglio(da, a)
+        n = len(self.camera)
+
+        def evid(t):
+            t = html.escape(t)
+            return re.sub(f"(?i)({re.escape(html.escape(chiave))})", r"<em>\1</em>", t) if chiave else t
+        cx = (faccia["sinistra"] + faccia["destra"]) / 2
+        # dietro: tanti ritagli piccoli e sfocati che coprono il muro sopra le spalle
+        rng = __import__("random").Random(11)
+        dietro = []
+        for j in range(16):
+            x, y = rng.uniform(-40, 900), rng.uniform(60, faccia["mento"] - 120)
+            t = titoli[j % len(titoli)]
+            scuro = j % 4 == 3
+            dietro.append(f'<div class="mu-p{" mu-s" if scuro else ""}" id="mu{n}d{j}" style="left:{x:.0f}px;top:{y:.0f}px;--g:{rng.uniform(-7, 7):.1f}deg">'
+                          f'{evid(t)}</div>')
+        # davanti: i ritagli grandi, due per lato della testa più la ricerca in alto a destra
+        sx, dx = max(cx - 560, 20), min(cx + 230, 1080 - 440)
+        yt = max(faccia["occhi"] - 520, 140)
+        forme = [
+            (sx, yt + 260, -4, f'<div class="mu-g mu-gn"><small>NOTIZIE</small><b>{evid(titoli[0])}</b></div>'),
+            (sx + 10, yt + 560, 3, f'<div class="mu-g mu-gc"><small>CHAT DI GRUPPO</small><b>{evid(titoli[1 % len(titoli)])}</b></div>'),
+            (dx, yt + 360, 3, f'<div class="mu-g mu-gp"><div class="mu-a"><i></i>Un networker</div><b>{evid(titoli[2 % len(titoli)])}</b>'
+                              f'<div class="mu-ic"><i></i><i></i><i></i></div></div>'),
+            (dx + 20, yt + 700, -2, f'<div class="mu-g mu-gv"><b>{evid(titoli[3 % len(titoli)])}</b><div class="mu-play"><i></i></div></div>'),
+        ]
+        davanti = [f'<div class="mu-f" id="mu{n}f{j}" style="left:{x:.0f}px;top:{y:.0f}px;--g:{g}deg">{h}</div>' for j, (x, y, g, h) in enumerate(forme)]
+        cerca = e.get("cerca", "")
+        if cerca:
+            davanti.append(f'<div class="mu-f mu-cerca" id="mu{n}c" style="left:{max(20, min(cx - 280, 1080 - 40 - 22 * len(cerca) - 90)):.0f}px;top:{yt + 120:.0f}px">'
+                           f'<i>⌕</i><span id="mu{n}ct"></span><b class="mu-car"></b></div>')
+        self.camera.insert(0, f'<div class="mu" id="mu{n}">{"".join(dietro)}{"".join(davanti)}</div>')
+        tl = [f'tl.set("{sel}",{{opacity:1}},{da:.3f});tl.set("{sel}",{{opacity:0}},{a:.3f});tl.set("#mu{n}",{{opacity:1}},{da:.3f});']
+        for j in range(16):
+            tl.append(f'tl.fromTo("#mu{n}d{j}",{{opacity:0,scale:1.3}},{{opacity:1,scale:1,duration:0.18,ease:"power2.out",immediateRender:false}},{da + j * 0.06:.3f});')
+        for j in range(len(forme)):
+            t = da + 0.5 + j * 0.28
+            tl.append(f'tl.fromTo("#mu{n}f{j}",{{opacity:0,scale:1.25,y:-20}},{{opacity:1,scale:1,y:0,duration:0.25,ease:"back.out(1.6)",immediateRender:false}},{t:.3f});')
+            self.suono("pop", t, 0.18)
+        if cerca:
+            t = da + 0.4
+            tl.append(f'tl.fromTo("#mu{n}c",{{opacity:0,y:-15}},{{opacity:1,y:0,duration:0.2,immediateRender:false}},{t:.3f});'
+                      f'scrivi("#mu{n}ct",{json.dumps(cerca)},{t + 0.2:.3f},{t + 0.2 + 0.05 * len(cerca):.3f});')
+            self.suono("tastiera", t + 0.2, 0.2, dur=0.05 * len(cerca))
+        tl.append(f'tl.to("#mu{n}",{{opacity:0,duration:0.3}},{a - 0.3:.3f});')
+        self.tl.append("".join(tl))
+        self.suono_libreria("hyperframes/whoosh-short.mp3", da, 0.2)
+
+    def etichetta(self, e, faccia):
+        """Etichetta attaccata: un cartellino giallo (parola piccola sopra, parola grande, riga scura sotto) attaccato di
+        fianco alla testa, un po' storto, che ti segue quando ti muovi. Con "dove": "petto" sta sul petto con una freccia
+        disegnata che punta alla faccia. e = {"da", "a", "piccolo": "IL", "grande": "METODO", "sotto": "...", "dove": "testa"}."""
+        self.font_extra("InterTight.ttf")
+        da, a = e["da"], e["a"]
+        n = len(self.camera)
+        petto = e.get("dove") == "petto"
+        gr = html.escape(e.get("grande", "").upper())
+        if petto:
+            dentro = (f'<svg class="et2-fr" viewBox="0 0 60 70"><path id="et2{n}fr" d="M10 66 C 18 40, 30 22, 48 8 M34 8 L48 8 L46 22" '
+                      f'stroke-dasharray="120" stroke-dashoffset="120"/></svg><div class="et2-c">{gr}</div>')
+        else:
+            dentro = (f'<div class="et2-c">{f"<small>{html.escape(e["piccolo"].upper())}</small>" if e.get("piccolo") else ""}{gr}</div>'
+                      + (f'<div class="et2-s" id="et2{n}s">{html.escape(e["sotto"])}</div>' if e.get("sotto") else ""))
+        self.camera.append(f'<div class="et2{" et2-petto" if petto else ""}" id="et2{n}">{dentro}</div>')
+        # segue la testa: i campioni della faccia (ogni mezzo secondo) diventano tappe dell'etichetta
+        camp = [c for c in faccia.get("campioni", []) if da - 0.5 <= c["t"] <= a + 0.5] or \
+               [{"t": da, "x": faccia["sinistra"], "y": faccia["occhi"] - 90, "l": faccia["destra"] - faccia["sinistra"]}]
+        def posto(c):
+            return (c["x"] + c["l"] * 0.3, c["y"] + c["l"] * 1.35) if petto else (c["x"] + c["l"] * 0.92, c["y"] - c["l"] * 0.05)
+        x, y = posto(camp[0])
+        if not petto:   # la parola grande si rimpicciolisce quanto serve per stare tra la testa e il bordo
+            spazio = 1050 - max(posto(c)[0] for c in camp)
+            dim = max(44, min(84, (spazio - 50) / max(len(gr) * 0.68, 1)))
+            self.camera[-1] = self.camera[-1].replace('class="et2-c"', f'class="et2-c" style="font-size:{dim:.0f}px"', 1)
+        tl = [f'tl.set("#et2{n}",{{x:{x:.0f},y:{y:.0f}}},{da:.3f});',
+              f'tl.fromTo("#et2{n}",{{opacity:0,scale:0.4,rotation:{-14 if not petto else 8}}},{{opacity:1,scale:1,rotation:{-5 if not petto else 2},duration:0.3,ease:"back.out(2.2)",immediateRender:false}},{da:.3f});']
+        for c1, c2 in zip(camp, camp[1:]):
+            if c2["t"] <= da or c1["t"] >= a:
+                continue
+            x, y = posto(c2)
+            t = max(c1["t"], da)
+            tl.append(f'tl.to("#et2{n}",{{x:{x:.0f},y:{y:.0f},duration:{max(c2["t"] - t, 0.05):.2f},ease:"sine.inOut"}},{t:.3f});')
+        if petto:
+            tl.append(f'tl.to("#et2{n}fr",{{strokeDashoffset:0,duration:0.35,ease:"power2.out"}},{da + 0.25:.3f});')
+        elif e.get("sotto"):
+            tl.append(f'tl.fromTo("#et2{n}s",{{opacity:0,y:-10}},{{opacity:1,y:0,duration:0.25,immediateRender:false}},{da + 0.5:.3f});')
+        tl.append(f'tl.to("#et2{n}",{{opacity:0,scale:0.8,duration:0.2}},{a - 0.2:.3f});')
+        self.tl.append("".join(tl))
+        self.suono("pop", da, 0.3)
+
     def prompt(self, e, faccia):
         """Prompt che si scrive: sul petto un riquadro di vetro con la scritta "prompt" sul bordo, e dentro si scrive da
         solo quello che dici di scrivere, con il cursore. e = {"da", "a", "testo": "...", "scrivi_da": secondo,
@@ -1817,6 +2004,14 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.tessere(e, faccia)
         elif tipo == "classifica":
             r.classifica(e, faccia)
+        elif tipo == "prima_dopo":
+            r.prima_dopo(e, faccia)
+        elif tipo == "grafico":
+            r.grafico(e, faccia)
+        elif tipo == "muro":
+            r.muro(e, faccia)
+        elif tipo == "etichetta":
+            r.etichetta(e, faccia)
         elif tipo == "scena":
             r.scena(e, faccia)
         elif tipo == "pannello":
@@ -1947,6 +2142,50 @@ html,body{{margin:0;background:{scuro}}}
 .cl-v span{{background:#2c2c33;color:#ddd;font-size:24px;font-weight:700;padding:10px 14px;border-radius:12px;white-space:nowrap}}
 .cl-vola{{position:absolute;left:136px;top:80px;background:#fff;color:#111;font-size:28px;font-weight:800;padding:14px 18px;border-radius:12px;
  white-space:nowrap;opacity:0;box-shadow:0 10px 26px rgba(0,0,0,.5)}}
+@font-face{{font-family:'Playfair Display';src:url('assets/PlayfairDisplay.ttf');font-weight:400 900}}
+.pd{{position:absolute;inset:0;opacity:0;z-index:4;pointer-events:none;font-family:"Inter Tight"}}
+.pd-v{{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;clip-path:inset(0 calc(1080px - var(--x)) 0 0)}}
+.pd-spento{{filter:saturate(.12) contrast(.82) brightness(1.08)}}
+.pd-l{{position:absolute;top:0;bottom:0;left:var(--x);width:5px;margin-left:-2px;background:#fff;box-shadow:0 0 12px rgba(0,0,0,.35)}}
+.pd-m{{position:absolute;left:var(--x);top:1480px;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;background:#fff;color:#222;
+ font-size:40px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.3)}}
+.pd-t1,.pd-t2{{position:absolute;top:250px;font-size:34px;font-weight:700;padding:8px 22px;border-radius:30px}}
+.pd-t1{{right:calc(1080px - var(--x) + 22px);background:rgba(30,30,30,.85);color:#fff}}
+.pd-t2{{left:calc(var(--x) + 22px);background:#F6E46A;color:#222}}
+.gf{{position:absolute;inset:0;opacity:0;z-index:2;pointer-events:none}}.gf svg{{position:absolute;inset:0}}
+.gf-gr line{{stroke:rgba(255,255,255,.16);stroke-width:2}}
+.gf-le text{{fill:#fff;font:700 40px "Inter Tight";text-anchor:middle;letter-spacing:2px}}
+.gf-a{{fill:none;stroke:#fff;stroke-width:6;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}}
+.gf-b{{fill:none;stroke:#F6E46A;stroke-width:9;stroke-linejoin:round;filter:drop-shadow(0 0 14px #F6E46A)}}
+.gf-d{{stroke:#F6E46A;stroke-width:3;stroke-dasharray:8 8}}
+.gf-pb{{fill:#fff;stroke:#111;stroke-width:3;opacity:0}}.gf-pg{{fill:#F6E46A;stroke:#fff;stroke-width:3;opacity:0;filter:drop-shadow(0 0 10px #F6E46A)}}
+.gf-et{{position:absolute;transform:translateX(-50%);background:#F6E46A;color:#111;font:800 44px "Inter Tight";padding:10px 26px;border-radius:40px;
+ opacity:0;white-space:nowrap;box-shadow:0 0 30px rgba(246,228,106,.55)}}
+.mu{{position:absolute;inset:0;opacity:0;z-index:2;pointer-events:none}}
+.mu-p{{position:absolute;width:230px;padding:14px 16px;background:#F1ECE1;color:#222;font:700 26px/1.15 "Playfair Display";border-radius:6px;
+ transform:rotate(var(--g));filter:blur(1.4px) brightness(.8);box-shadow:0 6px 14px rgba(0,0,0,.35);opacity:0}}
+.mu-s{{background:#151515;color:#eee;font-family:"Inter Tight";font-weight:800}}
+.mu em{{font-style:normal;background:#F6E46A;color:#111;padding:0 4px;border-radius:4px}}
+.mu-f{{position:absolute;transform:rotate(var(--g));opacity:0}}
+.mu-g{{width:400px;padding:22px 26px;border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.45)}}
+.mu-g small{{display:block;font:700 18px "Inter Tight";letter-spacing:3px;opacity:.6;margin-bottom:8px}}
+.mu-gn{{background:#F7F3EA;color:#111}}.mu-gn b{{font:800 48px/1.08 "Playfair Display"}}
+.mu-gc{{background:#141414;color:#fff}}.mu-gc b{{font:800 46px/1.08 "Inter Tight"}}
+.mu-gp{{background:#fff;color:#111}}.mu-gp b{{display:block;font:600 36px/1.2 "Inter Tight";margin:10px 0}}
+.mu-a{{display:flex;align-items:center;gap:12px;font:700 26px "Inter Tight"}}.mu-a i{{width:40px;height:40px;border-radius:50%;background:#ccc}}
+.mu-ic{{display:flex;gap:18px}}.mu-ic i{{width:24px;height:24px;border:3px solid #999;border-radius:50%}}
+.mu-gv{{width:330px;background:#fff;color:#111}}.mu-gv b{{font:600 32px/1.2 "Inter Tight"}}
+.mu-play{{margin-top:12px;height:120px;border-radius:10px;background:#d8d8dc;display:flex;align-items:center;justify-content:center}}
+.mu-play i{{width:60px;height:60px;border-radius:50%;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.2)}}
+.mu-cerca{{display:flex;align-items:center;gap:12px;background:#fff;color:#111;font:600 32px "Inter Tight";padding:16px 28px;border-radius:40px;
+ box-shadow:0 12px 30px rgba(0,0,0,.4);white-space:nowrap}}.mu-cerca i{{font-style:normal;font-size:38px;opacity:.6}}
+.mu-car{{width:3px;height:34px;background:#111}}
+.et2{{position:absolute;left:0;top:0;z-index:6;opacity:0;pointer-events:none;font-family:"Inter Tight";display:flex;flex-direction:column;align-items:flex-start}}
+.et2-c{{display:inline-block;background:#F6E46A;color:#111;font-weight:900;font-size:84px;line-height:.95;padding:12px 22px 14px;border-radius:12px;
+ box-shadow:0 10px 26px rgba(0,0,0,.35);letter-spacing:-1px}}.et2-c small{{display:block;font-size:22px;letter-spacing:6px;font-weight:800;margin-bottom:2px}}
+.et2-s{{margin-top:8px;display:inline-block;background:#1b1b1b;color:#fff;font-weight:700;font-size:28px;padding:8px 16px;border-radius:10px;opacity:0}}
+.et2-petto .et2-c{{font-size:46px;padding:10px 20px;border:4px solid #111}}
+.et2-fr{{display:block;width:70px;height:80px;margin:0 0 8px 150px}}.et2-fr path{{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}}
 .finale{{position:absolute;left:80px;right:110px;top:640px;text-align:center;z-index:36;opacity:0}}
 .fin-g{{{W};font-size:120px;color:#fff;margin-top:30px}}
 .bottone{{display:inline-block;margin-top:24px;background:{acc};color:#fff;{W};font-size:150px;padding:10px 60px 18px;border-radius:30px;
