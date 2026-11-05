@@ -21,4 +21,7 @@ Uno zoom serve a dire "ascolta questo". Se non sottolinea niente, non si mette.
 ## Per stile
 - **Diviso**: lo zoom è solo sulla parte bassa (la persona); la testa resta sotto il pannello. Più leggero: massimo 1.2.
 - **Impact**: "zoom" nel piano con "mosse" (lento / scatto / fuori), dove non c'è un'altra grafica.
+- **Glow**: va piano. All'inizio solo uno lento e leggero (1.0 -> 1.08 in 2-3 secondi) che torna indietro lento,
+  niente scatti nei primi 5 secondi, e nessun rumore sugli zoom (Michael, 2026-11-04: "vai piano con lo zoom all'inizio").
+  Al massimo uno scatto in tutto il video, sulla frase più forte.
 - **Scene**: "zoom": 1.12 nel piano per l'alternanza sui tagli; gli scatti sulle frasi forti solo tra una scena e l'altra.

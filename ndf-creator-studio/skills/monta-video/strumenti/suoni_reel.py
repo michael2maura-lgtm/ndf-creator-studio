@@ -30,9 +30,12 @@ def risalita(assets):
 
 def frasi_chiave(piano, D):
     """Le 1-3 frasi chiave del piano ("frasi_chiave": [[da, a], ...]): risalita, silenzio, frase senza musica,
-    la musica riparte con un colpo. Restituisce le frasi buone e il data-stop per la musica."""
-    frasi = [(da, a) for da, a in piano.get("frasi_chiave", []) if 2.5 < da < a < D - 0.5]
-    return frasi, ",".join(f"{da - SILENZIO:.3f}:{a:.3f}" for da, a in frasi)
+    la musica riparte con un colpo. [da, a, "netto"]: niente risalita, la musica si taglia di colpo poco prima della
+    frase (come nel reel di esempio "come il 22"). Restituisce le frasi buone (da, a, netto) e il data-stop."""
+    frasi = [(f[0], f[1], len(f) > 2 and f[2] == "netto") for f in piano.get("frasi_chiave", [])
+             if 2.5 < f[0] < f[1] < D - 0.5]
+    return frasi, ",".join(f"{da - (0.2 if netto else SILENZIO):.3f}:{a:.3f}" + (":n" if netto else "")
+                           for da, a, netto in frasi)
 
 
 
@@ -156,8 +159,9 @@ def prepara(piano, stile, cart_stile, reel, D):
             tag[-1] = tag[-1].replace("<audio ", f'<audio data-stop="{stop}" ', 1)
             src_r, dur_r = risalita(assets)
             colpo = suoni.get("colpo") and copia(suoni["colpo"], "colpo" + os.path.splitext(suoni["colpo"])[1])
-            for k, (da, a) in enumerate(frasi):
-                audio(f"ri{k}", src_r, da - SILENZIO - dur_r, dur_r, VOL_RISALITA)
+            for k, (da, a, netto) in enumerate(frasi):
+                if not netto:
+                    audio(f"ri{k}", src_r, da - SILENZIO - dur_r, dur_r, VOL_RISALITA)
                 if colpo:
                     audio(f"fc{k}", colpo, a, 1.5, VOL_COLPO)
     return tag

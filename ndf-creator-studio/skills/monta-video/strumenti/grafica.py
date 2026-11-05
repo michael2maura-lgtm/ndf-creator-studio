@@ -196,6 +196,8 @@ class Reel:
     def suono(self, nome, da, vol=0.45, dur=None, se_manca=None):
         """Un suono dello stile al secondo `da`, a -16 LUFS come tutti gli altri (i suoni scelti nella pagina sono già
         dentro lo stile: comune.con_le_scelte). Se lo stile non ha `nome`, suona `se_manca` (o niente)."""
+        if nome == "transizione" and self.stile["suoni"].get("sfumatura"):   # Glow: niente whoosh, anche per telefono e orbita
+            nome, vol = "sfumatura", min(vol, 0.2)
         cart, rel = self.cart_stile, self.stile["suoni"].get(nome)
         if rel == "":  # "nessun suono" scelto nella pagina: niente, nemmeno il ripiego
             return
@@ -203,7 +205,7 @@ class Reel:
             if se_manca:
                 self.suono(se_manca, da, vol, dur)
             return
-        if nome == "transizione":  # un solo suono per cambio di scena, mai due attaccati
+        if nome in ("transizione", "sfumatura"):  # un solo suono per cambio di scena, mai due attaccati
             if any(abs(da - t) < 0.4 for t in self.transizioni):
                 return
             self.transizioni.append(da)
@@ -233,10 +235,11 @@ class Reel:
         if not frasi:
             return
         src, dur = suoni_reel.risalita(self.assets)
-        for da, a in frasi:
+        for da, a, netto in frasi:
             n = len(self.audio)
-            self.audio.append(f'<audio id="ri{n}" src="{src}" data-start="{da - suoni_reel.SILENZIO - dur:.3f}" '
-                              f'data-media-start="0" data-duration="{dur:.3f}" data-volume="{suoni_reel.VOL_RISALITA}"></audio>')
+            if not netto:
+                self.audio.append(f'<audio id="ri{n}" src="{src}" data-start="{da - suoni_reel.SILENZIO - dur:.3f}" '
+                                  f'data-media-start="0" data-duration="{dur:.3f}" data-volume="{suoni_reel.VOL_RISALITA}"></audio>')
             self.suono("impatto", a, 0.5, se_manca="colpo")
 
     # ---------- pezzi grafici ----------
@@ -507,7 +510,8 @@ class Reel:
                 dur = 0.12 if tipo == "scatto" else 0.28
                 self.tl.append(f'tl.to("#cam",{{scale:{scala},duration:{dur},ease:"{"power4.out" if tipo == "scatto" else "expo.out"}"}},{arrivo - dur:.3f});'
                                f'tl.fromTo("#bg",{{filter:"blur(7px)"}},{{filter:"blur(0px)",duration:{dur + 0.1:.2f},ease:"power2.out",immediateRender:false}},{arrivo - dur:.3f});')
-                self.suono("transizione", arrivo - dur, 0.3)
+                if not self.stile.get("zoom_muto"):
+                    self.suono("transizione", arrivo - dur, 0.3)
 
     def schermo(self, e, faccia):
         """Schermo dietro di te: diventi piccolo in basso e dietro di te, a tutto schermo, c'è la cosa di cui parli
@@ -927,6 +931,32 @@ class Reel:
             self.tl.append(f'tl.fromTo("#pl{n}p{j}",{{opacity:0,scale:0.6}},{{opacity:1,scale:1,duration:0.28,ease:"back.out(2.4)",immediateRender:false}},{quando:.3f});')
             self.suono("pop", quando, 0.3)
 
+    def caduta(self, e, faccia):
+        """Post che cadono: dei post finti (come su Instagram) cadono dall'alto ai lati della testa, girando, e si
+        fermano storti come buttati lì; poi spariscono. Per "a caso", "in disordine", "pubblichi senza un piano".
+        e = {"da": quando cade il primo, "a": fine, "quanti": 4}."""
+        da, a = e["da"], e["a"]
+        n = len(self.corpo)
+        quanti = max(2, min(e.get("quanti", 4), 6))
+        cx = (faccia["sinistra"] + faccia["destra"]) / 2
+        posti = [(-1, 0.0, -14), (1, 0.15, 11), (-1, 0.55, 8), (1, 0.7, -9), (-1, 1.1, -5), (1, 1.25, 13)][:quanti]
+        pezzi = []
+        for j, (lato, quota, gira) in enumerate(posti):
+            x = max(30, min(cx - 470, 260)) if lato < 0 else min(1050 - 230, max(cx + 240, 600))
+            x += (j // 2) * 30 * lato
+            y = faccia["occhi"] - 120 + quota * 420
+            fondo = self.P["schede"][j % len(self.P["schede"])]
+            pezzi.append(f'<div class="cd-p" id="cd{n}p{j}" style="left:{x:.0f}px;top:{y:.0f}px;--g:{gira}deg">'
+                         f'<div class="cd-t"><i></i><b></b></div><div class="cd-f" style="background:{fondo}"></div>'
+                         f'<div class="cd-b"><i></i><i></i><i></i></div></div>')
+        self.corpo.append(f'<div class="cd" id="cd{n}">{"".join(pezzi)}</div>')
+        self.tl.append(f'tl.set("#cd{n}",{{opacity:1}},{da:.3f});tl.to("#cd{n}",{{opacity:0,duration:0.3}},{a - 0.3:.3f});')
+        self.suono_libreria("hyperframes/sparkle.mp3", da, 0.3)   # un solo fruscio luminoso, come nel 22 (non un pop per post)
+        for j, (_, quota, gira) in enumerate(posti):
+            t = da + j * 0.16
+            self.tl.append(f'tl.fromTo("#cd{n}p{j}",{{y:-900,rotation:{-gira * 3},opacity:1}},'
+                           f'{{y:0,rotation:{gira},duration:0.42,ease:"bounce.out",immediateRender:false}},{t:.3f});')
+
     def prompt(self, e, faccia):
         """Prompt che si scrive: sul petto un riquadro di vetro con la scritta "prompt" sul bordo, e dentro si scrive da
         solo quello che dici di scrivere, con il cursore. e = {"da", "a", "testo": "...", "scrivi_da": secondo,
@@ -1143,7 +1173,7 @@ class Reel:
                        f'tl.fromTo("#bg",{{filter:"blur(0px) brightness(1) saturate(1)"}},{{filter:"blur(6px) brightness(1.55) saturate(1.25)",duration:{su:.3f},ease:"power1.in",immediateRender:false}},{t - su:.3f});'
                        f'tl.fromTo("#bg",{{filter:"blur(3px) brightness(1.3) saturate(1.2)"}},{{filter:"blur(0px) brightness(1) saturate(1)",duration:{giu * 0.8:.3f},immediateRender:false}},{t + 0.04:.3f});'
                        f'tl.set("#sf{n}",{{opacity:0}},{t + giu + 0.05:.3f});')
-        self.suono("transizione", t - su * 0.6, 0.3)
+        self.suono("transizione", t - su * 0.6, 0.3)   # nel Glow diventa il suono morbido (vedi suono)
 
     def transizione(self, t):
         """La transizione dello stile (o scelta nella pagina) su un cambio di argomento."""
@@ -1558,7 +1588,7 @@ class Reel:
 
 def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     if piano.get("versione", stile.get("versione")) == "semplice":   # Impact semplice (ex Luce): sfumatura come passaggio, niente mirino REC
-        stile = dict(stile, transizione="sfumatura", mirino=False)
+        stile = dict(stile, transizione="sfumatura", mirino=False, zoom_muto=True)   # zoom senza whoosh (Michael, 2026-11-04)
     reel = os.path.join(cart, "reel")
     r = Reel(stile, cart_stile, reel, D)
     os.makedirs(r.assets, exist_ok=True)
@@ -1656,6 +1686,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.telefono3d(e, faccia)
         elif tipo == "orbita":
             r.orbita(e, faccia)
+        elif tipo == "caduta":
+            r.caduta(e, faccia)
         elif tipo == "scena":
             r.scena(e, faccia)
         elif tipo == "pannello":
@@ -1757,6 +1789,11 @@ html,body{{margin:0;background:{scuro}}}
 .rec-tel{{position:absolute;left:510px;top:1350px;width:60px;height:60px;border-radius:50%;border:5px solid #fff;z-index:32;opacity:0}}
 .rec-tel b{{position:absolute;inset:7px;border-radius:50%;background:#FF3B30}}
 .rec-lab{{position:absolute;left:330px;top:560px;{M};font-size:24px;color:#fff;background:rgba(0,0,0,.55);padding:6px 14px;border-radius:10px;z-index:32;opacity:0}}
+.cd{{position:absolute;inset:0;z-index:31;opacity:0;pointer-events:none}}
+.cd-p{{position:absolute;width:220px;background:#fff;border-radius:18px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.45);transform:rotate(var(--g))}}
+.cd-t{{display:flex;align-items:center;gap:8px;margin-bottom:8px}}.cd-t i{{width:26px;height:26px;border-radius:50%;background:#ddd}}
+.cd-t b{{height:9px;width:90px;border-radius:5px;background:#ddd}}.cd-f{{height:210px;border-radius:10px}}
+.cd-b{{display:flex;gap:10px;margin-top:9px}}.cd-b i{{width:22px;height:22px;border-radius:50%;border:3px solid #222}}
 .finale{{position:absolute;left:80px;right:110px;top:640px;text-align:center;z-index:36;opacity:0}}
 .fin-g{{{W};font-size:120px;color:#fff;margin-top:30px}}
 .bottone{{display:inline-block;margin-top:24px;background:{acc};color:#fff;{W};font-size:150px;padding:10px 60px 18px;border-radius:30px;

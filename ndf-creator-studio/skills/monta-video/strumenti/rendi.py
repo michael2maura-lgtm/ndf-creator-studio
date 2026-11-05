@@ -60,8 +60,8 @@ def ferma_musica(stop):
     """La musica si spegne sulle frasi chiave (riparte di colpo alla fine della frase): "a:b,c:d" in data-stop."""
     termini = []
     for pezzo in filter(None, stop.split(",")):
-        a, b = (float(x) for x in pezzo.split(":"))
-        termini.append(f"clip(max(({a:.3f}-t)/0.15,(t-{b:.3f})/0.04),0,1)")
+        a, b, *netto = pezzo.split(":")   # ":n" = taglio netto, come in "come il 22"
+        termini.append(f"clip(max(({float(a):.3f}-t)/{0.03 if netto else 0.15},(t-{float(b):.3f})/0.04),0,1)")
     return f",volume='{'*'.join(termini)}':eval=frame" if termini else ""
 
 
