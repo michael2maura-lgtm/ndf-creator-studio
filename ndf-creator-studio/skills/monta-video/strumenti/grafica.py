@@ -957,6 +957,127 @@ class Reel:
             self.tl.append(f'tl.fromTo("#cd{n}p{j}",{{y:-900,rotation:{-gira * 3},opacity:1}},'
                            f'{{y:0,rotation:{gira},duration:0.42,ease:"bounce.out",immediateRender:false}},{t:.3f});')
 
+    def timbro(self, e, faccia):
+        """Timbro rosso: sulla parola un grosso timbro di gomma (bordo doppio, lettere maiuscole, inchiostro un po'
+        consumato) sbatte storto sul petto e resta lì. Per smontare un'idea: "NO", "A CASO", "SBAGLIATO".
+        e = {"da": quando lo dici, "a": fine, "testo": "NO", "colore": facoltativo (rosso timbro)}."""
+        import numpy as np
+        from PIL import Image, ImageFilter
+        da, a = e["da"], e["a"]
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        testo = e.get("testo", "NO").upper()
+        col = e.get("colore", "#E1262D")
+        dim = 190 if len(testo) <= 3 else 150 if len(testo) <= 6 else 118 if len(testo) <= 9 else 92
+        y = min(faccia["mento"] + 150, 1250)
+        gira = e.get("gira", -11)
+        if not os.path.exists(os.path.join(self.assets, "timbro-ruvido.png")):
+            # inchiostro consumato: macchie chiare a caso, sempre le stesse (seme fisso), usate come maschera
+            rng = np.random.default_rng(7)
+            m = Image.fromarray((rng.random((180, 360)) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.6))
+            v = np.array(m, dtype=float)
+            v = (v - v.min()) / (v.max() - v.min())
+            Image.fromarray(np.where(v > 0.30, 255, 0).astype(np.uint8)).resize((720, 360)).save(os.path.join(self.assets, "timbro-ruvido.png"))
+        self.corpo.append(f'<div class="tb" id="tb{n}" style="top:{y}px;--g:{gira}deg"><div class="tb-in" id="tb{n}i" '
+                          f'style="color:{col};border-color:{col};font-size:{dim}px">{html.escape(testo)}</div></div>')
+        self.tl.append(f'tl.fromTo("#tb{n}i",{{opacity:0,scale:2.4}},{{opacity:0.92,scale:1,duration:0.13,ease:"power4.in",immediateRender:false}},{da - 0.13:.3f});'
+                       f'tl.fromTo("#tb{n}i",{{scale:1}},{{scale:1.035,duration:0.06,yoyo:true,repeat:1,ease:"power1.out",immediateRender:false}},{da:.3f});'
+                       f'tl.to("#tb{n}i",{{opacity:0,duration:0.2}},{a - 0.2:.3f});')
+        self.suono_libreria("hyperframes/impact-bass-1.mp3", da - 0.02, 0.45)   # il colpo sordo del timbro sul tavolo
+        self.nascondi.append((da, a))
+
+    def segui(self, e, faccia):
+        """Tasto Segui: sotto il mento spunta la scheda del tuo profilo (la tua foto, il nome, il tasto blu "Segui");
+        un tocco lo preme e diventa "Seguito". Per il finale dei reel organici o quando dici "seguimi".
+        e = {"da", "a", "tocco": secondo del tocco, "nome": "networkerdelfuturo", "sotto": "Networker del Futuro"}."""
+        da, a = e["da"], e["a"]
+        tocco = e.get("tocco", da + 1.2)
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        # il profilo vero sta in DATI/profilo.json ({"nome", "sotto", "foto": "profilo.jpg"}, la foto accanto in DATI);
+        # senza foto, un quadrato attorno alla tua faccia preso dal video in quel momento
+        pp = os.path.join(DATI, "profilo.json")
+        pf = json.load(open(pp, encoding="utf-8")) if os.path.exists(pp) else {}
+        e = dict(pf, **e)
+        foto = f"segui-{n}.jpg"
+        vera = os.path.join(DATI, pf["foto"]) if pf.get("foto") else ""
+        if os.path.exists(vera):
+            subprocess.run([FFMPEG, "-v", "error", "-y", "-i", vera, "-vf", "scale=200:200:force_original_aspect_ratio=increase,crop=200:200",
+                            "-q:v", "3", os.path.join(self.assets, foto)], check=True)
+        else:
+            lato = int((faccia["destra"] - faccia["sinistra"]) * 1.5)
+            cx, cy = (faccia["sinistra"] + faccia["destra"]) / 2, (faccia["occhi"] + faccia["mento"]) / 2
+            subprocess.run([FFMPEG, "-v", "error", "-y", "-ss", f"{max(da, 0):.3f}", "-i", os.path.join(self.assets, "tagliato.mp4"), "-frames:v", "1",
+                            "-vf", f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+                                   f"crop={lato}:{lato}:{max(cx - lato / 2, 0):.0f}:{max(cy - lato / 2, 0):.0f},scale=200:200", "-q:v", "3",
+                            os.path.join(self.assets, foto)], check=True)
+        y = min(faccia["mento"] + 140, 1250)
+        self.corpo.append(f'<div class="sg" id="sg{n}" style="top:{y}px"><img class="sg-f" src="assets/{foto}">'
+                          f'<div class="sg-n"><b>{html.escape(e.get("nome", "networkerdelfuturo"))}</b><span>{html.escape(e.get("sotto", ""))}</span></div>'
+                          f'<div class="sg-b" id="sg{n}b"><span id="sg{n}s">Segui</span><span id="sg{n}t" style="display:none">Seguito</span></div>'
+                          f'<i class="sg-tocco" id="sg{n}c"></i></div>')
+        self.tl.append(f'tl.fromTo("#sg{n}",{{opacity:0,y:40,scale:0.9}},{{opacity:1,y:0,scale:1,duration:0.35,ease:"back.out(1.7)",immediateRender:false}},{da:.3f});'
+                       f'tl.fromTo("#sg{n}c",{{opacity:0.9,scale:0.2}},{{opacity:0,scale:1.6,duration:0.45,ease:"power2.out",immediateRender:false}},{tocco - 0.05:.3f});'
+                       f'tl.fromTo("#sg{n}b",{{scale:1}},{{scale:0.9,duration:0.07,yoyo:true,repeat:1,immediateRender:false}},{tocco - 0.05:.3f});'
+                       f'tl.set("#sg{n}b",{{backgroundColor:"#EFEFEF",color:"#111"}},{tocco + 0.02:.3f});'
+                       f'tl.set("#sg{n}s",{{display:"none"}},{tocco + 0.02:.3f});tl.set("#sg{n}t",{{display:"inline"}},{tocco + 0.02:.3f});'
+                       f'tl.to("#sg{n}",{{opacity:0,y:30,duration:0.25,ease:"power2.in"}},{a - 0.25:.3f});')
+        self.suono("pop", da, 0.25)
+        self.suono_libreria("hyperframes/click-soft.mp3", tocco - 0.05, 0.5)   # il tocco sul tasto
+        self.nascondi.append((da, a))
+
+    def tessere(self, e, faccia):
+        """Tessere numerate: quando elenchi ("prima cosa", "seconda cosa"...), per ogni punto una tessera crema con il
+        numero grande e la parola spunta ad arco attorno alla testa, e restano tutte fino alla fine dell'elenco.
+        e = {"a": fine, "voci": [["STORIE", secondo], ["REEL", secondo], ...] (al massimo 4)}."""
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        voci = e["voci"][:4]
+        a = e["a"]
+        cx, cy = (faccia["sinistra"] + faccia["destra"]) / 2, faccia["occhi"]
+        r = (faccia["destra"] - faccia["sinistra"]) * 0.5 + 180
+        k = len(voci)
+        angoli = [-140, -40] if k == 2 else [-155 + j * (130 / (k - 1)) for j in range(k)] if k > 1 else [-90]
+        acc = self.stile["colori"]["accento"]
+        pezzi = []
+        for j, ((testo, _), ang) in enumerate(zip(voci, angoli)):
+            x = min(max(cx + r * math.cos(math.radians(ang)) - 120, 30), 1050 - 240)
+            y = max(cy + r * math.sin(math.radians(ang)) - 80, 240)
+            pezzi.append(f'<div class="ts" id="ts{n}t{j}" style="left:{x:.0f}px;top:{y:.0f}px;--g:{(ang + 90) * 0.12:.1f}deg">'
+                         f'<b style="color:{acc}">{j + 1:02d}</b><span>{html.escape(testo.upper())}</span></div>')
+        self.corpo.append(f'<div class="ts-tutte" id="ts{n}">{"".join(pezzi)}</div>')
+        for j, (_, quando) in enumerate(voci):
+            self.tl.append(f'tl.fromTo("#ts{n}t{j}",{{opacity:0,scale:0.3,x:{(cx - 540) * 0.2:.0f},y:120}},'
+                           f'{{opacity:1,scale:1,x:0,y:0,duration:0.4,ease:"back.out(1.8)",immediateRender:false}},{quando:.3f});')
+            self.suono("pop", quando, 0.3)
+        self.tl.append(f'tl.to("#ts{n}",{{opacity:0,duration:0.25}},{a - 0.25:.3f});')
+
+    def classifica(self, e, faccia):
+        """Classifica (tier list): sotto il mento compare una classifica S, A, B, C con delle voci già messe in basso;
+        sulla parola chiave la voce giusta vola su fino alla riga S. Per i confronti: "il modo migliore", "funziona di più".
+        e = {"da", "a", "titolo": "Cosa pubblicare", "voci": [["Post a caso", "C"], ...], "vola": ["Risposte alle domande", secondo]}."""
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        da, a = e["da"], e["a"]
+        righe = [("S", "#FF7F7F"), ("A", "#FFBF7F"), ("B", "#FFDF7F"), ("C", "#BFFF7F")]
+        y = min(faccia["mento"] + 60, 1080)
+        voci = {}
+        for testo, riga in e.get("voci", []):
+            voci.setdefault(riga, []).append(testo)
+        html_righe = "".join(f'<div class="cl-r"><i style="background:{col}">{l}</i><div class="cl-v" id="cl{n}{l}">'
+                             + "".join(f'<span>{html.escape(t)}</span>' for t in voci.get(l, [])) + '</div></div>' for l, col in righe)
+        testo_vola, quando = e["vola"]
+        self.corpo.append(f'<div class="cl" id="cl{n}" style="top:{y}px"><div class="cl-t">{html.escape(e.get("titolo", ""))}</div>{html_righe}'
+                          f'<span class="cl-vola" id="cl{n}x">{html.escape(testo_vola)}</span></div>')
+        self.tl.append(f'tl.fromTo("#cl{n}",{{opacity:0,y:50,scale:0.95}},{{opacity:1,y:0,scale:1,duration:0.35,ease:"back.out(1.5)",immediateRender:false}},{da:.3f});'
+                       f'tl.fromTo("#cl{n}x",{{opacity:0,y:560,scale:0.8,rotation:-8}},{{opacity:1,y:440,scale:1,rotation:-4,duration:0.25,ease:"power2.out",immediateRender:false}},{quando - 0.45:.3f});'
+                       f'tl.to("#cl{n}x",{{y:0,rotation:0,duration:0.42,ease:"back.out(1.4)"}},{quando - 0.2:.3f});'
+                       f'tl.to("#cl{n}",{{opacity:0,y:30,duration:0.25,ease:"power2.in"}},{a - 0.25:.3f});')
+        self.suono("pop", da, 0.25)
+        self.suono_libreria("hyperframes/whoosh-short.mp3", quando - 0.25, 0.25)
+        self.suono("ding", quando + 0.2, 0.35, se_manca="pop")
+        self.nascondi.append((da, a))
+
     def prompt(self, e, faccia):
         """Prompt che si scrive: sul petto un riquadro di vetro con la scritta "prompt" sul bordo, e dentro si scrive da
         solo quello che dici di scrivere, con il cursore. e = {"da", "a", "testo": "...", "scrivi_da": secondo,
@@ -1688,6 +1809,14 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.orbita(e, faccia)
         elif tipo == "caduta":
             r.caduta(e, faccia)
+        elif tipo == "timbro":
+            r.timbro(e, faccia)
+        elif tipo == "segui":
+            r.segui(e, faccia)
+        elif tipo == "tessere":
+            r.tessere(e, faccia)
+        elif tipo == "classifica":
+            r.classifica(e, faccia)
         elif tipo == "scena":
             r.scena(e, faccia)
         elif tipo == "pannello":
@@ -1794,6 +1923,30 @@ html,body{{margin:0;background:{scuro}}}
 .cd-t{{display:flex;align-items:center;gap:8px;margin-bottom:8px}}.cd-t i{{width:26px;height:26px;border-radius:50%;background:#ddd}}
 .cd-t b{{height:9px;width:90px;border-radius:5px;background:#ddd}}.cd-f{{height:210px;border-radius:10px}}
 .cd-b{{display:flex;gap:10px;margin-top:9px}}.cd-b i{{width:22px;height:22px;border-radius:50%;border:3px solid #222}}
+.tb{{position:absolute;left:0;right:0;display:flex;justify-content:center;z-index:31;pointer-events:none;transform:rotate(var(--g))}}
+.tb-in{{opacity:0;font-family:"Inter Tight";font-weight:900;letter-spacing:6px;line-height:1;padding:22px 40px 18px;border:12px solid;
+ border-radius:22px;outline:5px solid currentColor;outline-offset:-30px;mix-blend-mode:multiply;
+ -webkit-mask-image:url(assets/timbro-ruvido.png);-webkit-mask-size:cover;mask-image:url(assets/timbro-ruvido.png);mask-size:cover}}
+.sg{{position:absolute;left:90px;right:90px;z-index:31;opacity:0;display:flex;align-items:center;gap:22px;background:#fff;border-radius:34px;
+ padding:22px 26px;box-shadow:0 22px 50px rgba(0,0,0,.4);font-family:"Inter Tight"}}
+.sg-f{{width:104px;height:104px;border-radius:50%;object-fit:cover;border:4px solid #fff;outline:5px solid #E1306C}}
+.sg-n{{flex:1;min-width:0;display:flex;flex-direction:column}}.sg-n b{{font-size:36px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.sg-n span{{font-size:28px;color:#777}}
+.sg-b{{position:relative;background:#0095F6;color:#fff;font-size:34px;font-weight:800;padding:16px 34px;border-radius:18px}}
+.sg-tocco{{position:absolute;right:70px;top:50%;width:110px;height:110px;margin-top:-55px;border-radius:50%;background:rgba(120,120,120,.45);opacity:0}}
+.ts-tutte{{position:absolute;inset:0;z-index:31;pointer-events:none}}
+.ts{{position:absolute;width:240px;padding:18px 10px 20px;background:#FBF6EC;border-radius:24px;text-align:center;opacity:0;
+ box-shadow:0 16px 36px rgba(0,0,0,.4);font-family:"Inter Tight";transform:rotate(var(--g))}}
+.ts b{{display:block;font-size:100px;font-weight:900;line-height:1}}.ts span{{display:block;font-size:36px;font-weight:800;color:#1a1a1a;margin-top:6px;letter-spacing:1px}}
+.cl{{position:absolute;left:110px;right:110px;z-index:31;opacity:0;background:rgba(18,18,22,.9);border-radius:28px;padding:20px;
+ font-family:"Inter Tight";box-shadow:0 22px 50px rgba(0,0,0,.45)}}
+.cl-t{{color:#fff;font-size:34px;font-weight:800;margin:0 0 14px 6px}}
+.cl-r{{display:flex;gap:10px;margin-top:8px;height:86px}}.cl-r i{{width:86px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+ font-style:normal;font-size:46px;font-weight:900;color:#1a1a1a}}
+.cl-v{{flex:1;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.07);border-radius:14px;padding:0 10px;overflow:hidden}}
+.cl-v span{{background:#2c2c33;color:#ddd;font-size:24px;font-weight:700;padding:10px 14px;border-radius:12px;white-space:nowrap}}
+.cl-vola{{position:absolute;left:136px;top:80px;background:#fff;color:#111;font-size:28px;font-weight:800;padding:14px 18px;border-radius:12px;
+ white-space:nowrap;opacity:0;box-shadow:0 10px 26px rgba(0,0,0,.5)}}
 .finale{{position:absolute;left:80px;right:110px;top:640px;text-align:center;z-index:36;opacity:0}}
 .fin-g{{{W};font-size:120px;color:#fff;margin-top:30px}}
 .bottone{{display:inline-block;margin-top:24px;background:{acc};color:#fff;{W};font-size:150px;padding:10px 60px 18px;border-radius:30px;

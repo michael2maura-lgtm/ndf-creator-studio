@@ -50,7 +50,11 @@
     "telefono3d",
     "orbita",
     "commento",
-    "caduta"
+    "caduta",
+    "timbro",
+    "segui",
+    "tessere",
+    "classifica"
   ],
   "versione": "semplice",
   "transizione": "sfumatura",
