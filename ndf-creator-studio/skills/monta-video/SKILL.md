@@ -94,7 +94,9 @@ Effetti (motion graphics del motore grafica): catalogo in `strumenti/effetti.py`
 stile ha i suoi pochi effetti accesi (stile.json "effetti"); nella pagina l'utente accende quelli che gli piacciono
 (scelte.json "effetti"). Nel piano usa SOLO gli effetti accesi, e solo dove c'entrano con la frase detta (lo stile.md
 dice quando): grafica.py salta gli altri con una NOTA. L'utente non sceglie niente reel per reel. Le scelte le usa `costruisci.py` da solo: tu nel piano
-scrivi lo stile scelto e basta. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio) più la sua copertina
+scrivi lo stile scelto e basta. Tasto Segui ("segui"): solo su una frase che invita a seguire, e solo se c'è
+`DATI/profilo.json` ({"nome": nome Instagram, "sotto": riga sotto, "foto": "profilo.jpg"} con la foto in DATI); se manca,
+chiedi una volta il link del profilo Instagram, prendi foto e nome dalla pagina pubblica e salvali lì. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio) più la sua copertina
 `anteprima.jpg` (un fotogramma con la faccia ferma e una scritta, mai una mano davanti)
 nella sua cartella: falla quando crei uno stile nuovo, dal primo video approvato.
 Velocità: ogni reel finito va il 12% più veloce (comune.VELOCITA); nella pagina l'utente sceglie Normale, Svelta o

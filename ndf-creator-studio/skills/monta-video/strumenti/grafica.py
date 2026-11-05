@@ -1013,7 +1013,7 @@ class Reel:
                             os.path.join(self.assets, foto)], check=True)
         y = min(faccia["mento"] + 140, 1250)
         self.corpo.append(f'<div class="sg" id="sg{n}" style="top:{y}px"><img class="sg-f" src="assets/{foto}">'
-                          f'<div class="sg-n"><b>{html.escape(e.get("nome", "networkerdelfuturo"))}</b><span>{html.escape(e.get("sotto", ""))}</span></div>'
+                          f'<div class="sg-n"><b>{html.escape(e.get("nome", ""))}</b><span>{html.escape(e.get("sotto", ""))}</span></div>'
                           f'<div class="sg-b" id="sg{n}b"><span id="sg{n}s">Segui</span><span id="sg{n}t" style="display:none">Seguito</span></div>'
                           f'<i class="sg-tocco" id="sg{n}c"></i></div>')
         self.tl.append(f'tl.fromTo("#sg{n}",{{opacity:0,y:40,scale:0.9}},{{opacity:1,y:0,scale:1,duration:0.35,ease:"back.out(1.7)",immediateRender:false}},{da:.3f});'
