@@ -1,0 +1,45 @@
+{
+ "nome": "Stile Pulito",
+ "motore": "grafica",
+ "colori": {
+  "accento": "#E86530",
+  "accento_luce": "#FF8A4C",
+  "testo": "#F9F7F4",
+  "scuro": "#140E0A",
+  "banda": "#4A2412"
+ },
+ "font": {
+  "titoli": {
+   "file": "font/Archivo.ttf",
+   "famiglia": "Archivo",
+   "peso": 900,
+   "larghezza": 125
+  },
+  "mono": {
+   "file": "font/JetBrainsMono.ttf",
+   "famiglia": "JetBrains Mono"
+  }
+ },
+ "finale": false,
+ "suoni": {
+  "transizione": "suoni/transizione.mp3",
+  "impatto": "suoni/impatto.mp3",
+  "glitch": "suoni/glitch.mp3",
+  "pop": "suoni/pop.mp3",
+  "tastiera": "suoni/tastiera.mp3",
+  "ding": "suoni/ding.mp3",
+  "livello": "suoni/livello.mp3",
+  "click": "suoni/click.mp3",
+  "sfumatura": "suoni/sfumatura.mp3"
+ },
+ "descrizione": "Solo tu che parli: tagli netti, sottotitoli, uno zoom leggero e la sfumatura di luce quando cambi argomento. Nient'altro.",
+ "sottotitoli_nome": "b-semplici",
+ "effetti": [
+  "zoom"
+ ],
+ "versione": "semplice",
+ "transizione": "sfumatura",
+ "mirino": false,
+ "zoom_tagli_da": 5,
+ "modello": true
+}

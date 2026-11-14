@@ -154,7 +154,7 @@ def modelli():
     if not os.path.exists(f):
         scarica(FACCIA, f)
     r = gira([PY, "-c", "import sys; from faster_whisper import WhisperModel; "
-                        "WhisperModel('medium', device='cpu', compute_type='int8', download_root=sys.argv[1])", MODELLI])
+                        "WhisperModel('large-v3-turbo', device='cpu', compute_type='int8', download_root=sys.argv[1])", MODELLI])
     stato("modelli (voce e faccia)", r.returncode == 0 and os.path.exists(f), "la prima volta scarica circa 1,5 GB")
 
 

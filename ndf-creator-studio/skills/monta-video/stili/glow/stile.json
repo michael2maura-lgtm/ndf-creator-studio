@@ -20,11 +20,7 @@
       "famiglia": "JetBrains Mono"
     }
   },
-  "finale": {
-    "testo": "COMMENTA",
-    "bottone": "INFO",
-    "sopra": "TE LO INVIO IN DIRECT"
-  },
+  "finale": false,
   "suoni": {
     "transizione": "suoni/transizione.mp3",
     "impatto": "suoni/impatto.mp3",
@@ -38,7 +34,7 @@
     "sfumatura": "suoni/sfumatura.mp3"
   },
   "descrizione": "Per i contenuti semplici: tu che parli, la sfumatura di luce tra una frase e l'altra, pop-up quando nomini qualcosa, il telefono in 3D quando parli di un'app e alla fine il commento da scrivere.",
-  "sottotitoli_nome": "ndf-targhetta",
+  "sottotitoli_nome": "glow",
   "effetti": [
     "zoom",
     "popup",
@@ -58,9 +54,21 @@
     "prima_dopo",
     "grafico",
     "muro",
-    "etichetta"
+    "etichetta",
+    "mappa",
+    "barra",
+    "scontrino",
+    "carrello",
+    "sondaggio",
+    "voto",
+    "podio",
+    "top",
+    "freccia",
+    "postit",
+    "citazione"
   ],
   "versione": "semplice",
   "transizione": "sfumatura",
-  "mirino": false
+  "mirino": false,
+  "zoom_tagli_da": 5
 }

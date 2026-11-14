@@ -72,8 +72,11 @@ def volume_giusto(entrata, uscita):
     err = subprocess.run([FFMPEG, "-i", entrata, "-af", f"loudnorm={OBIETTIVO}:print_format=json", "-vn", "-f", "null", "-"],
                          capture_output=True, text=True).stderr
     m = json.loads(re.search(r"\{[^{}]*\}", err[err.rfind("Parsed_loudnorm"):], re.S).group(0))
-    filtro = (f"loudnorm={OBIETTIVO}:measured_I={m['input_i']}:measured_TP={m['input_tp']}:"
-              f"measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true")
+    # guadagno fisso + limitatore: loudnorm, quando i picchi non ci stanno, passa da solo in modo "dinamico" e
+    # rialza le parti senza voce (la musica sotto tornava forte nelle pause)
+    guadagno = float(re.search(r"I=(-?[\d.]+)", OBIETTIVO).group(1)) - float(m["input_i"])
+    picco = 10 ** (float(re.search(r"TP=(-?[\d.]+)", OBIETTIVO).group(1)) / 20)
+    filtro = f"volume={guadagno:.2f}dB,alimiter=limit={picco:.3f}:level=false:attack=5:release=50"
     esegui([FFMPEG, "-v", "error", "-y", "-i", entrata, "-c:v", "copy", "-af", filtro,
             "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", uscita])
 
@@ -88,13 +91,13 @@ def solo_audio(reel, video_prima, finito, vel=1.0, gia_veloce=False):
     for tag in re.findall(r"<audio [^>]*>", pagina):
         att = dict(re.findall(r'([\w-]+)="([^"]*)"', tag))
         tracce.append((att.get("id", ""), os.path.join(reel, att["src"]), float(att["data-start"]), float(att.get("data-media-start", 0)),
-                       float(att["data-duration"]), float(att.get("data-volume", 1)), att.get("data-stop", "")))
+                       float(att["data-duration"]), float(att.get("data-volume", 1)), att.get("data-stop", ""), float(att.get("data-sotto", SOTTO_VOCE))))
     ingressi, filtri, nomi = [], [], []
     i_voce = i_musica = None
     voce = next((src for id_, src, *_ in tracce if id_ == "voce"), None)
-    for i, (id_, src, da, ms, dur, vol, stop) in enumerate(tracce):
+    for i, (id_, src, da, ms, dur, vol, stop, sotto) in enumerate(tracce):
         if id_ == "musica" and voce:  # ogni brano e ogni voce hanno un volume diverso: si misura, non si indovina
-            vol = 10 ** ((lufs(voce) - SOTTO_VOCE - lufs(src)) / 20)
+            vol = 10 ** ((lufs(voce) - sotto - lufs(src)) / 20)
         ingressi += ["-i", src]
         dur = corto(id_, src, ms, dur)
         sfuma = f",afade=t=out:st={max(dur - SFUMA, 0):.3f}:d={SFUMA}" if id_ not in ("voce", "musica") else ""

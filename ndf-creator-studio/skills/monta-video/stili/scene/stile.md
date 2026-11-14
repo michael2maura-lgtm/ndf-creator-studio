@@ -15,8 +15,8 @@ Per ogni frase scegli la scena che la spiega meglio (scene.py e grafica.py):
 - un numero, un tempo, un prima e dopo: "testo" o "capitolo" (le scene animate della pasta sono dello Stile Impact);
 - chat, telefono: quando dici di scrivere a ChatGPT o di aprire Instagram.
 
-Varia le scene: mai tre dello stesso tipo di fila. Zoom a scatti sui tagli, musica sotto, finale commenta INFO.
-Per le ads: stesso stile, finale "CLICCA QUI SOTTO" (mai commenta).
+Varia le scene: mai tre dello stesso tipo di fila. Zoom a scatti sui tagli, musica sotto. Nessuna scritta di chiusura di serie: il video finisce sulla persona.
+Solo se la persona lo chiede, nel piano "finale_testo" (es. per le ads "CLICCA QUI SOTTO").
 
 ## Note fisse (Michael)
 - Semplice vuol dire semplice: una scena spiega una cosa sola.

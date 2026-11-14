@@ -31,11 +31,7 @@
   "entrata": 0.35,
   "uscita": 0.2
  },
- "finale": {
-  "testo": "COMMENTA INFO",
-  "secondi": 2.6,
-  "colore": "accento"
- },
+ "finale": false,
  "suoni": {
   "transizione": "suoni/transizione.mp3",
   "colpo": "suoni/colpo.mp3",

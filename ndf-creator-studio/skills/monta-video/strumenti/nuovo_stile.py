@@ -69,7 +69,8 @@ def anteprima(cart):
     d.text((540, 820), "IN UN REEL", font=ft, fill=c["accento"], anchor="mm")
     d.text((540, 920), "così appaiono i titoli", font=fc, fill=c["accento_luce"], anchor="mm")
     d.text((540, 1250), "SOTTOTITOLO", font=fs, fill=c["testo"], anchor="mm")
-    d.text((540, 1400), s["finale"]["testo"], font=ft, fill=c["accento"], anchor="mm")
+    if s.get("finale"):
+        d.text((540, 1400), s["finale"]["testo"], font=ft, fill=c["accento"], anchor="mm")
     im.save(os.path.join(cart, "anteprima.png"))
     return os.path.join(cart, "anteprima.png")
 
@@ -100,7 +101,7 @@ def main():
                  "corsivo": {"file": f"font/{fc}", "famiglia": a.font_corsivo or "Instrument Serif", "stile": "italic"}},
         "sottotitoli": {"parole_insieme": 1, "maiuscolo": True, "dimensione": 76, "colore": "testo"},
         "titoli": {"dimensione_grande": 118, "dimensione_corsivo": 66, "durata_minima": 1.2, "entrata": 0.35, "uscita": 0.2},
-        "finale": {"testo": a.finale or "COMMENTA INFO", "secondi": 2.6, "colore": "accento"},
+        "finale": {"testo": a.finale, "secondi": 2.6, "colore": "accento"} if a.finale else False,
         "suoni": {"transizione": "suoni/transizione.mp3", "colpo": "suoni/colpo.mp3", "tastiera": "suoni/tastiera.mp3",
                   "musica": "suoni/musica.wav"},
     }

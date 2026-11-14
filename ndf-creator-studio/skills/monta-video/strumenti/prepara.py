@@ -16,7 +16,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import FFMPEG, FFPROBE, MODELLI, cartella_lavoro, durata, esegui, scrivi  # noqa: E402
+from comune import nomi_con_il_profilo, FFMPEG, FFPROBE, MODELLI, cartella_lavoro, durata, esegui, scrivi  # noqa: E402
 
 
 def misure(video):
@@ -62,7 +62,8 @@ def pause(audio, soglia="-40dB", minima=0.15):
 
 def trascrivi(audio, nomi):
     from faster_whisper import WhisperModel
-    modello = WhisperModel("medium", device="cpu", compute_type="int8", download_root=MODELLI)
+    from comune import MODELLO_VOCE
+    modello = WhisperModel(MODELLO_VOCE, device="cpu", compute_type="int8", download_root=MODELLI)
     # condition_on_previous_text=False: altrimenti Whisper "salta" le frasi ripetute, e sono proprio
     # le riprese che ci servono per scegliere la migliore.
     segmenti, _ = modello.transcribe(audio, language="it", word_timestamps=True, vad_filter=False,
@@ -94,7 +95,7 @@ def main():
     audio = os.path.join(cart, "audio.wav")
     esegui([FFMPEG, "-v", "error", "-y", "-i", video, "-vn", "-ac", "1", "-ar", "16000", audio])
     print("Trascrivo (qualche minuto)...")
-    frasi = trascrivi(audio, a.nomi)
+    frasi = trascrivi(audio, nomi_con_il_profilo(a.nomi))
     scrivi(os.path.join(cart, "parole_grezze.json"), frasi)
     silenzi = pause(audio)
 

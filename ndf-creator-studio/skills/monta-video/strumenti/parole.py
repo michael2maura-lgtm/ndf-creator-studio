@@ -13,7 +13,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import FFMPEG, MODELLI, cartella_lavoro, esegui, scrivi  # noqa: E402
+from comune import nomi_con_il_profilo, FFMPEG, MODELLI, cartella_lavoro, esegui, scrivi  # noqa: E402
 
 
 def main():
@@ -26,9 +26,10 @@ def main():
     esegui([FFMPEG, "-v", "error", "-y", "-i", os.path.join(cart, "tagliato.mp4"), "-vn", "-ac", "1", "-ar", "16000", audio])
 
     from faster_whisper import WhisperModel
-    modello = WhisperModel("medium", device="cpu", compute_type="int8", download_root=MODELLI)
+    from comune import MODELLO_VOCE
+    modello = WhisperModel(MODELLO_VOCE, device="cpu", compute_type="int8", download_root=MODELLI)
     segmenti, _ = modello.transcribe(audio, language="it", word_timestamps=True, vad_filter=False,
-                                     condition_on_previous_text=False, initial_prompt=a.nomi or None)
+                                     condition_on_previous_text=False, initial_prompt=nomi_con_il_profilo(a.nomi) or None)
     parole, righe = [], []
     for s in segmenti:
         righe.append(s.text.strip())

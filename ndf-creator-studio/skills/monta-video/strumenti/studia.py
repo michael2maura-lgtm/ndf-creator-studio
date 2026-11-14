@@ -71,7 +71,8 @@ def parole(video, cart):
     subprocess.run([FFMPEG, "-v", "error", "-y", "-i", video, "-ac", "1", "-ar", "16000", wav], check=True)
     try:
         from faster_whisper import WhisperModel
-        m = WhisperModel("medium", device="cpu", compute_type="int8", download_root=MODELLI)
+        from comune import MODELLO_VOCE
+        m = WhisperModel(MODELLO_VOCE, device="cpu", compute_type="int8", download_root=MODELLI)
         seg, info = m.transcribe(wav, word_timestamps=True, vad_filter=True)
         out = [{"testo": w.word.strip(), "da": round(w.start, 2), "a": round(w.end, 2)} for s in seg for w in (s.words or [])]
         return out, info.language

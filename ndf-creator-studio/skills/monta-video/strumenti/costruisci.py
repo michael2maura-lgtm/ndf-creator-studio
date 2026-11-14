@@ -27,6 +27,7 @@ import colore as look_girato  # noqa: E402
 import grafica  # noqa: E402
 import scene  # noqa: E402
 import sottotitoli  # noqa: E402
+import ritocchi  # noqa: E402
 import split  # noqa: E402
 import suoni_reel  # noqa: E402
 
@@ -145,11 +146,12 @@ def main():
         font[ruolo] = f
 
     # dove stanno le scritte: sotto il mento, dentro la zona sicura
-    y_sub = min(max(faccia["mento"] + 170, 900), ZONA["basso"] - 80)
+    y_sub = min(max(faccia["mento"] + 170, 1230), ZONA["basso"] - 80)   # sul petto, ben sotto la bocca (14/11/2026)
     y_tit = min(max(faccia["mento"] + 60, 900), ZONA["basso"] - 330)
-    ts, tt, fin = stile["sottotitoli"], stile["titoli"], stile["finale"]
+    ts, tt = stile["sottotitoli"], stile["titoli"]
+    fin = {"secondi": 2.6, "colore": "accento", "testo": ""} | (stile.get("finale") or {})   # false: nessun finale di serie
     titoli = piano.get("titoli", [])
-    finale_da = piano.get("finale_da", D - fin["secondi"])
+    finale_da = piano.get("finale_da", D - fin["secondi"] if piano.get("finale_testo", fin["testo"]) else D + 1)
 
     # solo quello che comincia prima della fine del video (con "durata_max" o un taglio, il resto si blocca nel render)
     scene_piano = [x for x in piano.get("scene", []) if x["da"] < D - 0.2]
@@ -173,7 +175,7 @@ def main():
         nascondi = [(x["da"], x["a"]) for x in titoli + coprono + liste
                     + [p for p in piano.get("pannelli", []) if p.get("frase") or p.get("pieno")]] + [(finale_da, D + 1)]
         css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile.get("sottotitoli_scelti") or propri, parole, chiave, y_sub + 40,
-                                                            nascondi, stile["colori"])
+                                                            nascondi, stile["colori"], stile.get("ritocchi_sott"))
         corpo += c_sott
         tl += tl_sott
         for f in f_sott:
@@ -259,12 +261,22 @@ def main():
                 tl.append(f'tl.fromTo("#gv{n}_{k}",{{opacity:0,scale:1.3}},{{opacity:1,scale:1,duration:0.15,immediateRender:false}},{da + 0.03 * k:.3f});')
 
     # zoom a scatti: a ogni pezzo del taglio l'inquadratura si stringe o si allarga, centrata sulla faccia
-    if piano.get("zoom"):
+    # di serie acceso (dal 14/11/2026): largo, stretto, largo, più stretto. "zoom": false nel piano lo spegne;
+    # "zoom": 1.2 cambia il livello più stretto
+    if piano.get("zoom", True) and os.path.exists(os.path.join(cart, "segmenti.json")):
+        alto = piano["zoom"] if isinstance(piano.get("zoom"), (int, float)) and piano["zoom"] is not True else 1.12
+        livelli = [1.0, 1 + (alto - 1) * 0.6, 1.0, alto]
         cx = (faccia["sinistra"] + faccia["destra"]) / 2
         cy = (faccia["occhi"] + faccia["mento"]) / 2
         tl.append(f'gsap.set("#bg",{{transformOrigin:"{cx:.0f}px {cy:.0f}px"}});')
-        for k, seg in enumerate(leggi(os.path.join(cart, "segmenti.json"))):
-            tl.append(f'tl.set("#bg",{{scale:{1.0 if k % 2 == 0 else piano["zoom"]}}},{seg["inizio"]:.3f});')
+        k, ultimo, prec = 0, -99.0, None
+        for seg in leggi(os.path.join(cart, "segmenti.json")):
+            base = seg["id"].rsplit("-", 1)[0] if seg["id"].rsplit("-", 1)[-1].isdigit() else seg["id"]
+            nuova, prec = base != prec, base
+            if seg["inizio"] > 0 and (not nuova or seg["inizio"] - ultimo < 5.0):   # solo tra le frasi, ogni 5 s al massimo
+                continue
+            tl.append(f'tl.set("#bg",{{scale:{livelli[k % 4]:.3f}}},{seg["inizio"]:.3f});')
+            k, ultimo = k + 1, seg["inizio"]
 
     if split_on:
         tl.append(f'gsap.set("#bg",{{y:{split.SPOSTA}}});')
@@ -296,13 +308,14 @@ def main():
                            f"font-weight:100 900;font-stretch:62% 125%}}" for f in st_r["font"].values()) + grafica.css_scene(st_r)
 
     testo_fin = piano.get("finale_testo", fin["testo"])
-    sotto_fin = piano.get("finale_sotto", "qui sotto")
-    size_fin = dimensione_titolo({"grande": testo_fin, "sotto": sotto_fin}, stile, cart_stile, larghezza, y_tit, limite,
-                                 extra=100)  # la freccia
-    corpo.append(f'<div class="tit" id="fin"><div class="grande" style="color:{colore(stile, fin["colore"])};font-size:{size_fin}px">'
-                 f'{html.escape(testo_fin)}</div><div class="cors">{html.escape(sotto_fin)}</div>'
-                 f'<div class="freccia" id="freccia">↓</div></div>')
-    tl.append(f'tl.fromTo("#fin",{{opacity:0,y:50}},{{opacity:1,y:0,duration:0.4,ease:"power3.out"}},{finale_da:.3f});'
+    if testo_fin:   # finale solo se lo stile o il piano lo chiede (es. ads: "CLICCA QUI SOTTO")
+        sotto_fin = piano.get("finale_sotto", "qui sotto")
+        size_fin = dimensione_titolo({"grande": testo_fin, "sotto": sotto_fin}, stile, cart_stile, larghezza, y_tit, limite,
+                                     extra=100)  # la freccia
+        corpo.append(f'<div class="tit" id="fin"><div class="grande" style="color:{colore(stile, fin["colore"])};font-size:{size_fin}px">'
+                     f'{html.escape(testo_fin)}</div><div class="cors">{html.escape(sotto_fin)}</div>'
+                     f'<div class="freccia" id="freccia">↓</div></div>')
+        tl.append(f'tl.fromTo("#fin",{{opacity:0,y:50}},{{opacity:1,y:0,duration:0.4,ease:"power3.out"}},{finale_da:.3f});'
               f'tl.fromTo("#freccia",{{y:0}},{{y:24,duration:0.45,repeat:{int((D - finale_da) / 0.45)},yoyo:true,ease:"sine.inOut"}},{finale_da + 0.4:.3f});')
 
     zone = zone_rosse(faccia) if "--zone" in sys.argv else ""
@@ -363,6 +376,8 @@ window.__timelines["main"] = tl;
 </script>
 </body></html>
 """
+    pagina = ritocchi.titoli(pagina, font["titoli"]["famiglia"], stile.get("ritocchi_titoli"), c["accento"])
+    pagina = ritocchi.testo_fisso(pagina, stile.get("testo_fisso"), stile.get("fisso"), font["titoli"]["famiglia"], c["accento"])
     with open(os.path.join(reel, "index.html"), "w", encoding="utf-8") as f:
         f.write(pagina)
     with open(os.path.join(reel, "hyperframes.json"), "w", encoding="utf-8") as f:

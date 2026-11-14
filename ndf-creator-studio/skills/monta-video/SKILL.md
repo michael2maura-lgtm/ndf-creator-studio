@@ -24,14 +24,23 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
   Se una riga dice MANCA, rilancialo una volta; se resta, di' in una riga cosa manca.
 - `PY STUDIO/strumenti/aggiornamenti.py`: se dice che c'è una versione nuova, dillo in una riga e chiedi se
   aggiornare (`/plugin update ndf-creator-studio`, poi riaprire Claude Code).
-- Nessuno stile in `DATI/stili/`: prima fai l'intervista (abilità `crea-stile`), poi torna qui.
+- Manca il colore in `DATI/profilo.json` (brand mai fatto): niente domande in chat. Apri la pagina su `/brand`
+  (`PY STUDIO/strumenti/scegli.py`), di' "Ti ho aperto la pagina: rispondi lì e premi Salva", aspetta `BRAND SALVATO`
+  e poi `SCELTE SALVATE`, poi monta. L'intervista `crea-stile` si fa solo se l'utente la chiede.
 
 ## I passaggi, sempre in quest'ordine
 1. `PY STUDIO/strumenti/prepara.py "<video>" NOME --nomi "<nomi detti nel video>"`
    Leggi `trascrizione.txt` e guarda `foglio.jpg`.
-2. Scrivi `tagli.json` seguendo `regole/taglio.md`, poi `PY STUDIO/strumenti/taglia.py NOME`.
+2. Scrivi `tagli.json` seguendo `regole/taglio.md`, poi `PY STUDIO/strumenti/taglia.py NOME`. Tu scegli QUALI frasi
+   tenere; le pause le toglie da solo (`stringi.py`, dentro taglia.py): il reel non si ferma mai. `--respiri` solo se
+   l'utente vuole un ritmo calmo.
 3. `PY STUDIO/strumenti/parole.py NOME --nomi "..."`: confronta il testo con quello detto (regole/taglio.md).
    `PY STUDIO/strumenti/controlla_tagli.py NOME` e guarda `controllo/tagli.jpg`.
+   `PY STUDIO/strumenti/controlla_audio.py NOME`: il controllo dei tagli a orecchio (parola mozzata, sillaba in più,
+   pausa lunga, ripetizione), con il pezzo e il secondo dell'originale da sistemare. Sistema `tagli.json`, rifai
+   taglia.py, parole.py e il controllo, al massimo 3 giri: finché non dice `DA SISTEMARE: 0` non passi al piano
+   (una ripetizione voluta va bene). Se resta qualcosa, nel messaggio finale di' il secondo da ascoltare.
+   Lo zoom cambia da solo a ogni taglio (largo, stretto, largo, più stretto, sulla faccia): non scriverlo nel piano.
 4. `PY STUDIO/strumenti/faccia.py NOME` e guarda `controllo/faccia.jpg`: il riquadro deve stare sulla faccia.
 5. Leggi le ultime 5 righe di `stili/<stile>/registro.md` e scegli scene, clip e pose diverse da quelle.
    Decidi che video è. **Completo**: ogni 3-6 secondi una scena a tutto schermo di 1-3 secondi, poi si torna sulla
@@ -58,18 +67,32 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    titoli che si decodificano, targhette, parola gigante, cornice, telefono, contatore). Formato in cima a
    `strumenti/grafica.py`, quando usare cosa nello `stile.md` dello stile, esempio approvato in `esempi/grafica.json` (Impact semplice, approvato da Michael: `esempi/impact-semplice.json`).
    Ogni 4-8 secondi una grafica, sempre nata da una frase detta in quel momento.
+   Effetti nuovi (barra, scontrino, carrello, sondaggio, voto, podio, top, freccia, postit, citazione): formato in cima
+   a `strumenti/effetti_nuovi.py`. Usa solo gli effetti accesi nella pagina Effetti (scelte.json "effetti"): dove
+   metterli lo decidi tu, sulla frase che li giustifica, con numeri e nomi veri detti nel video (mai inventati).
    Zoom: decidilo sempre tu, in ogni video, seguendo `regole/zoom.md` (l'utente non deve chiederlo).
    **Poche cose fatte bene**: una grafica alla volta, mai lampi, adesivi o pillole su ogni parola. Se un elemento non
    aiuta a capire o a sentire, toglilo.
+   **Scena piena dal primo fotogramma**: una scena a tutto schermo non si apre mai su uno sfondo vuoto (anche mezzo
+   secondo fa sembrare il reel in ritardo). Gli elementi principali ci sono già, tenui, e si accendono sulla parola
+   detta; dal nulla compaiono solo gli accenti (un timbro, un cerchio, un oggetto che vola).
+   **Strumenti e marchi veri**: se nel video si nomina un'app, un sito o un marchio, si mostra il suo logo vero (dal
+   sito ufficiale) o la sua pagina vera, mai un disegno generico o un logo inventato.
+   **Mai più di due scene costruite allo stesso modo** in un video, e mai due di fila: si alterna.
+   **La faccia ha lo stesso colore in tutto il video**: i filtri colore vanno sulle clip e sulle foto, mai sulle
+   riprese della persona (anche quando è ritagliata o dentro un riquadro).
 6. `PY STUDIO/strumenti/costruisci.py NOME --zone`, poi `PY STUDIO/strumenti/foto.py NOME <6-8 momenti>`
    e guarda il foglio: niente nelle zone rosse, niente sulla faccia, niente righe orfane.
 7. `PY STUDIO/strumenti/costruisci.py NOME` (senza zone), poi `PY STUDIO/strumenti/rendi.py NOME`.
 8. `PY STUDIO/strumenti/controlla_tagli.py NOME finale/NOME-vN.mp4 --telefono`: guarda i fotogrammi del video
-   FINITO e il volume. Manda all'utente la copia per il telefono.
+   FINITO e il volume. Se stampa DA GUARDARE (nero, o due cambi di immagine troppo vicini), guarda `nascosti.jpg`:
+   se è un errore vero (un fotogramma di un'altra scena, un buco nero) correggilo e rifai il video prima di mandarlo;
+   se è un passaggio voluto (lampo, transizione) vai avanti. Manda all'utente la copia per il telefono.
 9. `PY STUDIO/strumenti/registro.py <stile> "NOME | scene: ... | clip: ... | omini: ... | suoni: ..."` con
    quello che hai usato davvero. Di' in poche righe cosa hai fatto, se hai messo la musica e perché, e cosa deve
    ascoltare o controllare (le parole corrette a intuito, con il secondo). Tu non senti l'audio: dillo.
 
+Modelli rifatti da zero (quelli che la pagina mostra al passo 1, stile.json "modello": true), per ora uno: **Pulito** (`pulito`: solo la persona, tagli netti, sottotitoli, zoom leggero, sfumatura di luce sui cambi di argomento; niente grafiche, titoli, musica: vedi il suo stile.md).
 Stili pronti, quattro: **Glow** (`glow`: Impact semplice, sfumatura e pop-up, per i contenuti organici), **Scene** (tu che parli e tra una frase e l'altra la scena giusta: clip e foto nella finestra,
 lavagna, lavagna bianca a schede "bianca"; niente omini), **Impact** (`ndf-grafica`, lo stile Notech dei reel di esempio 01 e 04: grafiche sopra la persona e, per numeri e prima/dopo, le scene animate "scena" della pasta; poche per un video
 semplice, con la sfumatura come passaggio, tante per un video d'impatto) e **Diviso** (pannello in alto, persona sotto).
@@ -85,12 +108,25 @@ L'utente dice "scegli il look", "apri la pagina", "voglio cambiare suoni / music
 lancia `PY STUDIO/strumenti/scegli.py` in sottofondo e di' in una riga che si è aperta nel browser.
 Tre strade: stile pronto, replica un reel (l'utente ti manda il link in chat: lo studi con l'abilità `crea-stile`
 e ne fai uno stile nuovo, che poi compare nella pagina), crea il tuo (parte da uno stile e cambia suoni e musica).
-Quando scrive `SCELTE SALVATE`, di' in una riga cosa ha scelto. I 20 sottotitoli a scelta stanno in
+Quando scrive `SCELTE SALVATE`, di' in una riga cosa ha scelto.
+La pagina (telefono con anteprima e 8 passi) salva in `DATI/scelte.json` anche queste scelte, che applichi TU nel piano
+di ogni reel (valgono finché non le cambia):
+- `modello`: pulito, glow, scene, impact, diviso, ads, animato. **ads** = stile Impact, gancio forte nei primi 2 s,
+  ritmo veloce, finale "CLICCA QUI SOTTO" (mai "commenta").
+- `accento`: il colore del brand. Nel piano del motore grafica `"colori": {"accento": "<accento>"}`; negli altri sulle
+  parole chiave e sui titoli.
+- `chiusura` (commenta / segui / clicca / niente) e `parola` (la parola da commentare): il finale del reel.
+- `durata`: secondi massimi. Se il tagliato è più lungo, proponi all'utente le frasi da togliere prima di tagliarle.
+- `punti`: [{"quando": parole dette, "effetto": chiave, "testo": scritta}] = in quel punto esattamente quell'effetto
+  (trova le parole in `parole.json`); se il testo è vuoto usa le parole dette. È un obbligo, non spostarlo.
+- `testo_fisso`: una targhetta in alto per tutto il reel (elemento `targhetta`).
+- `note`: richieste libere dell'utente per i suoi reel: valgono più delle altre scelte.
+Le 3 caselle "stili salvati" stanno in `DATI/stili-salvati.json`: le usa la pagina, non serve toccarle. I 20 sottotitoli a scelta stanno in
 `strumenti/sottotitoli.py`; le loro anteprime le rifà `anteprima_sottotitoli.py` (solo se ne cambi o aggiungi uno).
 Colore del girato: `strumenti/colore.py` (6 look, la pelle resta naturale). Quello scelto nella pagina lo applica
 `costruisci.py` da solo; per un video solo scrivi "colore" nel piano. Se l'utente chiede "che colore ci sta?",
 `PY STUDIO/strumenti/colore.py proposte NOME` e mostragli `controllo/look.jpg`.
-Effetti (motion graphics del motore grafica): catalogo in `strumenti/effetti.py`. Come nel Creator Studio, ogni
+Effetti (motion graphics del motore grafica): catalogo in `strumenti/effetti.py`. Ogni
 stile ha i suoi pochi effetti accesi (stile.json "effetti"); nella pagina l'utente accende quelli che gli piacciono
 (scelte.json "effetti"). Nel piano usa SOLO gli effetti accesi, e solo dove c'entrano con la frase detta (lo stile.md
 dice quando): grafica.py salta gli altri con una NOTA. L'utente non sceglie niente reel per reel. Le scelte le usa `costruisci.py` da solo: tu nel piano
@@ -104,6 +140,21 @@ Veloce, e `rendi.py` la usa da solo. Per un reel diverso: "velocita" nel piano (
 Transizioni (stili del motore grafica): nel piano scrivi "transizioni": [secondi], SOLO sui cambi di argomento (2-3 in
 un minuto, nella pausa prima della parte nuova). Il tipo (sfumatura di luce, bande, taglio netto) è quello dello stile
 o quello scelto nella pagina: tu scrivi solo i secondi.
+
+Pagina Stile (come si sceglie il look): modello, look del video, font dei titoli (grandezza, grassetto, corsivo,
+maiuscolo, ombra), sottotitoli (stile, font del testo, font delle parole in evidenza, lettere, colori), chiusura e
+durata, testo fisso in alto, note. Finiscono in scelte.json ("titoli", "sott", "testo_fisso", "fisso") e le applica
+`strumenti/ritocchi.py` da solo, in qualsiasi stile: tu nel piano non scrivi niente. Il colore del brand non è nella
+pagina: sta in `DATI/profilo.json` ("colore": "#RRGGBB"), chiesto una volta all'inizio. Gli effetti hanno la loro
+pagina (scheda Effetti): il cliente accende quelli che gli piacciono, dove metterli lo decidi tu.
+
+Il brand (le domande iniziali, una volta sola): la scheda **Brand** della pagina (`/brand`, file `pagina/brand.html`). La
+prima volta la apri tu su `/brand`; senza colore la pagina Stile mostra in alto l'invito ad andarci. Il cliente carica il logo (la pagina propone i colori presi da lì), sceglie UN
+colore, scrive nome Instagram, riga sotto, foto profilo, parola da commentare e parole speciali. Finisce in
+`DATI/profilo.json` ("colore", "nome", "sotto", "foto", "logo", "parola", "parole"); quando scrive `BRAND SALVATO` dillo in
+una riga. Da lì in poi non si chiede più: il colore lo prende `comune.con_le_scelte` in ogni stile, le parole speciali
+entrano da sole in `prepara.py` e `parole.py` (tu aggiungi con --nomi solo i nomi di QUEL video), la parola da commentare
+è già scritta nella pagina Stile. "Cambia i miei colori", "cambia il mio logo": apri la pagina su `/brand`.
 
 ## Copiare lo stile di un reel ("replica questo reel", "voglio uno stile come questo")
 L'utente manda un link, un file o descrive un aspetto: quello è il brief. Non lo avvicini allo stile più simile che

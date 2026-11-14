@@ -1,0 +1,87 @@
+{
+  "nome": "Stile Diviso chiaro",
+  "motore": "grafica",
+  "descrizione": "Sopra un fondo chiaro con la frase che conta, sotto tu in un riquadro con i sottotitoli: pulito, un solo carattere, il tuo colore sui dettagli.",
+  "colori": {
+    "accento": "#3B5BDB",
+    "accento_luce": "#5C7CFA",
+    "testo": "#FFFFFF",
+    "scuro": "#141414",
+    "banda": "#E9E7E2"
+  },
+  "font": {
+    "titoli": {
+      "file": "font/PlusJakartaSans.ttf",
+      "famiglia": "Plus Jakarta Sans",
+      "peso": 800,
+      "larghezza": 100
+    },
+    "mono": {
+      "file": "font/JetBrainsMono.ttf",
+      "famiglia": "JetBrains Mono"
+    }
+  },
+  "suoni": {
+    "transizione": "suoni/transizione.mp3",
+    "musica": "suoni/musica.wav",
+    "pop": "suoni/pop.mp3",
+    "click": "suoni/click.mp3",
+    "ding": "suoni/ding.mp3",
+    "livello": "suoni/livello.mp3"
+  },
+  "sottotitoli_nome": "pulito",
+  "transizione": "taglio",
+  "mirino": false,
+  "finale": false,
+  "effetti": [
+    "zoom",
+    "barra",
+    "scontrino",
+    "carrello",
+    "sondaggio",
+    "voto",
+    "podio",
+    "top",
+    "freccia",
+    "postit",
+    "citazione"
+  ],
+  "fonte": {
+    "principio": "pannello in alto e persona sotto, impaginato come una rivista"
+  },
+  "layout": "diviso",
+  "pannello": {
+    "acc": "#3B5BDB",
+    "acc_rgb": "59,91,219",
+    "viola_rgb": "92,124,250",
+    "blu_rgb": "59,91,219",
+    "fondo_alto": "#F2F1EE",
+    "fondo": "#F2F1EE",
+    "vetro_rgb": "255,255,255",
+    "fondo_pieno": "#F2F1EE",
+    "verde": "#3B5BDB",
+    "verde_rgb": "59,91,219",
+    "cta_rgb": "255,255,255",
+    "x": "#E03131",
+    "chiaro1": "#F2F1EE",
+    "chiaro2": "#ECEAE5",
+    "chiaro3": "#E9E7E2",
+    "griglia_rgb": "59,91,219",
+    "testo_chiaro": "#141414",
+    "schede": [
+      "linear-gradient(160deg,#5C7CFA,#3B5BDB)",
+      "linear-gradient(160deg,#343A40,#141414)",
+      "linear-gradient(160deg,#ADB5BD,#868E96)"
+    ],
+    "righe": [
+      "#3B5BDB",
+      "#141414",
+      "#5C7CFA",
+      "#495057",
+      "#748FFC"
+    ]
+  },
+  "riquadro": true,
+  "stacchi": false,
+  "nascosto": true
+}

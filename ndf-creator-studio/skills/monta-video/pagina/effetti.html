@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gli effetti · NDF Creator Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--acc:#E86530;--acc2:#FF7A3D;--fondo:#141416;--nero:#0B0B0C;--cr:#F4EDE0;--cr2:#DDD5C6;--ink:#1A0E06;--gr:#A79E8E;--ln:rgba(244,237,224,.14);--ln2:rgba(244,237,224,.3)}
+*{box-sizing:border-box}
+html,body{margin:0;color:var(--cr);font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:var(--fondo)}
+body{background:radial-gradient(900px 520px at 85% -5%,rgba(232,101,48,.22),transparent 60%),var(--fondo);min-height:100vh}
+button{font:inherit;cursor:pointer;color:inherit}
+a{color:inherit}
+.top{background:var(--nero);border-bottom:1px solid var(--ln)}
+.top .in{max-width:1180px;margin:0 auto;padding:12px 28px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:"Bebas Neue",sans-serif;font-size:24px;letter-spacing:.06em}
+.logo b{color:var(--acc);font-weight:400}
+.mono{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gr)}
+.mono .p{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:8px;box-shadow:0 0 10px var(--acc)}
+.wrap{max-width:1180px;margin:0 auto;padding:30px 28px 150px}
+h1{font-family:"Bebas Neue",sans-serif;font-weight:400;font-size:clamp(64px,9vw,124px);line-height:.88;margin:10px 0 14px;text-transform:uppercase}
+h1 i{font-family:"Instrument Serif",serif;font-style:italic;text-transform:none;color:var(--acc);font-size:.62em;display:block;line-height:1.1}
+.sub{color:var(--cr2);max-width:680px;line-height:1.55;margin:0 0 18px;font-size:17px}
+.sub b{color:var(--cr)}
+.azioni{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+.chip{border:1px solid var(--ln2);background:transparent;border-radius:9px;padding:9px 14px;font-weight:600;font-size:14px}
+.gruppo{margin:34px 0 14px;display:flex;align-items:baseline;gap:14px;border-top:1px solid var(--ln);padding-top:18px}
+.gruppo h2{font-family:"Bebas Neue",sans-serif;font-weight:400;font-size:44px;margin:0;line-height:1;text-transform:uppercase}
+.carte{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.carta{position:relative;border:0;border-radius:12px;padding:0;background:var(--cr);text-align:left;color:var(--ink);overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.media{position:relative;display:block;aspect-ratio:9/14;background:#2a2a2e}
+.media img,.media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.media video{opacity:0}
+.carta.gira .media video{opacity:1}
+.carta .n{font-family:"Bebas Neue",sans-serif;font-size:25px;line-height:1;padding:10px 12px 0;text-transform:uppercase}
+.carta .per{font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.06em;color:#9a3f12;padding:4px 12px 0;text-transform:uppercase}
+.carta .d{color:#5a4a3e;font-size:12.5px;line-height:1.4;padding:4px 12px 12px}
+.carta::after{content:"";position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:rgba(0,0,0,.25)}
+.carta.si{box-shadow:0 0 0 3px var(--acc),0 14px 30px -12px rgba(232,101,48,.6)}
+.carta.si::after{background:var(--acc);border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,255,255,.9) inset}
+.barra{position:fixed;left:0;right:0;bottom:0;background:var(--nero);border-top:1px solid var(--ln);z-index:20}
+.barra .in{max-width:1180px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;gap:18px}
+.schede{display:flex;border:1px solid var(--ln2);border-radius:10px;overflow:hidden}
+.schede a{padding:9px 16px;text-decoration:none;font-weight:700;font-size:14px}
+.schede a.qui{background:var(--acc);color:var(--ink)}
+.riass{flex:1;min-width:0}
+.riass .cosa{font-family:"Bebas Neue",sans-serif;font-size:24px;letter-spacing:.03em;text-transform:uppercase}
+.grande{background:var(--acc);color:var(--ink);border:0;border-radius:8px;padding:12px 34px;font-family:"Bebas Neue",sans-serif;font-size:30px;letter-spacing:.04em;box-shadow:0 10px 30px -8px rgba(232,101,48,.7)}
+.avviso{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--cr);color:var(--ink);font-weight:700;padding:12px 18px;border-radius:10px;z-index:30;display:none}
+@media (max-width:760px){.grande{font-size:22px;padding:10px 18px}.schede a{padding:8px 10px}}
+</style></head>
+<body>
+<div class="top"><div class="in"><div class="logo">NDF <b>CREATOR STUDIO</b></div><div class="mono"><span class="p"></span>Gli effetti</div></div></div>
+<div class="wrap">
+ <h1>Gli effetti.<i>Tu scegli, lo studio li mette</i></h1>
+ <p class="sub">Passa sopra un effetto per vederlo muoversi. Clicca per <b>accenderlo</b>. Dove metterli lo decide lo studio, nei momenti giusti di ogni video: tu scegli solo quelli che ti piacciono.</p>
+ <div class="azioni"><button class="chip" id="tutti">Accendi tutti</button><button class="chip" id="nessuno">Spegni tutti</button></div>
+ <div id="lista"></div>
+</div>
+<div class="barra"><div class="in">
+ <div class="schede"><a href="/brand">Brand</a><a href="/">Stile</a><a href="/effetti" class="qui">Effetti</a></div>
+ <div class="riass"><span class="mono">Accesi</span><div class="cosa" id="riass"></div></div>
+ <button class="grande" id="salva">Salva gli effetti</button>
+</div></div>
+<div class="avviso" id="avviso"></div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let D, accesi = new Set();
+function avviso(t) { const a = $("#avviso"); a.textContent = t; a.style.display = "block"; clearTimeout(a._t); a._t = setTimeout(() => a.style.display = "none", 2600); }
+function riass() { $("#riass").textContent = accesi.size ? accesi.size + " effetti" : "Nessuno: lo studio non mette effetti"; }
+function disegna() {
+  $("#lista").innerHTML = D.gruppi.map(g => {
+    const qui = D.effetti.filter(e => (e.gruppo || "Altri") === g);
+    if (!qui.length) return "";
+    return `<div class="gruppo"><h2>${esc(g)}</h2><span class="mono">${qui.length}</span></div><div class="carte">${qui.map(e => `
+      <button class="carta ${accesi.has(e.chiave) ? "si" : ""}" data-eff="${e.chiave}">
+        <span class="media">${e.anteprima ? `<img src="/file/eff-${e.chiave}-jpg" alt="" loading="lazy"><video data-src="/file/eff-${e.chiave}" muted loop playsinline preload="none"></video>` : ""}</span>
+        <div class="n">${esc(e.nome)}</div><div class="per">${esc(e.per)}</div><div class="d">${esc(e.descrizione)}</div></button>`).join("")}</div>`;
+  }).join("");
+  riass();
+}
+// il mini video parte quando ci passi sopra (o lo tocchi dal telefono)
+function gira(c, si) { const v = c.querySelector("video"); if (!v) return; if (si) { if (!v.src) v.src = v.dataset.src; v.play().catch(() => {}); c.classList.add("gira"); } else { v.pause(); c.classList.remove("gira"); } }
+document.addEventListener("mouseover", e => { const c = e.target.closest(".carta"); if (c) gira(c, true); });
+document.addEventListener("mouseout", e => { const c = e.target.closest(".carta"); if (c && !c.contains(e.relatedTarget)) gira(c, false); });
+document.addEventListener("click", e => {
+  const c = e.target.closest(".carta"); if (!c) return;
+  const k = c.dataset.eff; if (accesi.has(k)) accesi.delete(k); else accesi.add(k);
+  c.classList.toggle("si", accesi.has(k)); gira(c, true); riass();
+});
+$("#tutti").onclick = () => { D.effetti.forEach(e => accesi.add(e.chiave)); disegna(); };
+$("#nessuno").onclick = () => { accesi.clear(); disegna(); };
+$("#salva").onclick = async () => {
+  const r = await fetch("/salva-effetti", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({effetti:[...accesi]})});
+  avviso(r.ok ? "Salvati. Lo studio userà solo questi, dove servono." : "Non sono riuscito a salvare");
+};
+setInterval(() => fetch("/ping", {method:"POST", body:"{}"}).catch(() => {}), 5000);
+fetch("/dati").then(r => r.json()).then(d => {
+  D = d;
+  const sc = d.scelte || {};
+  accesi = new Set(sc.effetti ?? d.effetti.map(e => e.chiave));   // la prima volta: tutti accesi
+  disegna();
+});
+</script>
+</body></html>

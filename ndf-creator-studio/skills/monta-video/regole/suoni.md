@@ -20,6 +20,8 @@ Si sceglie in base a quello che viene detto e a quello che si vede in quel momen
   - Se l'utente lo dice ("con la musica", "senza musica", "monta semplice"), vale quello. Nel messaggio finale
     di' in una riga cosa hai scelto, così può cambiarlo.
 - Mai due suoni forti nello stesso istante, mai un suono sopra una parola importante.
+- Un suono non parte mai sull'inizio di una parola: la copre e non si capisce. Parte quando la parola è finita
+  (secondo di fine della parola in `parole.json`), anche se la grafica è entrata prima.
 - **Frasi chiave (solo con la musica):** 1-3 per video (il gancio, il problema, la svolta). Nel piano
   `"frasi_chiave": [[da, a]]` con i secondi della frase detta: lo studio mette da solo la risalita prima, spegne la
   musica 0,3 s prima della frase, la fa ripartire alla fine con un colpo. Mai due a meno di 10 s, mai nei primi 2,5 s.

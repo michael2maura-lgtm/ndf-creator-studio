@@ -29,6 +29,8 @@ FONT = {
     "pennarello": ("Permanent Marker", "PermanentMarker-Regular.ttf", ""),
     "fumetto": ("Bangers", "Bangers-Regular.ttf", ""),
     "mono": ("JetBrains Mono", "JetBrainsMono.ttf", "font-weight:100 800"),
+    "poppins": ("Poppins", "Poppins-SemiBold.ttf", ""),
+    "poppins-forte": ("Poppins Bold", "Poppins-Bold.ttf", ""),
 }
 
 OMBRA = "text-shadow:0 4px 18px rgba(0,0,0,.65)"
@@ -40,6 +42,57 @@ ENTRA_PUGNO = ('{scale:1.3,opacity:0}', '{scale:1,opacity:1,duration:0.12,ease:"
 
 # chiave -> descrizione. "css" usa %acc% %luce% %f-<font>%; .st è il sottotitolo, .w una parola, .k la parola chiave
 CATALOGO = {
+    # i 5 stili base, quelli in cima alla pagina (14/11/2026): pochi e molto diversi tra loro. "base": True
+    "b-karaoke": {
+        "nome": "Karaoke", "per": "Chi parla veloce, sfondi pieni", "base": True,
+        "descrizione": "La frase intera in un riquadro chiaro: le parole si accendono una dopo l'altra mentre le dici.",
+        "modo": "karaoke", "parole": 4, "lettere": 22, "entra": ENTRA_MORBIDO, "font": ["jakarta"],
+        "css": PIASTRA + "/*riq*/.st{font-family:%f-jakarta%;font-weight:700;font-size:58px;line-height:1.25;padding:14px 32px 16px;"
+               "border-radius:18px;background:#F6F0E4}.st .w{color:rgba(26,22,20,.4)}"
+               ".st .w[data-on]{color:#1A1614}.st .k[data-on]{color:%acc%}",
+    },
+    "b-due-righe": {
+        "nome": "Due righe grandi", "per": "Frasi forti, ganci", "base": True,
+        "descrizione": "Una riga sopra bianca e, sotto, una riga più grande nel tuo colore.",
+        "modo": "gruppo", "parole": 5, "lettere": 26, "due_righe": "sotto", "entra": ENTRA_MORBIDO, "font": ["jakarta"],
+        "css": ".st{font-family:%f-jakarta%;font-weight:700;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7)}"
+               ".st .ra{display:block;font-size:76px;line-height:1.1}"
+               ".st .rb{display:block;font-weight:800;font-size:108px;line-height:1.02;color:%acc%}",
+    },
+    "b-due-caratteri": {
+        "nome": "Due caratteri", "per": "Personal brand, video curati", "base": True,
+        "descrizione": "Sopra una riga bianca dritta, sotto una riga grande in corsivo elegante nel tuo colore.",
+        "modo": "gruppo", "parole": 5, "lettere": 26, "due_righe": "sotto", "entra": ENTRA_MORBIDO,
+        "font": ["jakarta", "serif-corsivo"],
+        "css": ".st{font-family:%f-jakarta%;font-weight:600;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7)}"
+               ".st .ra{display:block;font-size:76px;line-height:1.1}"
+               ".st .rb{display:block;font-family:%f-serif-corsivo%;font-weight:400;font-size:124px;line-height:1.02;"
+               "letter-spacing:-1px;color:%acc%}",
+    },
+    "b-parola": {
+        "nome": "Una parola alla volta", "per": "Ritmo veloce, ads", "base": True,
+        "descrizione": "Una parola sola, grande, al centro. Quella importante nel tuo colore.",
+        "modo": "parola", "maiuscolo": True, "entra": ENTRA_SALTO, "font": ["jakarta"],
+        "css": ".st{font-family:%f-jakarta%;font-weight:800;font-size:124px;line-height:1.05;color:#fff;"
+               "text-shadow:0 3px 18px rgba(0,0,0,.75)}.st .k{color:%acc%}",
+    },
+    "b-semplici": {
+        "nome": "Semplici", "per": "Tutti i giorni, va bene sempre", "base": True,
+        "descrizione": "Una riga piccola e leggibile, la parola importante nel tuo colore.",
+        "modo": "gruppo", "parole": 4, "lettere": 22, "entra": ENTRA_MORBIDO, "font": ["jakarta"],
+        "css": ".st{font-family:%f-jakarta%;font-weight:700;font-size:60px;line-height:1.2;color:#fff;"
+               "text-shadow:0 2px 12px rgba(0,0,0,.85)}.st .k{color:%acc%}",
+    },
+    "glow": {   # dall'esempio 02 di Michael (la ragazza con la sfumatura), rifatto guardandolo
+        "nome": "Glow", "per": "Video calmi, personal brand",
+        "descrizione": "Una o due parole piccole, bianche, in maiuscolo; la parola chiave da sola, grande e spaziata, "
+                       "entra con un lampeggio.",
+        "modo": "gruppo", "parole": 2, "lettere": 13, "maiuscolo": True, "chiave_sola": True, "k_lampo": True,
+        "entra": ('{opacity:0}', '{opacity:1,duration:0.06}'), "font": ["poppins", "poppins-forte"],
+        "css": ".st{font-family:%f-poppins%;font-size:36px;line-height:1.2;letter-spacing:.03em;color:#fff;"
+               "text-shadow:0 2px 10px rgba(0,0,0,.45)}"
+               ".st .k{font-family:%f-poppins-forte%;font-size:72px;letter-spacing:.24em;margin-right:-.24em}",
+    },
     "ndf-classico": {
         "nome": "NDF Classico", "per": "Video parlati, spiegazioni",
         "descrizione": "Una parola alla volta, maiuscola, bianca e grande.",
@@ -63,7 +116,7 @@ CATALOGO = {
                "text-shadow:0 3px 12px rgba(0,0,0,.6)}.st .k{background:%acc%;padding:2px 12px 4px;border-radius:6px;text-shadow:none}",
     },
     "due-righe": {
-        "nome": "Due righe", "per": "Schermo diviso, video calmi e curati",
+        "nome": "Due righe corsivo", "per": "Schermo diviso, video calmi e curati",
         "descrizione": "Prima riga in corsivo elegante, seconda in grassetto; la parola chiave colorata.",
         "modo": "accumula", "parole": 5, "lettere": 26, "due_righe": True, "entra": ENTRA_MORBIDO,
         "font": ["serif-corsivo", "jakarta"],
@@ -94,7 +147,7 @@ CATALOGO = {
                ".st .k{color:#FFD84D}",
     },
     "due-caratteri": {
-        "nome": "Due caratteri", "per": "Personal brand, video curati",
+        "nome": "Corsivo dorato", "per": "Personal brand, video curati",
         "descrizione": "Scritta bianca dritta, la parola importante in corsivo elegante dorato.",
         "modo": "gruppo", "parole": 4, "lettere": 20, "entra": ENTRA_MORBIDO, "font": ["jakarta", "serif-corsivo"],
         "css": ".st{font-family:%f-jakarta%;font-weight:600;font-size:54px;line-height:1.15;color:#fff;" + OMBRA + "}"
@@ -109,7 +162,7 @@ CATALOGO = {
                ".st .k{display:block;font-size:200px;color:%acc%}",
     },
     "karaoke": {
-        "nome": "Karaoke", "per": "Chi parla veloce, sfondi pieni",
+        "nome": "Karaoke scuro", "per": "Chi parla veloce, sfondi pieni",
         "descrizione": "Tutta la frase su un fondo scuro, la parola che dici si accende.",
         "modo": "karaoke", "parole": 4, "lettere": 22, "maiuscolo": True, "entra": ENTRA_MORBIDO, "font": ["jakarta"],
         "css": PIASTRA + ".st{font-family:%f-jakarta%;font-weight:800;font-size:54px;line-height:1.25;padding:18px 30px;"
@@ -234,10 +287,18 @@ CATALOGO = {
 }
 
 
-def gruppi(parole, max_parole, max_lettere):
-    """Divide le parole in gruppi: si va a capo alla punteggiatura, a max_parole o quando le lettere sono troppe."""
+def gruppi(parole, max_parole, max_lettere, sola=()):
+    """Divide le parole in gruppi: si va a capo alla punteggiatura, a max_parole o quando le lettere sono troppe.
+    Le parole in `sola` (parole chiave, se lo stile lo vuole) stanno in un gruppo da sole."""
     out, g = [], []
     for w in parole:
+        da_sola = re.sub(r"[^\w]", "", w["testo"].lower()) in sola
+        if g and (da_sola or sum(len(x["testo"]) for x in g) + len(w["testo"]) > max_lettere):
+            out.append(g)
+            g = []
+        if da_sola:
+            out.append([w])
+            continue
         if g and sum(len(x["testo"]) for x in g) + len(w["testo"]) > max_lettere:
             out.append(g)
             g = []
@@ -258,33 +319,51 @@ def _font_css(chiavi):
     return "".join(righe)
 
 
-def parti(nome, parole, chiave, y, nascondi, colori):
+def parti(nome, parole, chiave, y, nascondi, colori, ritocco=None):
     """css, [html], [righe di timeline], [file dei caratteri da copiare in assets] per i sottotitoli `nome`.
-    y = dove sta il centro della riga; nascondi = [(da, a)] in cui i sottotitoli non si vedono (titoli, scene)."""
+    y = dove sta il centro della riga; nascondi = [(da, a)] in cui i sottotitoli non si vedono (titoli, scene).
+    ritocco = le scelte della pagina su font, lettere e colori (ritocchi.py, scelte.json "sott")."""
     s = CATALOGO[nome]
+    css_in_piu, f_in_piu = "", []
+    if ritocco:
+        import ritocchi
+        css_in_piu, maiusc, f_in_piu = ritocchi.sottotitoli(ritocco, s["css"], s["modo"], colori.get("accento"))
+        if maiusc is not None:
+            s = dict(s, maiuscolo=maiusc)
     css = s["css"].replace("%acc%", colori.get("accento", "#E86530")).replace("%luce%", colori.get("accento_luce", "#FF8A4C"))
     for k, (fam, _, _) in FONT.items():
         css = css.replace(f"%f-{k}%", f"'{fam}'")
     css = _font_css(s["font"]) + (".st{position:absolute;left:80px;right:110px;text-align:center;opacity:0;z-index:30;"
-                                  "transform:translateY(-50%)}") + css
+                                  "transform:translateY(-50%)}") + css + css_in_piu
     y = y - s.get("su", 0) + s.get("giu", 0)
     modo = s["modo"]
     n_par, n_let = (1, 99) if modo == "parola" else (s.get("parole", 3), s.get("lettere", 16))
     corpo, tl = [], []
-    gs = gruppi(parole, n_par, n_let)
+    gs = gruppi(parole, n_par, n_let, chiave if s.get("chiave_sola") else ())
+    tieni = 0.0   # la parola chiave da sola resta almeno 0.8 s: il gruppo dopo aspetta
     for i, g in enumerate(gs):
-        da = g[0]["da"]
+        da = max(g[0]["da"], tieni)
         if any(x <= da < z for x, z in nascondi):
             continue
         fine = gs[i + 1][0]["da"] if i + 1 < len(gs) else g[-1]["a"]
         fine = min([fine, g[-1]["a"] + 0.6] + [x for x, _ in nascondi if x > da])
+        if s.get("chiave_sola") and len(g) == 1 and re.sub(r"[^\w]", "", g[0]["testo"].lower()) in chiave:
+            fine = min([max(fine, da + 0.8)] + [x for x, _ in nascondi if x > da])
+            tieni = fine
+        elif fine <= da + 0.15:   # il gruppo resterebbe troppo poco dopo l'attesa: salta
+            continue
         pezzi = []
         for j, w in enumerate(g):
             t = re.sub(r"[.,;:!?\"«»]", "", w["testo"])
             t = t.upper() if s.get("maiuscolo") else t
             cl = "w k" if re.sub(r"[^\w]", "", t.lower()) in chiave else "w"
             pezzi.append(f'<span class="{cl}" id="u{i}w{j}">{html.escape(t)}</span>')
-        if s.get("due_righe") and len(pezzi) > 1:   # prima metà in corsivo sopra, il resto in grassetto sotto
+        if s.get("due_righe") == "sotto" and len(pezzi) > 1:   # riga sopra normale (.ra), riga sotto grande e colorata (.rb)
+            m = (len(pezzi) + 1) // 2
+            pezzi = [f'<span class="ra">{" ".join(pezzi[:m])}</span>', f'<span class="rb">{" ".join(pezzi[m:])}</span>']
+        elif s.get("due_righe") == "sotto":   # una parola sola: è la riga grande
+            pezzi = [f'<span class="rb">{pezzi[0]}</span>']
+        elif s.get("due_righe") and len(pezzi) > 1:   # prima metà in corsivo sopra, il resto in grassetto sotto
             m = max(1, len(pezzi) // 2)
             pezzi = [f'<span class="r1">{" ".join(pezzi[:m])}</span>', f'<span class="r2">{" ".join(pezzi[m:])}</span>']
         corpo.append(f'<div class="st" id="u{i}" style="top:{y}px">{" ".join(pezzi)}</div>')
@@ -294,6 +373,13 @@ def parti(nome, parole, chiave, y, nascondi, colori):
             for j, w in enumerate(g):  # la parola chiave fa qualcosa in più quando viene detta (evidenziatore, pennarello)
                 if s.get("k_entra") and 'class="w k"' in pezzi[j]:
                     tl.append(f'tl.fromTo("#u{i}w{j}",{s["k_entra"][0]},{s["k_entra"][1]},{w["da"]:.3f});')
+                if s.get("k_lampo") and 'class="w k"' in pezzi[j]:   # entra lampeggiando, poi esce sfumando
+                    q, d = f"#u{i}w{j}", w["da"]
+                    tl.append(f'tl.fromTo("{q}",{{opacity:0,filter:"blur(3px)"}},{{opacity:.45,filter:"blur(0px)",duration:0.07}},{d:.3f});'
+                              f'tl.to("{q}",{{opacity:1,duration:0.05}},{d + 0.07:.3f});'
+                              f'tl.to("{q}",{{opacity:.4,duration:0.05}},{d + 0.16:.3f});'
+                              f'tl.to("{q}",{{opacity:1,duration:0.08}},{d + 0.24:.3f});'
+                              f'tl.to("{q}",{{opacity:0,duration:0.2}},{max(fine - 0.2, d + 0.35):.3f});')
         elif modo in ("accumula", "scrivi"):
             tl.append(f'tl.set("#u{i}",{{opacity:1}},{da:.3f});tl.set("#u{i} .w",{{opacity:0}},{da:.3f});')
             for j, w in enumerate(g):
@@ -318,7 +404,7 @@ def parti(nome, parole, chiave, y, nascondi, colori):
         if nascondi:
             for x, z in nascondi:
                 tl.append(f'tl.set("#et",{{autoAlpha:0}},{x:.3f});tl.set("#et",{{autoAlpha:1}},{z:.3f});')
-    font = [FONT[k][1] for k in s["font"]]
+    font = [FONT[k][1] for k in s["font"]] + f_in_piu
     return css, corpo, tl, font
 
 

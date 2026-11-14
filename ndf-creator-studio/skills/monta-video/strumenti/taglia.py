@@ -1,8 +1,11 @@
 """Passo 2: taglia il video direttamente dall'originale, seguendo lavori/<nome>/tagli.json.
 
-Uso:  python3 strumenti/taglia.py <nome-lavoro> [--voce-originale]
+Uso:  python3 strumenti/taglia.py <nome-lavoro> [--voce-originale | --voce-forte] [--respiri | --senza-stringere]
+      Prima toglie da solo le pause (stringi.py: tagli-scelti.json resta la scelta di Claude). --respiri lascia le
+      pause dentro le frasi (ritmo calmo); --senza-stringere taglia esattamente come tagli.json.
       La voce viene pulita (fruscio, rumori bassi, volume uniforme) e i video in HDR corretti nei colori, da soli.
       --voce-originale: lascia la voce com'è registrata.
+      --voce-forte: pulizia forte, per i video girati in posti rumorosi (eco, passi, rumori di fondo).
 
 tagli.json lo scrive Claude dopo aver letto trascrizione.txt: l'ultima ripresa buona di ogni frase,
 via fuori onda e pause morte. Tempi in secondi del video ORIGINALE.
@@ -17,7 +20,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import FFMPEG, cartella_lavoro, codec_video, durata, esegui, leggi, scrivi  # noqa: E402
+from comune import DATI, FFMPEG, cartella_lavoro, codec_video, durata, esegui, leggi, scrivi  # noqa: E402
 
 FPS = 30
 DISSOLVENZA = 0.03  # 30 ms: niente "click" sui tagli
@@ -29,6 +32,21 @@ COLORE_HDR = ("zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=m
               "zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
 # voce pulita: via i rumori bassi e il fruscio, volume più uniforme (il volume finale lo fa rendi.py)
 VOCE = "highpass=f=80,afftdn=nf=-25,acompressor=threshold=-20dB:ratio=3:attack=5:release=80"
+# --voce-forte: girato in una stanza che rimbomba o rumorosa. Niente compressore (alza le code dell'eco), via il "suono
+# di scatola" sui 300-500 Hz, un po' di presenza, rumore abbassato solo nelle pause. Una pulizia più forte rende la
+# voce metallica: provata e scartata da Michael, 2026-11-05.
+# Pezzi girati in posti diversi (fuori in strada, dentro una stanza): "voce" nel pezzo di tagli.json vale solo
+# per quel pezzo ("originale", "vento", "ai", "ai_forte", "normale", "forte", "leggera"). Fuori la correzione della stanza rovina la voce.
+VOCE_FORTE = ("highpass=f=100,afftdn=nf=-30,equalizer=f=380:t=q:w=1:g=-6,equalizer=f=900:t=q:w=1.5:g=-2,"
+              "equalizer=f=3200:t=q:w=1:g=3,equalizer=f=9000:t=q:w=1:g=1.5,deesser=i=0.3,"
+              "agate=threshold=0.01:ratio=2:attack=8:release=150:range=0.25")
+VOCE_LEGGERA = "highpass=f=80,afftdn=nf=-35"   # all'aperto: quasi naturale, via solo il fruscio
+VOCE_VENTO = "highpass=f=120:poles=2"   # solo via vento e rombi bassi, la voce resta com'è registrata
+# "ai": pulitore a rete neurale di ffmpeg (RNNoise) che separa la voce dal rumore di fondo; mix 0.85 lascia un filo
+# di ambiente, se no la voce suona finta. Modello: DATI/modelli/voce-rumore.rnnn (arnndn-models, std.rnnn).
+MODELLO_RNN = os.path.join(DATI, "modelli", "voce-rumore.rnnn").replace("\\", "/").replace(":", "\\:")
+VOCE_AI = f"highpass=f=120:poles=2,aresample=48000,arnndn=m='{MODELLO_RNN}':mix=0.85"
+VOCE_AI_FORTE = f"highpass=f=120:poles=2,aresample=48000,arnndn=m='{MODELLO_RNN}':mix=1"   # tutto il rumore via (Michael: meglio così)
 
 
 def e_hdr(video):
@@ -43,6 +61,11 @@ def main():
         sys.exit(__doc__)
     cart = cartella_lavoro(sys.argv[1])
     sorgente = leggi(os.path.join(cart, "sorgente.json"))
+    # prima via le pause, da sole (stringi.py): il reel non si ferma mai. --senza-stringere per tagliare esattamente com'è
+    if "--senza-stringere" not in sys.argv:
+        import subprocess
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "stringi.py"), sys.argv[1],
+                        *[f for f in ("--respiri", "--voce-originale") if f in sys.argv]], check=True)
     tagli = leggi(os.path.join(cart, "tagli.json"))
     if not tagli:
         sys.exit("tagli.json è vuoto")
@@ -54,12 +77,14 @@ def main():
     if hdr:
         print("Il video è in HDR: correggo i colori.")
     colore = f",{COLORE_HDR}" if hdr else ""
+    voce = "anull" if "--voce-originale" in sys.argv else VOCE_FORTE if "--voce-forte" in sys.argv else VOCE
     filtri, segmenti, inizio = [], [], 0.0
     for i, t in enumerate(tagli):
         d = t["a"] - t["da"]
         filtri.append(f"[0:v]trim={t['da']}:{t['a']},setpts=PTS-STARTPTS,"
                       f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1{colore}[v{i}]")
-        filtri.append(f"[0:a]atrim={t['da']}:{t['a']},asetpts=PTS-STARTPTS,"
+        pulizia = {"originale": "anull", "normale": VOCE, "forte": VOCE_FORTE, "leggera": VOCE_LEGGERA, "vento": VOCE_VENTO, "ai": VOCE_AI, "ai_forte": VOCE_AI_FORTE}.get(t.get("voce"), voce)
+        filtri.append(f"[0:a]atrim={t['da']}:{t['a']},asetpts=PTS-STARTPTS,{pulizia},"
                       f"afade=t=in:d={DISSOLVENZA},afade=t=out:st={d - DISSOLVENZA:.3f}:d={DISSOLVENZA}[a{i}]")
         segmenti.append({"id": t["id"], "inizio": round(inizio, 3), "fotogramma": round(inizio * FPS),
                          "durata": round(d, 3), "da_originale": t["da"], "a_originale": t["a"]})
@@ -68,8 +93,7 @@ def main():
     filtri.append("".join(f"[v{i}][a{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=1[vc][ac]")
     # fotogrammi regolari dal tempo zero: le scritte e gli effetti dopo restano a tempo fino alla fine
     filtri.append(f"[vc]fps={FPS},setpts=N/{FPS}/TB[v]")
-    voce = "anull" if "--voce-originale" in sys.argv else VOCE
-    filtri.append(f"[ac]{voce}[a]")
+    filtri.append("[ac]anull[a]")
 
     dest = os.path.join(cart, "tagliato.mp4")
     print(f"Taglio {n} pezzi dall'originale...")

@@ -7,7 +7,10 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
 {"stile": "ndf-grafica",
  "correzioni": {...}, "aggiungi": [...],                  come nel motore normale (costruisci.py)
  "parole_chiave": ["domande", "15", "info"],              nei sottotitoli finiscono su una targhetta col colore d'accento
- "musica": true,
+ "musica": true,                     oppure un brano diverso da quello dello stile: "rilassante-natura.mp3" (DATI/musica)
+ "musica_sotto": 30,                 musica più bassa: dB sotto la voce (di serie 20)
+ "transizione_vol": 0.05,           suono della sfumatura leggerissimo (0 = nessun suono)
+ "colori": {"accento": "#C9A13B", "accento_luce": "#E8C766"},   colori solo per questo video (qui: oro)
  "apertura": {"sopra": "PUBBLICHI", "targa": "A CASO?", "a": 2.0},     titolo d'apertura sul petto + mirino REC
  "elementi": [
    {"tipo": "titolo", "da": 45.3, "a": 50.1, "sopra": "LE STESSE", "targa": "DOMANDE", "sotto": "PRIMA DI DECIDERE", "sotto_da": 48.6},
@@ -67,9 +70,11 @@ import shutil
 import subprocess
 
 import effetti
+import effetti_nuovi
 import sottotitoli
+import ritocchi
 import suoni_reel
-from comune import DATI, FFMPEG, STUDIO, durata, girato, trova
+from comune import DATI, FFMPEG, STUDIO, durata, girato, leggi, trova
 
 GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
 MIRINO_FINO = 6.2  # il mirino REC solo in apertura: per tutto il reel stanca
@@ -122,6 +127,68 @@ PANNELLO = {  # colori dello schermo diviso; uno stile li cambia con "pannello" 
     "righe": ["#7A5CFF", "#FF3DB4", "#FF8A3D", "#3F7BFF", "#2FE0C6"],
 }
 
+
+
+CSS_APP = """
+@font-face{font-family:'Instrument Serif R';src:url('assets/InstrumentSerif-Regular.ttf')}
+@font-face{font-family:'Inter Tight';src:url('assets/InterTight.ttf');font-weight:100 900}
+.ap{position:absolute;left:0;right:0;z-index:2;background:linear-gradient(#F8F5EF,#F2EEE6);overflow:hidden;
+ box-shadow:0 18px 50px rgba(0,0,0,.35);font-family:'Inter Tight';color:#1C1A17;will-change:transform}
+.ap-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.ap-testa{position:absolute;top:236px;left:0;right:0;text-align:center;font-family:'Instrument Serif R';font-size:50px;color:#2A2622}
+.ap-segno{font-style:normal;color:var(--acc);margin-right:14px}
+.ap-ciao{position:absolute;top:318px;left:0;right:0;text-align:center;font-family:'Instrument Serif R';font-size:64px;color:#2A2622}
+.ap-box{position:absolute;top:418px;left:70px;right:70px;min-height:170px;background:#fff;border-radius:34px;
+ border:3px solid rgba(0,0,0,.08);box-shadow:0 10px 30px rgba(0,0,0,.08);padding:30px 36px 86px}
+.ap-files{display:flex;gap:14px;margin-bottom:18px}
+.ap-file{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:16px;background:#F2EEE6;font-size:28px;font-weight:600;opacity:0}
+.ap-file i{width:26px;height:32px;border-radius:5px;background:var(--acc);opacity:.85}
+.ap-riga{font-size:38px;line-height:1.3;min-height:50px}
+.ap-vuoto{color:#A39C92}
+.ap-car{display:inline-block;width:3px;height:42px;background:var(--acc);vertical-align:-6px;margin-left:2px;opacity:0}
+.ap-piede{position:absolute;left:36px;right:28px;bottom:22px;display:flex;justify-content:space-between;align-items:center}
+.ap-piede i{font-style:normal;font-size:44px;color:#8C857B}
+.ap-invia{width:62px;height:62px;border-radius:18px;background:#E7E1D7;color:#fff;font-size:36px;display:flex;align-items:center;justify-content:center}
+.ap-mio{position:absolute;top:318px;right:70px;max-width:760px;padding:22px 32px;border-radius:30px;background:#E9E3D8;font-size:38px;opacity:0}
+.ap-risp{position:absolute;top:410px;left:70px;right:70px;font-family:'Instrument Serif R';font-size:50px;opacity:0}
+.ap-scheda{position:absolute;top:486px;left:70px;right:70px;background:#fff;border-radius:28px;padding:26px 34px 18px;
+ box-shadow:0 10px 30px rgba(0,0,0,.1);opacity:0}
+.ap-bar{height:10px;border-radius:5px;background:#ECE6DC;margin-bottom:16px;overflow:hidden}
+.ap-bar i{display:block;height:100%;width:0;background:var(--acc)}
+.ap-p{display:flex;align-items:center;gap:20px;font-size:34px;font-weight:600;padding:8px 0;opacity:0}
+.ap-ico{position:relative;width:40px;height:40px;flex:none}
+.ap-giro{position:absolute;left:2px;top:2px;width:36px;height:36px;border-radius:50%;border:4px solid #E3DCD1;border-top-color:var(--acc);box-sizing:border-box}
+.ap-ok{width:40px;height:40px;border-radius:50%;background:#2FA36B;display:flex;align-items:center;justify-content:center;opacity:0;position:absolute;inset:0}
+.ap-ok svg{width:26px;fill:none;stroke:#fff;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.ap-tag{position:absolute;top:392px;right:56px;padding:8px 18px;background:#F4E06D;color:#1C1A17;font-weight:800;font-size:30px;
+ transform:rotate(-3deg);opacity:0}
+.ap-ris{position:absolute;z-index:28;width:232px;padding:14px;background:#fff;border-radius:22px;box-shadow:0 16px 40px rgba(0,0,0,.35);
+ font-family:'Inter Tight';opacity:0}
+.ap-ris-t{font-size:24px;font-weight:700;color:#1C1A17;margin:0 4px 10px}
+.ap-ris-v{position:relative;border-radius:14px;overflow:hidden}
+.ap-ris-v img{display:block;width:100%}
+.ap-pronto{position:absolute;left:10px;top:10px;padding:6px 14px;border-radius:12px;background:#2FA36B;color:#fff;font-size:22px;font-weight:700}
+"""
+
+
+def css_riquadro(P):
+    """Lo schermo diviso pulito (stile.json "riquadro": true): fondo chiaro uguale, scritte scure, cartoncini bianchi,
+    il colore del marchio (P["acc"]) solo sui dettagli."""
+    fondo, scuro, acc = P.get("chiaro1", "#F2F1EE"), P.get("testo_chiaro", "#141414"), P["acc"]
+    return (f"html,body,#root{{background:{fondo}}}"
+            f".pan{{z-index:1;height:1920px;background:{fondo};box-shadow:none}}.pan:after,.pan-luce{{display:none}}"
+            f"#riq{{position:absolute;bottom:-60px;border-radius:46px;overflow:hidden;z-index:5;box-shadow:0 26px 60px rgba(0,0,0,.16)}}"
+            f".pt-r,.pt-r.forte,.pt-r.corsivo,.pi,.pi svg,.pn,.pn-sopra,.ps-nome{{color:{scuro};text-shadow:none}}"
+            f".pt-r.accento{{color:{acc};text-shadow:none}}.pn-lab{{color:{acc};padding-top:60px}}.pn-barre{{display:none}}"
+            f".pl2{{background:#fff;border:none;box-shadow:0 16px 40px rgba(0,0,0,.09)}}.pl2-t{{color:rgba(0,0,0,.5)}}"
+            f".pf{{background:#fff;border:2px solid rgba(0,0,0,.07);color:rgba(0,0,0,.45);box-shadow:0 12px 30px rgba(0,0,0,.07)}}"
+            f".ps{{box-shadow:0 16px 36px rgba(0,0,0,.14)}}"
+            f".pno-e{{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:50px;color:{scuro};opacity:0}}"
+            f".pno-e i{{display:block;font-style:normal;font-size:44px;line-height:1.3}}"
+            f".pno-c{{position:absolute;left:0;right:0;margin:0 auto;width:fit-content;display:flex;align-items:center;gap:22px;white-space:nowrap;"
+            f"background:#fff;color:{scuro};font-weight:700;font-size:60px;padding:30px 46px;border-radius:30px;"
+            f"box-shadow:0 16px 40px rgba(0,0,0,.10);opacity:0}}"
+            f".pno-c svg{{width:64px;height:64px;color:{scuro}}}")
 
 
 def css_scene(stile):
@@ -197,7 +264,11 @@ class Reel:
         """Un suono dello stile al secondo `da`, a -16 LUFS come tutti gli altri (i suoni scelti nella pagina sono già
         dentro lo stile: comune.con_le_scelte). Se lo stile non ha `nome`, suona `se_manca` (o niente)."""
         if nome == "transizione" and self.stile["suoni"].get("sfumatura"):   # Glow: niente whoosh, anche per telefono e orbita
-            nome, vol = "sfumatura", min(vol, 0.2)
+            nome, vol = "sfumatura", min(vol, 0.12)   # leggero come nell'esempio 02
+        if nome in ("transizione", "sfumatura") and getattr(self, "vol_transizione", None) is not None:
+            vol = self.vol_transizione   # "transizione_vol" nel piano: 0 = nessun suono, 0.05 = leggerissimo
+            if not vol:
+                return
         cart, rel = self.cart_stile, self.stile["suoni"].get(nome)
         if rel == "":  # "nessun suono" scelto nella pagina: niente, nemmeno il ripiego
             return
@@ -218,14 +289,20 @@ class Reel:
         self.audio.append(f'<audio id="s{n}" src="assets/{os.path.basename(dest)}" data-start="{da:.3f}" data-media-start="0" '
                           f'data-duration="{min(dur or 99, durata(dest), self.D - da):.3f}" data-volume="{vol}"></audio>')
 
-    def musica(self, vol=0.2):
+    def musica(self, vol=0.2, brano=None, sotto=None):
+        """brano: una musica diversa da quella dello stile ("musica": "rilassante-natura.mp3" nel piano, in DATI/musica)."""
         rel = self.stile["suoni"].get("musica")
-        if not rel:
+        src = os.path.join(self.cart_stile, rel) if rel else None
+        if brano:
+            src = next((q for q in (brano, os.path.join(DATI, "musica", brano)) if os.path.isfile(q)), src)
+        if not src:
             return
         dest = os.path.join(self.assets, "musica.m4a")
-        subprocess.run([FFMPEG, "-v", "error", "-y", "-stream_loop", "-1", "-i", os.path.join(self.cart_stile, rel),
+        subprocess.run([FFMPEG, "-v", "error", "-y", "-stream_loop", "-1", "-i", src,
                         "-t", f"{self.D:.2f}", "-af", f"afade=t=out:st={self.D - 1.5:.2f}:d=1.5", "-c:a", "aac", dest], check=True)
         stop = f' data-stop="{self.stop}"' if getattr(self, "stop", "") else ""
+        if sotto:  # quanti dB sotto la voce (di serie 20, rendi.SOTTO_VOCE): "musica_sotto" nel piano
+            stop += f' data-sotto="{sotto}"'
         self.audio.append(f'<audio id="musica" src="assets/musica.m4a" data-start="0" data-media-start="0" '
                           f'data-duration="{self.D:.3f}" data-volume="{vol}"{stop}></audio>')
 
@@ -387,7 +464,8 @@ class Reel:
 
     # ---------- effetti con il ritaglio della persona ----------
     def ritaglio(self, da, a):
-        """La persona ritagliata dai secondi da-a (strumenti/ritaglio.py), come video trasparente nella pagina."""
+        """La persona ritagliata dai secondi da-a (strumenti/ritaglio.py), come video trasparente nella pagina
+        (alla stessa altezza del video: nel Diviso è spostato in basso)."""
         import ritaglio as rit
         p = rit.ritaglia(os.path.dirname(self.reel), da, a, f"rit-{da:.2f}-{a:.2f}")
         dest = os.path.join(self.assets, os.path.basename(p))
@@ -395,7 +473,8 @@ class Reel:
             shutil.copy2(p, dest)
         self.ultimo_ritaglio = dest
         n = len(self.camera)
-        self.camera.append(f'<video id="r{n}" class="rit" src="assets/{os.path.basename(p)}" muted playsinline '
+        alto = f' style="top:{self.sposta}px"' if getattr(self, "sposta", 0) else ""
+        self.camera.append(f'<video id="r{n}" class="rit"{alto} src="assets/{os.path.basename(p)}" muted playsinline '
                            f'data-start="{da:.3f}" data-media-start="0" data-duration="{a - da:.3f}"></video>')
         return f"#r{n}"
 
@@ -1000,7 +1079,7 @@ class Reel:
         pf = json.load(open(pp, encoding="utf-8")) if os.path.exists(pp) else {}
         e = dict(pf, **e)
         foto = f"segui-{n}.jpg"
-        vera = os.path.join(DATI, pf["foto"]) if pf.get("foto") else ""
+        vera = os.path.join(DATI, e["foto"]) if e.get("foto") else ""   # "foto": "" nel piano = la faccia dal video (profilo di un cliente)
         if os.path.exists(vera):
             subprocess.run([FFMPEG, "-v", "error", "-y", "-i", vera, "-vf", "scale=200:200:force_original_aspect_ratio=increase,crop=200:200",
                             "-q:v", "3", os.path.join(self.assets, foto)], check=True)
@@ -1024,6 +1103,61 @@ class Reel:
                        f'tl.to("#sg{n}",{{opacity:0,y:30,duration:0.25,ease:"power2.in"}},{a - 0.25:.3f});')
         self.suono("pop", da, 0.25)
         self.suono_libreria("hyperframes/click-soft.mp3", tocco - 0.05, 0.5)   # il tocco sul tasto
+        self.nascondi.append((da, a))
+
+    def mappa(self, e, faccia):
+        """Mappa: per un negozio, uno studio, un locale. Quando dici dove si trova, dal basso sale una scheda con la
+        cartina vera della zona (OpenStreetMap), il segnaposto rosso cade sul punto e sotto ci sono nome e indirizzo.
+        e = {"da", "a", "nome": "Lavana Mandiram", "indirizzo": "Via Risorgimento 31, San Lazzaro di Savena",
+             "lat": 44.46, "lon": 11.40 (se mancano si cercano dall'indirizzo), "suono": false per nessun suono}."""
+        import urllib.parse
+        import urllib.request
+        da, a = e["da"], e["a"]
+        self.font_extra("InterTight.ttf")
+        n = len(self.corpo)
+        ua = {"User-Agent": "NDFCreatorStudio/0.1 (montaggio reel)"}
+        lat, lon = e.get("lat"), e.get("lon")
+        if lat is None or lon is None:
+            q = urllib.parse.urlencode({"q": e["indirizzo"], "format": "json", "limit": 1})
+            with urllib.request.urlopen(urllib.request.Request(f"https://nominatim.openstreetmap.org/search?{q}", headers=ua), timeout=20) as r:
+                trovato = json.load(r)
+            if not trovato:
+                print(f"NOTA: indirizzo non trovato sulla mappa: {e['indirizzo']}")
+                return
+            lat, lon = float(trovato[0]["lat"]), float(trovato[0]["lon"])
+        # cartina: 3x3 tasselli attorno al punto (zoom 17, vie e numeri leggibili), tagliata con il punto al centro
+        L, H, z = 900, 440, 17
+        cache = os.path.join(DATI, "immagini", f"mappa-{lat:.5f}-{lon:.5f}.png")
+        if not os.path.exists(cache):
+            from io import BytesIO
+            from PIL import Image
+            xt = (lon + 180) / 360 * 2 ** z
+            yt = (1 - math.asinh(math.tan(math.radians(lat))) / math.pi) / 2 * 2 ** z
+            tela = Image.new("RGB", (256 * 5, 256 * 5))
+            for i in range(-2, 3):
+                for j in range(-2, 3):
+                    url = f"https://tile.openstreetmap.org/{z}/{int(xt) + i}/{int(yt) + j}.png"
+                    with urllib.request.urlopen(urllib.request.Request(url, headers=ua), timeout=20) as r:
+                        tela.paste(Image.open(BytesIO(r.read())).convert("RGB"), ((i + 2) * 256, (j + 2) * 256))
+            px, py = (xt - int(xt) + 2) * 256, (yt - int(yt) + 2) * 256
+            sc = 1.4   # un po' più grande: le scritte delle vie si leggono sul telefono
+            w, h = L / sc, H / sc
+            os.makedirs(os.path.dirname(cache), exist_ok=True)
+            tela.crop((int(px - w / 2), int(py - h / 2), int(px + w / 2), int(py + h / 2))).resize((L, H), Image.LANCZOS).save(cache)
+        shutil.copy2(cache, os.path.join(self.assets, f"mappa-{n}.png"))
+        y = min(max(faccia["mento"] - 40, 820), 1460 - H - 170)
+        pin = ('<svg viewBox="0 0 48 64" width="72" height="96"><path d="M24 2C12 2 3 11 3 23c0 16 21 38 21 38s21-22 21-38C45 11 36 2 24 2z" '
+               'fill="#EA4335" stroke="#B3261E" stroke-width="2"/><circle cx="24" cy="23" r="8" fill="#7A1A12"/></svg>')
+        self.corpo.append(f'<div class="mp" id="mp{n}" style="top:{y}px"><div class="mp-m"><img src="assets/mappa-{n}.png">'
+                          f'<i class="mp-onda" id="mp{n}o"></i><div class="mp-pin" id="mp{n}p">{pin}</div>'
+                          f'<small>© OpenStreetMap</small></div>'
+                          f'<div class="mp-t"><b>{html.escape(e.get("nome", ""))}</b><span>{html.escape(e["indirizzo"])}</span></div></div>')
+        self.tl.append(f'tl.fromTo("#mp{n}",{{opacity:0,y:80,scale:0.94}},{{opacity:1,y:0,scale:1,duration:0.5,ease:"power3.out",immediateRender:false}},{da:.3f});'
+                       f'tl.fromTo("#mp{n}p",{{opacity:0,y:-160}},{{opacity:1,y:0,duration:0.45,ease:"bounce.out",immediateRender:false}},{da + 0.35:.3f});'
+                       f'tl.fromTo("#mp{n}o",{{opacity:0.7,scale:0.2}},{{opacity:0,scale:1.4,duration:0.9,ease:"power2.out",repeat:2,immediateRender:false}},{da + 0.75:.3f});'
+                       f'tl.to("#mp{n}",{{opacity:0,y:40,duration:0.3,ease:"power2.in"}},{a - 0.3:.3f});')
+        if e.get("suono", True):
+            self.suono("pop", da + 0.75, 0.2)
         self.nascondi.append((da, a))
 
     def tessere(self, e, faccia):
@@ -1467,6 +1601,140 @@ class Reel:
                        f'orbita("#ob{n}",{cx:.0f},{cy:.0f},{da:.3f},{a:.3f},{giri});')
         self.suono("transizione", da, 0.3)
 
+    def app(self, e, faccia):
+        """Tu davanti allo schermo di un'app: scende dall'alto fino al petto, tu resti davanti (ritaglio) e lo schermo
+        segue quello che dici: si scrive un messaggio, parte, arriva la risposta, i passi si spuntano, accanto alla
+        testa spunta il risultato. Solo quando nella frase c'è uno strumento da usare. e = {"da", "a",
+        "nome": "Assistente" (nome dell'app in alto), "saluto": "Cosa facciamo oggi?",
+        "allega": [secondo, ["foto", "video", ...]] (facoltativo), "scrivi": [secondo, "testo"], "invia": secondo,
+        "etichetta": [secondo, "UN MESSAGGIO"] (facoltativa, gialla accanto alla casella),
+        "risposta": [secondo, "Ci penso io."], "passi": [[secondo, "riga"], ...] (1-4),
+        "risultato": [secondo, "titolo", "Pronto"] (facoltativo), "immagine": "file in DATI/immagini" (facoltativa:
+        al posto della chat il tuo screenshot o la tua pagina)}."""
+        c = self.stile["colori"]
+        da, a = e["da"], e["a"]
+        self.font_extra("InstrumentSerif-Regular.ttf")
+        self.font_extra("InterTight.ttf")
+        self.usa_app = True
+        sel = self.ritaglio(da - 0.1, a + 0.1)
+        sp = getattr(self, "sposta", 0)
+        cima = (self.cima_testa(self.ultimo_ritaglio, 0.3) or faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95) + sp
+        dy = round(780 - cima)                      # la testa scende (o sale) appena sotto lo schermo
+        if not sp:
+            dy = max(dy, 0)                         # a tutto schermo non si sale: sotto resterebbe un buco
+        testa = cima + dy
+        bordo = min(faccia["mento"] + sp + dy + 110, 1720)   # il bordo dello schermo passa sul petto
+        n = len(self.camera)
+        q = f"ap{n}"
+        # sottotitoli nella stanza sotto lo schermo; se lì non c'è posto (girato troppo vicino) si fermano per questi
+        # pochi secondi: le parole importanti sono già scritte sullo schermo
+        sotto = bordo + 30 + 150 <= 1470
+        y_sub = bordo + 30
+        if e.get("immagine"):
+            src = os.path.join(DATI, "immagini", e["immagine"])
+            shutil.copy2(src, os.path.join(self.assets, os.path.basename(src)))
+            dentro = f'<img class="ap-img" src="assets/{os.path.basename(src)}">'
+        else:
+            nome = html.escape(e.get("nome", "Assistente"))
+            saluto = html.escape(e.get("saluto", "Cosa facciamo oggi?"))
+            allega = ""
+            if e.get("allega"):
+                allega = "".join(f'<span class="ap-file" id="{q}f{j}"><i></i>{html.escape(x)}</span>' for j, x in enumerate(e["allega"][1][:5]))
+                allega = f'<div class="ap-files">{allega}</div>'
+            passi = "".join(f'<div class="ap-p" id="{q}p{j}"><span class="ap-ico"><b class="ap-giro" id="{q}g{j}"></b>'
+                            f'<b class="ap-ok" id="{q}k{j}"><svg viewBox="0 0 24 24"><path d="M6 12.5l4 4 8-9"/></svg></b></span>'
+                            f'<span>{html.escape(t)}</span></div>' for j, (_, t) in enumerate(e.get("passi", [])[:4]))
+            scheda = (f'<div class="ap-scheda" id="{q}s"><div class="ap-bar"><i id="{q}b"></i></div>{passi}</div>') if passi else ""
+            risposta = e.get("risposta")
+            dentro = (f'<div class="ap-testa"><i class="ap-segno">✦</i>{nome}</div>'
+                      f'<div class="ap-ciao" id="{q}h">{saluto}</div>'
+                      f'<div class="ap-box" id="{q}x">{allega}<div class="ap-riga"><span id="{q}t"></span><span class="ap-car" id="{q}c"></span>'
+                      f'<span class="ap-vuoto" id="{q}v">Scrivi un messaggio…</span></div>'
+                      f'<div class="ap-piede"><i>+</i><b class="ap-invia" id="{q}i">↑</b></div></div>'
+                      f'<div class="ap-mio" id="{q}m"></div>'
+                      + (f'<div class="ap-risp" id="{q}r"><i class="ap-segno">✦</i><span id="{q}rt"></span></div>' if risposta else "")
+                      + scheda)
+        etich = ""
+        if e.get("etichetta"):
+            etich = f'<div class="ap-tag" id="{q}e">{html.escape(e["etichetta"][1].upper())}</div>'
+        risult = ""
+        if e.get("risultato"):
+            t_r, titolo, badge = (e["risultato"] + ["Pronto"])[:3]
+            img = f"app-{n}.jpg"
+            subprocess.run([FFMPEG, "-v", "error", "-y", "-ss", f"{max(t_r - 1.5, 0):.2f}", "-i", os.path.join(self.assets, "tagliato.mp4"),
+                            "-frames:v", "1", "-vf", "scale=240:-1", os.path.join(self.assets, img)], check=True)
+            # dal lato con più posto accanto alla testa; a destra restano liberi i tasti di Instagram
+            lato = "left:44px" if faccia.get("sinistra", 300) - 44 >= 950 - faccia.get("destra", 700) else "right:130px"
+            risult = (f'<div class="ap-ris" id="{q}z" style="top:{testa + 30:.0f}px;{lato}"><div class="ap-ris-t">{html.escape(titolo)}</div>'
+                      f'<div class="ap-ris-v"><img src="assets/{img}"><span class="ap-pronto">✓ {html.escape(badge)}</span></div></div>')
+        # lo schermo sta nell'inquadratura (dietro al ritaglio, sopra il video), le schede accanto alla testa sopra tutto;
+        # si spostano video e ritaglio, non l'inquadratura: se no in fondo resterebbe una striscia vuota
+        # parte fuori dallo schermo, in alto: se no resta dietro il pannello e ne sporge sotto (barra chiara)
+        self.camera.insert(0, f'<div class="ap" id="{q}" style="top:0;height:{bordo}px;transform:translateY({-bordo - 60}px);'
+                              f'--acc:{c["accento"]}">{dentro}{etich}</div>')
+        self.corpo.append(risult)
+        T = self.tl.append
+        entra, esce = 0.5, max(a - 0.45, da + 1)
+        T(f'tl.set("#cam",{{zIndex:12}},{da:.3f});tl.set("{sel}",{{opacity:1}},{da:.3f});'
+          f'tl.fromTo("#{q}",{{y:{-bordo - 60}}},{{y:0,duration:{entra},ease:"power3.out",immediateRender:false}},{da:.3f});'
+          f'tl.fromTo(["#bg","{sel}"],{{y:0}},{{y:{dy},duration:{entra + 0.1},ease:"power3.inOut",immediateRender:false}},{da:.3f});'
+          f'tl.to("#{q}",{{y:{-bordo - 60},duration:0.45,ease:"power3.in"}},{esce:.3f});'
+          f'tl.to(["#bg","{sel}"],{{y:0,duration:0.5,ease:"power3.inOut"}},{esce:.3f});'
+          f'tl.set("#cam",{{zIndex:5}},{a + 0.05:.3f});tl.set("{sel}",{{opacity:0}},{a + 0.05:.3f});')
+        # i sottotitoli si spostano per il tempo dello schermo
+        if sotto:
+            T(f'tl.set(".st,.sub",{{top:{y_sub}}},{da:.3f});tl.set(".st,.sub",{{top:{self.y_sub}}},{a:.3f});')
+        else:
+            self.nascondi.append((da, a))
+        self.suono("transizione", da, 0.3)
+        if e.get("allega"):
+            t0, voci = e["allega"]
+            T(f'tl.set("#{q}x",{{borderStyle:"dashed",borderColor:"{c["accento"]}"}},{t0 - 0.2:.3f});'
+              f'tl.set("#{q}x",{{borderStyle:"solid",borderColor:"rgba(0,0,0,.08)"}},{t0 + 0.4 + 0.12 * len(voci):.3f});')
+            for j in range(len(voci[:5])):
+                T(f'tl.fromTo("#{q}f{j}",{{opacity:0,y:-260,x:{(j - 2) * 60},rotate:{(-1) ** j * 14}}},'
+                  f'{{opacity:1,y:0,x:0,rotate:0,duration:0.42,ease:"back.out(1.4)",immediateRender:false}},{t0 + 0.12 * j:.3f});')
+                self.suono("pop", t0 + 0.12 * j + 0.3, 0.18)
+        if e.get("etichetta"):
+            t_e = e["etichetta"][0]
+            T(f'tl.fromTo("#{q}e",{{opacity:0,scale:0.6,rotate:-6}},{{opacity:1,scale:1,rotate:-3,duration:0.3,ease:"back.out(2.5)",immediateRender:false}},{t_e:.3f});')
+        if e.get("scrivi"):
+            t_s, testo = e["scrivi"]
+            fine = min(t_s + 0.055 * len(testo), e.get("invia", a) - 0.1)
+            T(f'tl.set("#{q}v",{{display:"none"}},{t_s:.3f});scrivi("#{q}t",{json.dumps(testo)},{t_s:.3f},{fine:.3f});'
+              f'tl.fromTo("#{q}c",{{opacity:1}},{{opacity:0,duration:0.25,repeat:{max(int((fine - t_s) / 0.25) + 2, 1)},yoyo:true,immediateRender:false}},{t_s:.3f});'
+              f'tl.set("#{q}i",{{backgroundColor:"{c["accento"]}",color:"#fff"}},{t_s + 0.1:.3f});')
+            self.suono("tastiera", t_s, 0.3, dur=fine - t_s, se_manca="click")
+            if e.get("invia"):
+                t_i = e["invia"]
+                T(f'tl.fromTo("#{q}i",{{scale:1}},{{scale:0.82,duration:0.08,yoyo:true,repeat:1,immediateRender:false}},{t_i:.3f});'
+                  f'tl.set("#{q}m",{{textContent:{json.dumps(testo)}}},{t_i:.3f});'
+                  f'tl.to({json.dumps([f"#{q}h", f"#{q}x"] + ([f"#{q}e"] if e.get("etichetta") else []))},{{opacity:0,y:-40,duration:0.3,ease:"power2.in"}},{t_i:.3f});'
+                  f'tl.fromTo("#{q}m",{{opacity:0,y:120}},{{opacity:1,y:0,duration:0.4,ease:"power3.out",immediateRender:false}},{t_i + 0.1:.3f});')
+                self.suono("click", t_i, 0.35)
+        if e.get("risposta"):
+            t_r, testo = e["risposta"]
+            parole_r = testo.split()
+            T(f'tl.fromTo("#{q}r",{{opacity:0,y:20}},{{opacity:1,y:0,duration:0.25,immediateRender:false}},{t_r:.3f});'
+              + "".join(f'tl.set("#{q}rt",{{textContent:{json.dumps(" ".join(parole_r[:k + 1]))}}},{t_r + 0.09 * k:.3f});' for k in range(len(parole_r))))
+        passi = e.get("passi", [])[:4]
+        if passi and not e.get("immagine"):
+            t_p0 = passi[0][0]
+            T(f'tl.fromTo("#{q}s",{{opacity:0,y:24,scale:0.96}},{{opacity:1,y:0,scale:1,duration:0.3,ease:"back.out(1.6)",immediateRender:false}},{t_p0 - 0.15:.3f});')
+            for j, (t, _) in enumerate(passi):
+                fatto = passi[j + 1][0] - 0.1 if j + 1 < len(passi) else t + 0.7
+                T(f'tl.fromTo("#{q}p{j}",{{opacity:0,x:-14}},{{opacity:1,x:0,duration:0.25,immediateRender:false}},{t:.3f});'
+                  f'tl.fromTo("#{q}g{j}",{{rotate:0}},{{rotate:360*{max(int((fatto - t) / 0.6), 1)},duration:{fatto - t:.3f},ease:"none",immediateRender:false}},{t:.3f});'
+                  f'tl.set("#{q}g{j}",{{display:"none"}},{fatto:.3f});'
+                  f'tl.fromTo("#{q}k{j}",{{opacity:0,scale:0.4}},{{opacity:1,scale:1,duration:0.25,ease:"back.out(3)",immediateRender:false}},{fatto:.3f});'
+                  f'tl.to("#{q}b",{{width:"{(j + 1) / len(passi) * 100:.0f}%",duration:0.35,ease:"power2.out"}},{fatto:.3f});')
+                self.suono("pop", fatto, 0.25)
+        if e.get("risultato"):
+            t_r = e["risultato"][0]
+            T(f'tl.fromTo("#{q}z",{{opacity:0,scale:0.5,rotate:8}},{{opacity:1,scale:1,rotate:2,duration:0.4,ease:"back.out(1.8)",immediateRender:false}},{t_r:.3f});'
+              f'tl.to("#{q}z",{{opacity:0,scale:0.9,duration:0.25}},{esce - 0.1:.3f});')
+            self.suono("ding", t_r, 0.3)
+
     def sfumatura(self, t, dur=1.3):
         """Transizione "sfumatura di luce": una luce calda arancio cresce sull'immagine, diventa bianca piena sul
         cambio (t) e poi si ritira lasciando un velo caldo che svanisce. Sotto il bianco l'immagine si sfoca appena."""
@@ -1481,7 +1749,8 @@ class Reel:
                        f'tl.fromTo("#bg",{{filter:"blur(0px) brightness(1) saturate(1)"}},{{filter:"blur(6px) brightness(1.55) saturate(1.25)",duration:{su:.3f},ease:"power1.in",immediateRender:false}},{t - su:.3f});'
                        f'tl.fromTo("#bg",{{filter:"blur(3px) brightness(1.3) saturate(1.2)"}},{{filter:"blur(0px) brightness(1) saturate(1)",duration:{giu * 0.8:.3f},immediateRender:false}},{t + 0.04:.3f});'
                        f'tl.set("#sf{n}",{{opacity:0}},{t + giu + 0.05:.3f});')
-        self.suono("transizione", t - su * 0.6, 0.3)   # nel Glow diventa il suono morbido (vedi suono)
+        # nel Glow diventa il fruscio brillante (vedi suono): parte appena prima del bianco pieno, come nell'esempio 02
+        self.suono("transizione", t - 0.1 if self.stile["suoni"].get("sfumatura") else t - su * 0.6, 0.3)
 
     def transizione(self, t):
         """La transizione dello stile (o scelta nella pagina) su un cambio di argomento."""
@@ -1492,9 +1761,10 @@ class Reel:
             self.bande(t)
 
     def titolo_box(self, testo, da, a, y):
-        """Titolo d'apertura semplice: un riquadro bianco con il testo nero, due righe al massimo."""
+        """Titolo d'apertura semplice: un riquadro bianco con il testo nero, due righe al massimo ("|" = a capo)."""
         n = len(self.corpo)
-        self.corpo.append(f'<div class="tbox" id="tb{n}" style="top:{y}px"><span>{html.escape(testo)}</span></div>')
+        righe = "<br>".join(html.escape(r.strip()) for r in testo.split("|"))
+        self.corpo.append(f'<div class="tbox" id="tb{n}" style="top:{y}px"><span>{righe}</span></div>')
         self.tl.append(f'tl.fromTo("#tb{n}",{{opacity:0,y:12}},{{opacity:1,y:0,duration:0.25,ease:"power2.out",immediateRender:false}},{da:.3f});'
                        f'tl.to("#tb{n}",{{opacity:0,duration:0.2}},{a - 0.2:.3f});')
 
@@ -1685,6 +1955,7 @@ class Reel:
 
     # ---------- schermo diviso (stile copiato da esempi/spunto) ----------
     PAN_H = 1000   # altezza del pannello in alto; sotto c'è la persona
+    RIQ_TOP = 820  # con "riquadro" (come lo Show and Tell): dove comincia il riquadro della persona
 
     def pannello(self, e, faccia):
         """Grafica nel pannello in alto (o a tutto schermo con "pieno": "scuro" | "chiaro"), una per frase.
@@ -1702,7 +1973,7 @@ class Reel:
         # icone, schede, liste e caselle si disegnano piccole e si ingrandiscono attorno al centro: grandi come nell'esempio
         # quanto ingrandire senza uscire dai lati: dipende da quante cose ci sono in fila
         quante = len(m.get("icone") or m.get("nodi") or []) or m.get("quante", 3)
-        scala = {"titolo": 1.0, "cta": 1.25, "numero": 1.1, "lista": 1.15, "schede": 1.35,
+        scala = {"titolo": 1.0, "nota": 1.0, "cta": 1.25, "numero": 1.1, "lista": 1.15, "schede": 1.35,
                  "icone": 1.5 if quante <= 2 else 1.12, "flusso": 1.4 if quante <= 3 else 1.1}.get(m["tipo"], 1.2)
         dentro = f'<div style="position:absolute;inset:0;transform-origin:540px {cy}px;transform:scale({scala})">{dentro}</div>'
         self.corpo.append(f'<div class="pan-el{" pieno " + pieno if pieno else ""}" id="pe{n}">{sfondo}{dentro}</div>')
@@ -1727,6 +1998,18 @@ class Reel:
             out.append(f'<div class="pt-r {r.get("stile", "forte")}" id="pe{n}t{j}" style="top:{alto + j * 120}px">{html.escape(r["testo"])}</div>')
             self._entra(f"#pe{n}t{j}", r.get("da", da), 18)
             self.suono("pop", r.get("da", da), 0.2)
+        return "".join(out)
+
+    def p_nota(self, m, n, da, a, cy):
+        """Una frase piccola e, sotto, un cartoncino bianco con una parola (e un'icona, facoltativa): il modo più semplice
+        di dire una cosa nel pannello. m = {"etichetta": "ti serve", "testo": "il link", "icona": "telefono", "carta": secondo}."""
+        t = m.get("carta", da + 0.35)
+        ico = f'<svg viewBox="0 0 64 64">{ICONE[m["icona"]]}</svg>' if m.get("icona") in ICONE else ""
+        out = [f'<div class="pno-e" id="pe{n}e" style="top:{cy - 150:.0f}px">{html.escape(m.get("etichetta", ""))}<i>↓</i></div>',
+               f'<div class="pno-c" id="pe{n}c" style="top:{cy - 20:.0f}px">{ico}<span>{html.escape(m["testo"])}</span></div>']
+        self._entra(f"#pe{n}e", da, 14)
+        self._entra(f"#pe{n}c", t)
+        self.suono("pop", t, 0.25)
         return "".join(out)
 
     def p_schede(self, m, n, da, a, cy):
@@ -1894,11 +2177,100 @@ class Reel:
                            f'tl.set("#u{i}",{{opacity:0}},{fine:.3f});')
 
 
+ZOOM_LIVELLI = [1.0, 1.07, 1.0, 1.12]   # tra una frase e l'altra l'inquadratura cambia: il salto non si vede
+ZOOM_OGNI = 5.0   # secondi minimi tra due cambi (Michael, 14/11: "troppi zoom" con un cambio a ogni taglio)
+
+
+def zoom_sui_tagli(r, cart, piano, stile, faccia, riq):
+    """A ogni taglio lo zoom cambia livello (largo, stretto, largo, più stretto), centrato sulla faccia, così il salto
+    tra due pezzi non si nota. Si salta dove c'è una grafica o uno zoom del piano, e alla fine si torna a 1.
+    piano o stile.json: "zoom_tagli": false per spegnerlo; stile.json "zoom_tagli_da": secondi (Glow: niente nei primi 5 s)."""
+    if not piano.get("zoom_tagli", stile.get("zoom_tagli", True)) or riq or stile.get("layout") == "diviso":
+        return
+    p = os.path.join(cart, "segmenti.json")
+    if not os.path.exists(p):
+        return
+    occupati = []
+    for e in piano.get("elementi", []):
+        if e.get("tipo") == "zoom":
+            occupati += [(m[0] - 0.3, m[1] + 0.6) for m in e.get("mosse", [])]
+            continue
+        inizio = e.get("da", e.get("quando"))
+        if inizio is None and e.get("voci"):
+            inizio = e["voci"][0][-1]
+        if inizio is not None:   # senza "a" (il commento in chiusura): fino alla fine
+            occupati.append((inizio - 0.2, e["a"] + 0.2 if "a" in e else 1e9))
+    fine = piano.get("finale_da") or 1e9
+    da_quando = stile.get("zoom_tagli_da", 0)
+    parole = leggi(os.path.join(cart, "parole.json")) if os.path.exists(os.path.join(cart, "parole.json")) else []
+    k, n, ultimo, prec = 0, 0, -99.0, None
+    for seg in leggi(p):
+        base = seg["id"].rsplit("-", 1)[0] if re.search(r"-\d+$", seg["id"]) else seg["id"]
+        t = seg["inizio"]
+        prima = [w for w in parole if w["a"] <= t + 0.05]
+        fine_frase = bool(prima) and prima[-1]["testo"].rstrip()[-1:] in ".?!,;:"   # il taglio cade alla fine di una frase
+        nuova_frase, prec = base != prec or fine_frase, base
+        # solo tra una frase e l'altra (non sui tagli delle pause), al massimo uno ogni ZOOM_OGNI secondi
+        if t == 0 or not nuova_frase or t - ultimo < ZOOM_OGNI or t < da_quando or t > fine - 0.3 \
+                or any(a <= t <= b for a, b in occupati):
+            continue
+        k += 1
+        x, y = r.viso(faccia, t)
+        livello = ZOOM_LIVELLI[k % len(ZOOM_LIVELLI)]
+        if k % 2:   # a scatto, sul taglio
+            r.tl.append(f'tl.set("#cam",{{transformOrigin:"{x:.0f}px {y:.0f}px",scale:{livello}}},{t:.3f});')
+        else:       # lento: ci si avvicina piano per un secondo e mezzo
+            r.tl.append(f'tl.set("#cam",{{transformOrigin:"{x:.0f}px {y:.0f}px"}},{t:.3f});'
+                        f'tl.to("#cam",{{scale:{livello},duration:1.5,ease:"sine.inOut"}},{t:.3f});')
+        ultimo, n = t, n + 1
+    for a, _ in occupati:   # prima di ogni grafica l'inquadratura torna larga
+        r.tl.append(f'tl.set("#cam",{{scale:1}},{max(a, 0):.3f});')
+    if fine < 1e9:
+        r.tl.append(f'tl.set("#cam",{{scale:1}},{max(fine - 0.3, 0):.3f});')
+    if n:
+        print(f"Zoom tra le frasi: {n} cambi di inquadratura")
+
+
+TESTO_SOTT = ("jakarta", "poppins", "poppins-forte", "archivo")   # font dei sottotitoli buoni anche per le scritte piccole
+
+
+def font_degli_effetti(pagina, nome_sott):
+    """Gli effetti prendono il font dei sottotitoli del reel: le scritte delle schede, delle
+    etichette e delle notifiche usano lo stesso carattere dei sottotitoli, così tutto il reel sembra una famiglia.
+    I titoli grandi restano nel font dello stile. Font da insegna (Anton, Bebas, pennarello) non vanno nelle scritte piccole."""
+    s = sottotitoli.CATALOGO.get(nome_sott or "")
+    k = next((f for f in (s or {}).get("font", []) if f in TESTO_SOTT), None)
+    if not k:
+        return pagina
+    fam = sottotitoli.FONT[k][0]
+    tieni = "@font-face{font-family:'Inter Tight'"
+    pagina = pagina.replace(tieni, "@@INTER@@")
+    pagina = pagina.replace("'Inter Tight'", f"'{fam}'").replace('"Inter Tight"', f'"{fam}"')
+    return pagina.replace("@@INTER@@", tieni)
+
+
+def colore_degli_effetti(pagina, acc):
+    """Il colore di evidenza degli effetti (spunte, chip, commento, barre: di serie un giallo) diventa il colore del brand
+    scelto nella pagina. Se il colore è scuro, il testo sopra diventa bianco."""
+    if not acc:
+        return pagina
+    r, g, b = (int(acc[i:i + 2], 16) for i in (1, 3, 5))
+    for giallo in ("#F4E06D", "#FFD84A"):
+        pagina = pagina.replace(giallo, acc)
+    pagina = pagina.replace("244,224,109", f"{r},{g},{b}")
+    if 0.2126 * r + 0.7152 * g + 0.0722 * b < 150:   # colore scuro: testo chiaro sopra
+        pagina = pagina.replace('color:"#141414"', 'color:"#FFFFFF"').replace("color:#141414", "color:#FFFFFF").replace("color:#3a3420", "color:#FFFFFF")
+    return pagina
+
+
 def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     if piano.get("versione", stile.get("versione")) == "semplice":   # Impact semplice (ex Luce): sfumatura come passaggio, niente mirino REC
         stile = dict(stile, transizione="sfumatura", mirino=False, zoom_muto=True)   # zoom senza whoosh (Michael, 2026-11-04)
+    if piano.get("colori"):   # colori solo per questo video (es. oro al posto dell'arancio), il resto dallo stile
+        stile = dict(stile, colori=dict(stile["colori"], **piano["colori"]))
     reel = os.path.join(cart, "reel")
     r = Reel(stile, cart_stile, reel, D)
+    r.vol_transizione = piano.get("transizione_vol")
     os.makedirs(r.assets, exist_ok=True)
     dest = os.path.join(r.assets, "tagliato.mp4")
     if os.path.exists(dest):
@@ -1912,13 +2284,26 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         shutil.copy2(os.path.join(cart_stile, f["file"]), os.path.join(r.assets, os.path.basename(f["file"])))
 
     petto = min(faccia["mento"] + 70, 1180)  # titoli e targhette sul petto, sotto il mento
-    y_sub = min(faccia["mento"] + 160, 1300)
+    y_sub = min(max(faccia["mento"] + 190, 1270), 1350)   # sul petto, ben sotto la bocca (Michael, 14/11/2026)
     diviso = stile.get("layout") == "diviso"
     sposta = 0
+    riq = None
     if diviso:   # schermo diviso: la persona scende sotto il pannello, la cima della testa appena sotto il bordo
         cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
         sposta = int(Reel.PAN_H + 40 - cima)
         y_sub = Reel.PAN_H - 90
+        if stile.get("riquadro"):   # la persona più piccola in un riquadro arrotondato, il fondo chiaro tutto intorno
+            ct = Reel.RIQ_TOP
+            sc = max(0.6, min(0.9, (1290 - ct - 50) / (faccia["mento"] - cima)))   # il mento sopra la zona dei tasti
+            sc = max(sc, (1920 + 60 - ct - 50) / (1920 - cima))   # ma il video arriva fino in fondo al riquadro
+            w = round(1080 * sc)
+            riq = {"top": ct, "w": w, "left": (1080 - w) // 2, "s": sc, "y": round(50 - cima * sc)}
+            sposta = 0
+            y_sub = round(min(ct + riq["y"] + faccia["mento"] * sc + 40, 1390))   # sotto il mento
+            # avvicinamento lentissimo per tutto il video, attorno alla faccia
+            r.tl.append(f'tl.set("#bg",{{transformOrigin:"50% {(faccia["occhi"] / 1920) * 100:.0f}%"}},0);'
+                        f'tl.fromTo("#bg",{{scale:1}},{{scale:1.06,duration:{D:.3f},ease:"none",immediateRender:false}},0);')
+    r.sposta, r.y_sub = sposta, y_sub
     ap = piano.get("apertura")
     # effetti accesi: quelli scelti nella pagina, se no quelli dello stile (stile.json "effetti"), se no tutti
     accesi = stile.get("effetti_scelti", stile.get("effetti"))
@@ -1934,6 +2319,13 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         r.titolo(ap["sopra"], ap["targa"], 0.0, ap.get("a", 2.0), petto - 20)
         r.nascondi.append((0.0, ap.get("a", 2.0)))
         r.suono("apertura", 0.0, 0.4)
+    # un pannello che finisce poco prima della grafica dopo (meno di 0,3 s) lascia uno o due fotogrammi dello schermo
+    # vuoto in mezzo: sul telefono è un lampo. Si allunga fino all'inizio della grafica dopo.
+    con_tempi = sorted((e for e in piano.get("elementi", []) if "da" in e and "a" in e), key=lambda x: x["da"])
+    for e, dopo in zip(con_tempi, con_tempi[1:]):
+        if e["tipo"] == "pannello" and 0 < dopo["da"] - e["a"] < 0.3:
+            e["a"] = dopo["da"]
+    zoom_sui_tagli(r, cart, piano, stile, faccia, riq)
     for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][-1] if x.get("voci") else 0):
         tipo = e["tipo"]
         if tipo not in ("scena", "pannello") and accesi is not None and effetti.chiave_di(e) not in accesi:   # le scene sono lo stile, non un effetto
@@ -2000,6 +2392,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.timbro(e, faccia)
         elif tipo == "segui":
             r.segui(e, faccia)
+        elif tipo == "mappa":
+            r.mappa(e, faccia)
         elif tipo == "tessere":
             r.tessere(e, faccia)
         elif tipo == "classifica":
@@ -2012,10 +2406,14 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.muro(e, faccia)
         elif tipo == "etichetta":
             r.etichetta(e, faccia)
+        elif tipo == "app":
+            r.app(e, faccia)
         elif tipo == "scena":
             r.scena(e, faccia)
         elif tipo == "pannello":
             r.pannello(e, faccia)
+        elif tipo in effetti_nuovi.TIPI:
+            effetti_nuovi.TIPI[tipo](r, e, faccia)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude
         r.transizione(t)
     # il commento fa da chiusura: senza "finale_da" nel piano, niente finale scuro sopra
@@ -2026,13 +2424,13 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         r.finale(piano, finale_da)
     if piano.get("musica", True):
         r.frasi_chiave(piano)
-        r.musica()
+        r.musica(brano=piano["musica"] if isinstance(piano.get("musica"), str) else None, sotto=piano.get("musica_sotto"))
     chiave = {p.lower() for p in piano.get("parole_chiave", [])}
     css_sott = ""
     propri = stile.get("sottotitoli_nome") if stile.get("sottotitoli_nome") not in (None, "ndf-targhetta") else None
     if stile.get("sottotitoli_scelti") or propri:  # scelti nella pagina, o quelli dello stile (strumenti/sottotitoli.py)
         css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile.get("sottotitoli_scelti") or propri, parole, chiave, y_sub,
-                                                            r.nascondi + [(finale_da, D + 1)], stile["colori"])
+                                                            r.nascondi + [(finale_da, D + 1)], stile["colori"], stile.get("ritocchi_sott"))
         r.corpo += c_sott
         r.tl += tl_sott
         for f in f_sott:
@@ -2122,6 +2520,13 @@ html,body{{margin:0;background:{scuro}}}
 .tb-in{{opacity:0;font-family:"Inter Tight";font-weight:900;letter-spacing:6px;line-height:1;padding:22px 40px 18px;border:12px solid;
  border-radius:22px;outline:5px solid currentColor;outline-offset:-30px;mix-blend-mode:multiply;
  -webkit-mask-image:url(assets/timbro-ruvido.png);-webkit-mask-size:cover;mask-image:url(assets/timbro-ruvido.png);mask-size:cover}}
+.mp{{position:absolute;left:90px;width:900px;z-index:31;opacity:0;background:#fff;border-radius:34px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)}}
+.mp-m{{position:relative;height:440px}}.mp-m img{{display:block;width:900px;height:440px;object-fit:cover}}
+.mp-m small{{position:absolute;right:12px;bottom:8px;font:500 18px 'Inter Tight';color:#555;background:rgba(255,255,255,.8);padding:2px 8px;border-radius:6px}}
+.mp-pin{{position:absolute;left:414px;top:124px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))}}
+.mp-onda{{position:absolute;left:390px;top:200px;width:120px;height:40px;border-radius:50%;border:5px solid #EA4335;opacity:0}}
+.mp-t{{padding:26px 36px 30px;display:flex;flex-direction:column;gap:6px;font-family:'Inter Tight'}}
+.mp-t b{{font-size:44px;font-weight:800;color:#111}}.mp-t span{{font-size:32px;font-weight:500;color:#555}}
 .sg{{position:absolute;left:90px;right:90px;z-index:31;opacity:0;display:flex;align-items:center;gap:22px;background:#fff;border-radius:34px;
  padding:22px 26px;box-shadow:0 22px 50px rgba(0,0,0,.4);font-family:"Inter Tight"}}
 .sg-f{{width:104px;height:104px;border-radius:50%;object-fit:cover;border:4px solid #fff;outline:5px solid #E1306C}}
@@ -2467,8 +2872,8 @@ html,body{{margin:0;background:{scuro}}}
 <audio id="voce" src="assets/tagliato.mp4" data-start="0" data-media-start="0" data-duration="{D:.3f}" data-volume="1"></audio>
 {chr(10).join(r.audio)}
 {'<div class="pan"><i class="pan-luce"></i></div>' if diviso else ''}
-<div id="cam" class="cam"><video id="bg" src="assets/tagliato.mp4" style="top:{sposta}px" muted playsinline data-start="0" data-media-start="0" data-duration="{D:.3f}"></video>
-{chr(10).join(r.camera)}</div>
+{f'<div id="riq" style="left:{riq["left"]}px;top:{riq["top"]}px;width:{riq["w"]}px">' if riq else ''}<div id="cam" class="cam"{f' style="inset:auto;left:0;top:0;width:{riq["w"]}px;height:{1980 - riq["top"]}px"' if riq else ''}><video id="bg" src="assets/tagliato.mp4" style="{f'top:{riq["y"]}px;width:{riq["w"]}px;height:{round(1920 * riq["s"])}px' if riq else f'top:{sposta}px'}" muted playsinline data-start="0" data-media-start="0" data-duration="{D:.3f}"></video>
+{chr(10).join(r.camera)}</div>{'</div>' if riq else ''}
 <div class="mirino" id="mir"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i>
 <div class="mir-lab" style="left:150px"><span class="rosso">●</span> REC <span id="tc">00:00:00</span></div>
 <div class="mir-lab" style="right:200px">4K · 30FPS</div></div>
@@ -2532,6 +2937,16 @@ window.__timelines["main"] = tl;
 </script>
 </body></html>
 """
+    if getattr(r, "usa_nuovi", False):   # gli effetti nuovi: il colore del brand come variabile
+        pagina = pagina.replace("</style>", f":root{{--acc:{stile['colori']['accento']}}}" + effetti_nuovi.CSS + "</style>", 1)
+    if getattr(r, "usa_app", False):
+        pagina = pagina.replace("</style>", CSS_APP + "</style>", 1)
+    if riq:   # fondo chiaro, scritte scure: come lo Show and Tell
+        pagina = pagina.replace("</style>", css_riquadro(r.P) + "</style>", 1)
+    pagina = font_degli_effetti(pagina, stile.get("sottotitoli_scelti") or propri)
+    pagina = colore_degli_effetti(pagina, stile.get("accento_brand"))
+    pagina = ritocchi.titoli(pagina, ft["famiglia"], stile.get("ritocchi_titoli"), stile["colori"]["accento"])
+    pagina = ritocchi.testo_fisso(pagina, stile.get("testo_fisso"), stile.get("fisso"), ft["famiglia"], stile["colori"]["accento"])
     with open(os.path.join(reel, "index.html"), "w", encoding="utf-8") as f:
         f.write(pagina)
     with open(os.path.join(reel, "hyperframes.json"), "w", encoding="utf-8") as f:

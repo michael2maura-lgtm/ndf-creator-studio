@@ -1,624 +1,426 @@
 <!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NDF Creator Studio · Scegli il tuo look</title>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scegli il tuo stile · NDF Creator Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-@font-face{font-family:"Titoli";src:url("/file/font-titoli") format("truetype");font-weight:100 900;font-stretch:62.5% 125%}
-:root{
-  --fondo:#140E0A;--fondo2:#1E140E;--riga:#3A2A20;--testo:#F9F7F4;--piano:#B9A796;
-  --arancio:#E86530;--luce:#FF8A4C;--carta:#F4EEE6;--inchiostro:#1A120C;--grigio:#7C6B5E;
-}
+:root{--acc:#E86530;--acc2:#FF7A3D;--fondo:#141416;--nero:#0B0B0C;--cr:#F4EDE0;--cr2:#DDD5C6;--ink:#1A0E06;--gr:#A79E8E;--ln:rgba(244,237,224,.14);--ln2:rgba(244,237,224,.3)}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:radial-gradient(1200px 700px at 85% -10%,#3A1F10 0,transparent 60%),var(--fondo);
-  background-attachment:fixed;color:var(--testo);font:16px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:110px}
-.t{font-family:"Titoli",Impact,sans-serif;font-weight:900;font-stretch:125%;text-transform:uppercase;letter-spacing:-.01em;line-height:.95;margin:0}
-.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
-button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
-button:focus-visible{outline:2px solid var(--luce);outline-offset:3px}
-
-/* barra in alto */
-.top{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--riga)}
-.marchio{font-family:"Titoli",sans-serif;font-weight:900;font-stretch:125%;font-size:15px;letter-spacing:.06em}
-.marchio b{color:var(--arancio)}
-.etic{font:500 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--piano)}
-.punto{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--arancio);margin-right:8px;box-shadow:0 0 10px var(--arancio)}
-
-/* apertura */
-.intro{padding-top:56px}
-.intro h1{font-size:clamp(46px,9vw,112px)}
-.intro h1 em{font-style:normal;color:var(--arancio)}
-.intro p{color:var(--piano);margin:18px 0 30px;font-size:17px}
-.strade{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.strada{text-align:left;border:1px solid var(--riga);border-radius:14px;padding:20px 22px;background:var(--fondo2);transition:.2s}
-.strada:hover{border-color:var(--grigio)}
-.strada .t{font-size:24px;display:flex;gap:12px;align-items:center}
-.strada p{margin:8px 0 0;color:var(--piano);font-size:14px}
-.strada .tondo{width:12px;height:12px;border-radius:50%;border:2px solid var(--piano);flex:none}
-.strada[aria-selected=true]{background:var(--carta);color:var(--inchiostro);border-color:var(--carta)}
-.strada[aria-selected=true] p{color:#5B4A3E}
-.strada[aria-selected=true] .tondo{border-color:var(--arancio);background:var(--arancio);box-shadow:0 0 12px var(--arancio)}
-
-/* sezioni */
-.sez{padding-top:64px}
-.sez[hidden]{display:none}
-.capo{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--riga);padding-bottom:10px;margin-bottom:18px}
-.capo .etic b{color:var(--luce);font-weight:500}
-.capo .etic{display:flex;align-items:center;gap:10px}
-.ciak{width:34px;height:12px;flex:none}
-.cambia{margin-top:22px;font:600 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--testo);
-  border-bottom:2px solid var(--arancio);padding-bottom:5px}
-.cambia[hidden]{display:none}
-.cambia:hover{color:var(--luce)}
-.sez h2{font-size:clamp(34px,5vw,58px);margin-bottom:10px}
-.sez .aiuto{color:var(--piano);margin:0 0 22px}
-
-/* schede degli stili */
-.griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
-.griglia.vel .vuoto{aspect-ratio:auto;height:120px;font-size:44px}
-.scheda{position:relative;display:flex;flex-direction:column;text-align:left;background:var(--carta);color:var(--inchiostro);border-radius:12px;overflow:hidden;
-  border:3px solid transparent;transition:transform .2s,border-color .2s}
-.scheda:hover{transform:translateY(-3px)}
-.scheda[aria-pressed=true]{border-color:var(--arancio)}
-.scheda .vid{aspect-ratio:9/16;background:#2A1D14;display:block;width:100%;object-fit:cover}
-.scheda .media{position:relative;display:block}
-.gioca{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;
-  background:rgba(244,238,230,.92);color:var(--inchiostro);display:grid;place-items:center;font-size:22px;padding-left:4px;
-  box-shadow:0 6px 24px rgba(0,0,0,.4);transition:transform .15s,opacity .2s}
-.gioca:hover{transform:translate(-50%,-50%) scale(1.08)}
-.gioca.on{opacity:0;padding-left:0}
-.media:hover .gioca.on{opacity:1}
-.scheda .vuoto{aspect-ratio:9/16;display:grid;place-items:center;background:linear-gradient(160deg,#3A2416,#140E0A);color:var(--luce)}
-.scheda .corpo{padding:14px 16px 16px}
-.scheda .t{font-size:20px}
-.scheda .tag{font:600 10px/1 ui-monospace,Menlo,monospace;letter-spacing:.12em;color:var(--arancio);text-transform:uppercase;margin:8px 0}
-.scheda .desc{font-size:13px;color:#5B4A3E;margin:0}
-.eff-barra{display:flex;justify-content:flex-end;margin:-8px 0 16px}
-.eff-avviso{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px;padding:14px 18px;
-  border:1px solid var(--arancio);border-radius:12px;background:#2B1A10}
-.eff-avviso[hidden]{display:none}
-.eff-avviso .salva{padding:10px 18px;font-size:14px}
-.scheda.spento .corpo,.scheda.spento .spunta{opacity:.45}
-.eff-barra .cambia{margin-top:0}
-.quadro{border-radius:7px}
-.spunta{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);
-  display:grid;place-items:center;font-size:14px;color:#fff}
-[aria-pressed=true]>.spunta{background:var(--arancio);border-color:var(--arancio)}
-[aria-pressed=true]>.spunta::after{content:"✓"}
-
-/* replica */
-.replica{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.passo{background:var(--fondo2);border:1px solid var(--riga);border-radius:14px;padding:22px}
-.passo .n{font-family:"Titoli",sans-serif;font-weight:900;font-stretch:125%;font-size:44px;color:var(--arancio);line-height:1}
-.passo p{margin:10px 0 0;color:var(--piano)}
-.passo p b{color:var(--testo)}
-.frase{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.frase code{background:var(--fondo2);border:1px dashed var(--grigio);border-radius:8px;padding:10px 14px;font-size:15px}
-
-/* suoni */
-.momento{margin-bottom:28px}.momento:last-child{margin-bottom:0}
-.momento h3{margin:0 0 10px;font-size:15px;display:flex;gap:10px;align-items:baseline}
-.momento h3 .t{font-size:20px}
-.momento h3 span{color:var(--piano);font-weight:400;font-size:14px}
-.fila{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x proximity}
-.fila::-webkit-scrollbar{height:6px}.fila::-webkit-scrollbar-thumb{background:var(--riga);border-radius:3px}
-.suono{flex:none;width:190px;scroll-snap-align:start;position:relative;display:flex;align-items:center;gap:10px;text-align:left;
-  background:var(--fondo2);border:2px solid var(--riga);border-radius:12px;padding:10px 12px;transition:border-color .15s}
-.suono:hover{border-color:var(--grigio)}
-.suono[aria-pressed=true]{border-color:var(--arancio);background:#2B1A10}
-.suono .play{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:#35251A;font-size:13px}
-.suono .play.on{background:var(--arancio)}
-.suono .nome{min-width:0;flex:1}
-.suono .nome b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.suono .nome small{font-size:11px;color:var(--piano)}
-.suono .nome small.serie{color:var(--luce)}
-.suono.niente .play{background:none;border:1px dashed var(--grigio)}
-.altri{flex:none;align-self:center;padding:10px 14px;border:1px dashed var(--grigio);border-radius:12px;color:var(--piano);font-size:13px}
-
-.presto{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.presto div{border:1px dashed var(--riga);border-radius:14px;padding:18px 20px;color:var(--piano)}
-.presto b{display:block;color:var(--testo);margin-bottom:4px}
-
-/* barra in basso */
-.barra{position:fixed;left:0;right:0;bottom:0;background:rgba(20,14,10,.94);backdrop-filter:blur(10px);border-top:1px solid var(--riga);z-index:5}
-.barra .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:14px;padding-bottom:14px}
-.barra .riass{font-family:"Titoli",sans-serif;font-weight:900;font-stretch:125%;text-transform:uppercase;font-size:17px;margin-top:4px}
-.salva{background:var(--arancio);color:#fff;border-radius:10px;padding:14px 26px;font-family:"Titoli",sans-serif;font-weight:900;
-  font-stretch:125%;text-transform:uppercase;font-size:17px;transition:background .15s}
-.salva:hover{background:var(--luce)}
-.salva:disabled{background:#4A3A30;color:#9C8B7E;cursor:default}
-
-/* fatto */
-.fatto{position:fixed;inset:0;background:rgba(10,7,5,.85);display:grid;place-items:center;z-index:10;padding:20px}
-.fatto[hidden]{display:none}
-.fatto .box{background:var(--carta);color:var(--inchiostro);border-radius:16px;padding:34px;max-width:520px}
-.fatto .etic{color:var(--arancio);display:flex;align-items:center;font-weight:600}
-.fatto .t{font-size:52px;margin-top:14px}
-.fatto p{margin:14px 0 0}
-.fatto .parola{background:var(--arancio);color:#fff;padding:1px 7px;border-radius:4px;font-weight:600;white-space:nowrap}
-.fatto .scelte{font:500 12px/1.6 ui-monospace,Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;color:#5B4A3E;margin-top:14px}
-.fatto .poi{border-top:1px solid #DCCFC2;margin-top:18px;padding-top:14px;font-size:14px;color:#5B4A3E}
-.fatto button{margin-top:20px;font-weight:600}
-.fatto button{border:1px solid #CDBFB2;border-radius:10px;padding:12px 20px}
-.avviso{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--arancio);color:#fff;padding:10px 16px;border-radius:10px;
-  opacity:0;transition:opacity .2s;pointer-events:none;z-index:6}
-.avviso.v{opacity:1}
-
-@media (max-width:760px){
-  .strade,.replica,.presto{grid-template-columns:1fr}
-  .wrap{padding-left:16px;padding-right:16px}
-  .sez{padding-top:56px}
-  .barra .wrap{flex-direction:column;align-items:stretch}
-}
+html,body{margin:0;color:var(--cr);font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:var(--fondo)}
+body{background:radial-gradient(900px 520px at 85% -5%,rgba(232,101,48,.22),transparent 60%),radial-gradient(700px 500px at -10% 60%,rgba(232,101,48,.08),transparent 60%),var(--fondo);min-height:100vh}
+button{font:inherit;cursor:pointer;color:inherit}
+.top{background:var(--nero);border-bottom:1px solid var(--ln)}
+.top .in{max-width:1180px;margin:0 auto;padding:12px 28px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:"Bebas Neue",sans-serif;font-size:24px;letter-spacing:.06em}
+.logo b{color:var(--acc);font-weight:400}
+.mono{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gr)}
+.mono .p{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:8px;box-shadow:0 0 10px var(--acc)}
+.wrap{max-width:1180px;margin:0 auto;padding:30px 28px 150px}
+h1{font-family:"Bebas Neue",sans-serif;font-weight:400;font-size:clamp(64px,9vw,124px);line-height:.88;margin:10px 0 14px;letter-spacing:.01em;text-transform:uppercase}
+h1 i{font-family:"Instrument Serif",serif;font-style:italic;text-transform:none;color:var(--acc);font-size:.62em;display:block;letter-spacing:0;line-height:1.1}
+.sub{color:var(--cr2);max-width:640px;line-height:1.55;margin:0 0 24px;font-size:17px}
+.sub b{color:var(--cr)}
+.slots{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 30px}
+.slots span.t{margin-right:6px}
+.slot{display:flex;border:1px solid var(--ln2);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.03)}
+.slot button{border:0;background:none;padding:9px 14px;font-size:13px}
+.slot .usa{border-right:1px solid var(--ln2);font-weight:600}
+.slot .usa[disabled]{color:var(--gr);cursor:default;font-weight:400}
+.slot .salva{color:var(--acc2);font-weight:700}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:36px;align-items:start}
+.tel-col{position:sticky;top:20px}
+.tel{width:320px;aspect-ratio:9/19.5;border-radius:46px;background:#000;padding:11px;box-shadow:0 0 0 1px var(--ln2),0 40px 80px -30px rgba(232,101,48,.45)}
+.schermo{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:#1d1d20}
+.schermo video,.schermo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.isola{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:90px;height:24px;border-radius:14px;background:#000;z-index:5}
+.sopra{position:absolute;inset:0;z-index:4;pointer-events:none}
+.tela{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;pointer-events:none}
+.tela .st{opacity:1!important}
+.tela .w{opacity:1!important}
+.tit-vivo{position:absolute;left:70px;right:70px;top:125px;text-align:center;color:#fff;line-height:1}
+.tit-vivo .t1{font-size:64px;text-shadow:0 4px 16px rgba(0,0,0,.6)}
+.tit-vivo .t2{font-size:150px;color:var(--brand,var(--acc));text-shadow:0 4px 16px rgba(0,0,0,.6);margin-top:6px}
+.fisso-vivo{position:absolute;left:50%;top:235px;transform:translateX(-50%);white-space:nowrap;font-weight:800;font-size:40px;padding:12px 26px 14px;border-radius:14px}
+.fine-vivo{position:absolute;left:110px;right:110px;bottom:300px;background:rgba(255,255,255,.95);color:#1C1A18;border-radius:36px;padding:26px 34px;font-size:40px;font-weight:700;display:flex;justify-content:space-between;align-items:center;font-family:"Plus Jakarta Sans",sans-serif}
+.fine-vivo b{color:var(--brand,var(--acc))}
+.etich{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:6px;z-index:6;white-space:nowrap}
+.tel-bt{display:flex;gap:10px;margin-top:18px;justify-content:center}
+.bt{border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:14px}
+.bt.pieno{background:var(--acc);color:var(--ink)}
+.bt.vuoto{background:transparent;border:1px solid var(--ln2)}
+.passi{display:flex;flex-direction:column;gap:12px}
+.passo{border:1px solid var(--ln);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.025)}
+.passo.aperto{border-color:var(--ln2);background:rgba(255,255,255,.04)}
+.passo>button.testa{width:100%;display:flex;align-items:center;gap:14px;background:none;border:0;padding:16px 20px;text-align:left}
+.num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:var(--ink);font-weight:800;font-size:15px;display:grid;place-items:center;flex:none}
+.testa .nome{font-weight:800;font-size:18px;line-height:1.2}
+.testa .val{margin-left:auto;font-weight:600;font-size:13px;color:var(--gr);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%}
+.passo.aperto .testa .val{display:none}.passo.aperto .testa .fr{margin-left:auto}
+.testa .fr{color:var(--gr);font-size:20px}
+.passo.aperto .fr{transform:rotate(90deg)}
+.corpo{display:none;padding:2px 20px 22px}
+.passo.aperto .corpo{display:block}
+.spieg{color:var(--cr2);font-size:14px;line-height:1.55;margin:0 0 14px}
+.spieg b{color:var(--cr)}
+.carte{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.carta{position:relative;border:0;border-radius:12px;padding:0;background:var(--cr);text-align:left;color:var(--ink);overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.carta .mini{width:100%;aspect-ratio:9/13;object-fit:cover;display:block;background:#2a2a2e;margin:0}
+.carta .n{font-family:"Bebas Neue",sans-serif;font-size:24px;line-height:1;padding:10px 12px 0;letter-spacing:.02em;text-transform:uppercase}
+.carta .d{color:#5a4a3e;font-size:12.5px;line-height:1.4;padding:4px 12px 12px}
+.carta::after{content:"";position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.85);background:rgba(0,0,0,.25)}
+.carta.si{box-shadow:0 0 0 3px var(--acc),0 14px 30px -12px rgba(232,101,48,.6)}
+.carta.si::after{background:var(--acc);border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,255,255,.9) inset}
+.carta.senza .n{padding-top:14px}
+.carta.senza::after,.font::after{border-color:rgba(26,14,6,.3);background:transparent}
+.pill{position:absolute;top:10px;left:10px;background:var(--nero);color:var(--cr);font-family:"Space Mono",monospace;font-size:9px;letter-spacing:.1em;padding:4px 7px;border-radius:5px;z-index:2}
+.pill.c{background:var(--acc);color:var(--ink)}
+/* i font: caselle piccole, la scritta di prova su una riga nel suo carattere */
+.fonts{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:7px}
+.font{border:1.5px solid var(--ln2);border-radius:10px;background:rgba(0,0,0,.28);color:var(--cr);padding:6px 9px 6px;text-align:left;min-width:0}
+.font:hover{border-color:var(--cr2)}
+.font .prova{display:block;font-size:20px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.font .fn{display:block;font-size:10.5px;color:var(--gr);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.font.si{border-color:var(--acc);background:rgba(232,101,48,.16);box-shadow:0 0 0 1px var(--acc)}
+/* i riquadri dentro un passo: ognuno col suo titolo in cima, così si vede dove finisce uno e comincia l'altro */
+.blocco{border:1px solid var(--ln);border-radius:12px;background:rgba(0,0,0,.2);padding:12px 14px 14px;margin-top:12px}
+.blocco:first-child{margin-top:0}
+.blocco-t{margin:-12px -14px 12px;padding:9px 14px;background:rgba(244,237,224,.07);border-bottom:1px solid var(--ln);border-radius:11px 11px 0 0;font-weight:800;font-size:15px;display:flex;align-items:center;gap:9px}
+.blocco-t::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 3px rgba(232,101,48,.25);flex:none}
+.blocco-t2{margin:14px 0 8px;padding-top:12px;border-top:1px solid var(--ln);font-weight:700;font-size:13px;color:var(--cr2)}
+.blocco .spieg{font-size:13px;margin:-2px 0 10px}
+.riga{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.riga.nome{display:grid;grid-template-columns:128px minmax(0,1fr);gap:8px 12px;align-items:start;margin:0;padding:10px 0}
+.riga.nome + .riga.nome{border-top:1px solid var(--ln)}
+.riga.nome:first-of-type{padding-top:0}.riga.nome:last-child{padding-bottom:0}
+.riga.nome > div{display:flex;flex-wrap:wrap;gap:7px}
+.riga .cosa{font-weight:800;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--acc2);padding-top:9px}
+.chip{border:1px solid var(--ln2);background:transparent;border-radius:999px;padding:7px 13px;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:7px}
+.chip.si{border-color:var(--acc);background:var(--acc);color:var(--ink)}
+.chip .bollo{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.4)}
+.chip input[type=color]{width:22px;height:18px;border:0;padding:0;background:none}
+label.l{display:block;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gr);margin:22px 0 8px}
+label.l.primo{margin-top:0}
+input[type=text],textarea{font:inherit;border:1px solid var(--ln2);border-radius:10px;padding:11px 12px;background:rgba(0,0,0,.35);color:var(--cr);width:100%}
+input[type=range]{width:220px;accent-color:var(--acc)}
+input::placeholder,textarea::placeholder{color:#7d766b}
+textarea{min-height:110px;resize:vertical}
+.barra{position:fixed;left:0;right:0;bottom:0;background:var(--nero);border-top:1px solid var(--ln);z-index:20}
+.barra .in{max-width:1180px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;gap:18px}
+.schede{display:flex;border:1px solid var(--ln2);border-radius:10px;overflow:hidden}
+.schede a{padding:9px 16px;text-decoration:none;font-weight:700;font-size:14px;color:var(--cr)}
+.schede a.qui{background:var(--acc);color:var(--ink)}
+.riass{flex:1;min-width:0}
+.riass .mono{display:block;margin-bottom:2px}
+.riass .cosa{font-family:"Bebas Neue",sans-serif;font-size:24px;letter-spacing:.03em;color:var(--cr);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.grande{background:var(--acc);color:var(--ink);border:0;border-radius:8px;padding:12px 34px;font-family:"Bebas Neue",sans-serif;font-size:30px;letter-spacing:.04em;box-shadow:0 10px 30px -8px rgba(232,101,48,.7)}
+.grande:hover{background:var(--acc2)}
+.avviso{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--cr);color:var(--ink);font-weight:700;padding:12px 18px;border-radius:10px;z-index:30;display:none;max-width:90vw}
+@media (max-width:860px){.grid{grid-template-columns:1fr}.tel-col{position:static;display:flex;flex-direction:column;align-items:center}.grande{font-size:22px;padding:10px 18px}.riga.nome{grid-template-columns:1fr}.riga .cosa{padding-top:0}}
 </style>
+<style id="css-font"></style><style id="css-sott"></style><style id="css-tit"></style>
 </head>
 <body>
-<header class="top">
-  <div class="marchio">NDF <b>CREATOR</b> STUDIO</div>
-  <div class="etic"><span class="punto"></span>Scegli il tuo look</div>
-</header>
+<div class="top"><div class="in"><div class="logo">NDF <b>CREATOR STUDIO</b></div><div class="mono"><span class="p"></span>Scegli il tuo stile</div></div></div>
+<div class="wrap">
+ <h1>Scegli il tuo stile.<i>Lo studio monta per te</i></h1>
+ <p class="sub">Clicca e guarda il telefono: ogni scelta la vedi subito sul video. Quando ti piace premi <b>Salva</b>, poi in chat scrivi <b>monta questo video</b>. Gli effetti li scegli nella scheda <b>Effetti</b> e li mette lo studio, dove servono.</p>
+ <div class="slots" id="slots"><span class="t">I tuoi stili salvati</span></div>
 
-<section class="intro wrap">
-  <h1 class="t">Scegli il<br>tuo <em>look.</em></h1>
-  <p>Premi ▶ per guardare un video o ascoltare un suono. Scegli e salva: il prossimo video lo monto così.</p>
-  <div class="strade" role="tablist">
-    <button class="strada" role="tab" data-strada="pronto"><div class="t"><span class="tondo"></span>Stile pronto</div>
-      <p>Un clic. Grafiche, suoni e musica sono già decisi.</p></button>
-    <button class="strada" role="tab" data-strada="replica"><div class="t"><span class="tondo"></span>Replica un reel</div>
-      <p>Hai visto un reel che ti piace? Lo copio io.</p></button>
-    <button class="strada" role="tab" data-strada="crea"><div class="t"><span class="tondo"></span>Crea il tuo</div>
-      <p>Parti da uno stile e cambia colore, sottotitoli, effetti, suoni e musica.</p></button>
+ <div class="grid">
+  <div class="tel-col">
+   <div class="tel"><div class="schermo" id="schermo">
+     <div class="isola"></div>
+     <video id="vid" muted loop playsinline autoplay></video>
+     <img id="img" alt="" hidden>
+     <div class="sopra" id="sopra"><div class="tela" id="tela">
+       <div class="fisso-vivo" id="fisso" hidden></div>
+       <div class="tit-vivo" id="tit"><div class="t1">ecco il</div><div class="t2">tuo titolo</div></div>
+       <div id="sott"></div>
+       <div class="fine-vivo" id="fine" hidden></div>
+     </div></div>
+     <div class="etich" id="etich">Esempio</div>
+   </div></div>
+   <div class="tel-bt">
+     <button class="bt pieno" id="carica">Carica il tuo video</button>
+     <button class="bt vuoto" id="torna" hidden>Torna all'esempio</button>
+   </div>
+   <input type="file" id="file" accept="video/*" hidden>
   </div>
-</section>
 
-<section class="sez wrap" id="sez-stili" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 01</b> · Stile</span><span class="etic">Scegline uno</span></div>
-  <h2 class="t" id="tit-stili">Scegli uno stile.</h2>
-  <p class="aiuto" id="aiuto-stili">Ogni stile ha già le sue grafiche, i suoi suoni e la sua musica.</p>
-  <div class="griglia" id="stili"></div>
-  <button class="cambia" id="cambia" hidden>Cambia colore, sottotitoli, effetti, suoni o musica</button>
-</section>
+  <div class="passi" id="passi"></div>
+ </div>
+</div>
 
-<section class="sez wrap" id="sez-replica" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 01</b> · Replica</span><span class="etic">Tre passi</span></div>
-  <h2 class="t">Mandami il reel.</h2>
-  <p class="aiuto">La pagina non guarda i video: li guardo io, in chat.</p>
-  <div class="replica">
-    <div class="passo"><div class="n">1</div><p><b>Copia il link</b> del reel che ti piace, o salva il video sul computer.</p></div>
-    <div class="passo"><div class="n">2</div><p><b>Incollalo a Claude</b> in chat e scrivi la frase qui sotto.</p></div>
-    <div class="passo"><div class="n">3</div><p><b>Lo studio e lo copio.</b> Quando riapri questa pagina lo trovi tra gli stili pronti.</p></div>
-  </div>
-  <div class="frase"><code>Replica questo reel:</code><button class="salva" id="copia-frase" style="padding:10px 18px;font-size:14px">Copia la frase</button></div>
-</section>
-
-<section class="sez wrap" id="sez-vel" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Ritmo</b> · Velocità</span><span class="etic">Scegline una</span></div>
-  <h2 class="t">La tua velocità.</h2>
-  <p class="aiuto">Quanto va veloce il reel finito. La voce resta la tua: cambia il ritmo, non il tono.</p>
-  <div class="griglia vel" id="vel"></div>
-</section>
-
-<section class="sez wrap" id="sez-div" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Schermo diviso</b> · Pannello</span><span class="etic">Scegline uno</span></div>
-  <h2 class="t">Il tuo schermo diviso.</h2>
-  <p class="aiuto">Le grafiche stanno nel pannello in alto, tu sotto. Scegli se ogni tanto prendono tutto lo schermo.</p>
-  <div class="griglia vel" id="div"></div>
-</section>
-
-<section class="sez wrap" id="sez-col" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 02</b> · Colore</span><span class="etic">Scegline uno</span></div>
-  <h2 class="t">Il tuo colore.</h2>
-  <p class="aiuto">Il look del video. La pelle resta sempre naturale: cambia la stanza, non la tua faccia.</p>
-  <div class="griglia" id="col"></div>
-</section>
-
-<section class="sez wrap" id="sez-tr" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Passaggi</b> · Transizioni</span><span class="etic">Scegline una</span></div>
-  <h2 class="t">Le tue transizioni.</h2>
-  <p class="aiuto">Come si passa da un argomento all'altro. La metto solo dove cambi argomento, non a ogni taglio.</p>
-  <div class="griglia" id="tr"></div>
-</section>
-
-<section class="sez wrap" id="sez-sott" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 03</b> · Sottotitoli</span><span class="etic">Scegline uno</span></div>
-  <h2 class="t">I tuoi sottotitoli.</h2>
-  <p class="aiuto">Premi ▶ per vederli sul video. Quello con scritto <b style="color:var(--luce)">di serie</b> è quello dello stile.</p>
-  <div class="griglia" id="sott"></div>
-</section>
-
-<section class="sez wrap" id="sez-eff" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 04</b> · Effetti</span><span class="etic">Quanti vuoi</span></div>
-  <h2 class="t">I tuoi effetti.</h2>
-  <p class="aiuto" id="aiuto-eff">Metti la spunta a quelli che vuoi nei tuoi video. Li uso solo quando c'entrano con quello che dici.</p>
-  <div class="eff-avviso" id="eff-avviso" hidden><span id="eff-avviso-testo"></span><button class="salva" id="eff-passa"></button></div>
-  <div class="eff-barra"><button class="cambia" id="eff-tutti">Seleziona tutti</button></div>
-  <div class="griglia" id="eff"></div>
-</section>
-
-<section class="sez wrap" id="sez-suoni" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 05</b> · Suoni</span><span class="etic">Uno per riga</span></div>
-  <h2 class="t">I tuoi suoni.</h2>
-  <p class="aiuto">Scegli i suoni che danno il carattere al video. Quello con scritto <b style="color:var(--luce)">di serie</b> è quello dello stile.
-    Gli altri (tastiera, click, spunte) li metto io quando servono.</p>
-  <div id="momenti"></div>
-</section>
-
-<section class="sez wrap" id="sez-musica" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 06</b> · Musica</span><span class="etic">Scegline una</span></div>
-  <h2 class="t">La tua musica.</h2>
-  <p class="aiuto">Va sotto tutto il video e si abbassa da sola quando parli.</p>
-  <div class="fila" id="musiche"></div>
-</section>
-
-<section class="sez wrap" id="sez-presto" hidden>
-  <div class="capo"><span class="etic"><svg class="ciak" viewBox="0 0 34 12" aria-hidden="true"><rect x="0.5" y="0.5" width="33" height="11" rx="1.5" fill="none" stroke="currentColor"/><path d="M4 11.5 9 0.5h4L8 11.5zM12 11.5 17 0.5h4l-5 11zM20 11.5 25 0.5h4l-5 11z" fill="currentColor"/></svg><b>Scena 07</b> · In arrivo</span><span class="etic">Presto qui</span></div>
-  <h2 class="t">Presto qui.</h2>
-  <p class="aiuto">Per ora questi vengono dallo stile che hai scelto.</p>
-  <div class="presto">
-    <div><b>Transizioni</b>Come si passa da una scena all'altra, anche col fuoco.</div>
-    <div><b>Caratteri e colori</b>Le scritte e i colori del tuo stile.</div>
-  </div>
-</section>
-
-<div class="barra"><div class="wrap">
-  <div><div class="etic">Le tue scelte</div><div class="riass" id="riass">Scegli una strada</div></div>
-  <button class="salva" id="salva" disabled>Salva le scelte</button>
-</div></div>
-
-<div class="fatto" id="fatto" hidden><div class="box">
-  <div class="etic"><span class="punto"></span>Salvato</div>
-  <div class="t">Tutto pronto.</div>
-  <p>Torna da Claude e scrivi <span class="parola">monta questo video</span>.</p>
-  <div class="scelte" id="fatto-scelte"></div>
-  <div class="poi">Vuoi cambiare più avanti? Scrivi a Claude <b>«apri la pagina»</b>.</div>
-  <button id="continua">Continua a scegliere</button>
+<a id="senza-brand" href="/brand" hidden style="position:fixed;top:0;left:0;right:0;z-index:40;background:var(--acc);color:var(--ink);text-align:center;padding:10px 16px;font-weight:800;font-size:14px;text-decoration:none">Non hai ancora scelto il colore del tuo brand: clicca qui, ci vuole un minuto →</a>
+<div class="barra"><div class="in">
+ <div class="schede"><a href="/brand">Brand</a><a href="/" class="qui">Stile</a><a href="/effetti">Effetti</a></div>
+ <div class="riass"><span class="mono">Le tue scelte</span><div class="cosa" id="riass"></div></div>
+ <button class="grande" id="salva">Salva le mie scelte</button>
 </div></div>
 <div class="avviso" id="avviso"></div>
 
 <script>
 const $ = s => document.querySelector(s);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const TRANSIZIONI = [{k: "sfumatura", nome: "Sfumatura di luce", per: "Luce calda che diventa bianca e torna. Morbida, elegante."},
-                     {k: "bande", nome: "Bande", per: "Bande colorate che attraversano lo schermo. Energica."},
-                     {k: "taglio", nome: "Taglio netto", per: "Nessun effetto: si passa e basta. Pulita."}];
-const VELOCITA = [{v: 1, nome: "Normale", per: "Com'è girato", tag: "1×"}, {v: 1.12, nome: "Svelta", per: "Più ritmo, la voce suona naturale", tag: "+12%"},
-                  {v: 1.2, nome: "Veloce", per: "Ritmo serrato, per reel brevi", tag: "+20%"}];
-const DIVISO = [{k: "stacchi", nome: "Con stacchi", per: "Ogni tanto la grafica prende tutto lo schermo, poi torni tu", tag: "▣"},
-                {k: "fisso", nome: "Sempre in vista", per: "Resti sempre sotto, le grafiche solo nel pannello", tag: "▤"}];
-let D, stato = {diviso: null, transizione: null, velocita: null, strada: null, stile: null, colore: null, sottotitoli: null, effetti: null, suoni: {}, musica: null, cambia: false};
-const modifica = () => stato.strada === "crea" || (stato.strada === "pronto" && stato.cambia);  // si vedono suoni e musica
-const MOSTRA = 24; // suoni visibili per momento prima di "mostra tutti"
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// i modelli si rifanno da zero (Michael, 14/11/2026), uno alla volta: la lista di prima è in scegli-con-7-modelli.html
+const MODELLI = [];
+const CHIUSURE = [
+ {k:"commenta", nome:"Commenta la parola", d:"Chi commenta riceve le info"},
+ {k:"segui", nome:"Seguimi", d:"Il tasto Segui con il tuo profilo"},
+ {k:"clicca", nome:"Clicca qui sotto", d:"Per le ads"},
+ {k:"niente", nome:"Niente", d:"Finisce sulla tua ultima frase"},
+];
+const DURATE = [60, 90, 120, 180];
+const VELOCITA = [{v:1, nome:"Normale"}, {v:null, nome:"Svelta (consigliata)"}, {v:1.2, nome:"Veloce"}];
+const OMBRE_N = [["leggera","Leggera"],["nera","Nera"],["bianca","Bianca"],["colore","Il tuo colore"],["nessuna","Nessuna"]];
+const TIT_BASE = {fam:"Archivo", peso:900};   // il titolo di prova quando non scegli un font: quello degli stili pronti
 
-const audio = new Audio(); let suona = null;
-function ascolta(btn, id) {
-  if (suona === btn && !audio.paused) { audio.pause(); btn.classList.remove("on"); btn.textContent = "▶"; return; }
-  if (suona) { suona.classList.remove("on"); suona.textContent = "▶"; }
-  fermaVideo();
-  audio.src = "/file/" + id; audio.currentTime = 0; audio.play();
-  btn.classList.add("on"); btn.textContent = "■"; suona = btn;
+let D, R, S = {modello:null, stile:null, colore:null, accento:"#E86530", sottotitoli:"b-semplici", musica:null, velocita:null,
+            chiusura:"commenta", parola:"INFO", durata:90, punti:[], testo_fisso:"", note:"",
+            titoli:{font:null, grandezza:100, grassetto:null, corsivo:false, maiuscolo:null, ombra:null},
+            sott:{font:null, font_k:null, maiuscolo:null, grassetto:null, corsivo:false, ombra:null, testo:null, evidenza:null, riquadro:null},
+            fisso:{testo:null, sfondo:null}};
+let aperto = 1, mioVideo = null;
+
+const stileDi = k => D.stili.find(s => s.chiave === k);
+const miei = () => D.stili.filter(s => s.mio);
+const modelli = () => D.stili.filter(s => s.modello);   // i modelli pronti, rifatti uno alla volta (stile.json "modello": true)
+const F = k => R.font.find(f => f.chiave === k);
+const sottDi = () => D.sottotitoli.find(v => v.chiave === S.sottotitoli) || D.sottotitoli[0];
+
+function telefono(src, tipo, etichetta, sopra) {
+  const v = $("#vid"), im = $("#img");
+  if (tipo === "img") { v.hidden = true; v.pause(); im.hidden = false; im.src = src; }
+  else { im.hidden = true; v.hidden = false; if (v.getAttribute("src") !== src) { v.src = src; v.play().catch(() => {}); } }
+  $("#etich").textContent = etichetta;
+  $("#sopra").style.display = sopra ? "block" : "none";
 }
-audio.onended = () => { if (suona) { suona.classList.remove("on"); suona.textContent = "▶"; } };
-
-function avviso(t) { const v = $("#avviso"); v.textContent = t; v.classList.add("v"); clearTimeout(v.t); v.t = setTimeout(() => v.classList.remove("v"), 2200); }
-const stile = () => D.stili.find(s => s.chiave === stato.stile);
-
-function strada(k, scorri) {
-  stato.strada = k;
-  document.querySelectorAll(".strada").forEach(b => b.setAttribute("aria-selected", b.dataset.strada === k));
-  $("#sez-stili").hidden = k === "replica";
-  $("#sez-replica").hidden = k !== "replica";
-  mostraModifica();
-  $("#tit-stili").textContent = k === "crea" ? "Parti da uno stile." : "Scegli uno stile.";
-  $("#aiuto-stili").textContent = k === "crea" ? "Sotto cambi colore, sottotitoli, effetti, suoni e musica."
-                                               : "Ogni stile ha già le sue grafiche, i suoi suoni e la sua musica.";
-  aggiorna();
-  if (scorri !== false) $(k === "replica" ? "#sez-replica" : "#sez-stili").scrollIntoView({behavior: "smooth"});
+function base(etichetta) {   // il video di partenza con le scritte che cambiano con le scelte
+  telefono(mioVideo || (D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : "Esempio"), true);
+  disegnaSopra();
 }
+function luce(c) { const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)); return "#" + v.map(x => Math.min(255, Math.round(x + (255 - x) * 0.3)).toString(16).padStart(2, "0")).join(""); }
+const ombra = k => (R.ombre[k] || "").split("%acc%").join(S.accento);
 
-function mostraModifica() {
-  const k = stato.strada, on = modifica();
-  $("#sez-col").hidden = $("#sez-sott").hidden = $("#sez-eff").hidden = $("#sez-suoni").hidden = $("#sez-musica").hidden = $("#sez-presto").hidden = !on;
-  $("#cambia").hidden = k !== "pronto" || !stato.stile;
-  $("#cambia").textContent = stato.cambia ? "Nascondi i pezzi dello stile" : "Cambia colore, sottotitoli, effetti, suoni o musica";
-  const s = stile();
-  $("#sez-tr").hidden = !on || !s || !s.grafiche;   // le transizioni a scelta valgono per gli stili con le grafiche
-  if (on) { disegnaCol(); disegnaSott(); disegnaEff(); disegnaSuoni(); if (s && s.grafiche) disegnaTr(); }
+// le stesse regole di strumenti/ritocchi.py (sottotitoli): se cambi qui, cambia anche là
+function cssSott(x) {
+  const s = S.sott, c = [];
+  if (x.maiuscolo && !s.maiuscolo) c.push(".st{text-transform:uppercase}");
+  if (s.font && F(s.font)) c.push(`.st,.st .r2,.st .ra{font-family:'${F(s.font).nome}'}`);
+  if (s.font_k && F(s.font_k)) c.push(`.st .k,.st .r1,.st .rb{font-family:'${F(s.font_k).nome}';font-style:normal}`);
+  if (s.grassetto === true) c.push(".st,.st .w{font-weight:800}");
+  if (s.grassetto === false) c.push(".st,.st .w{font-weight:400}");
+  if (s.corsivo) c.push(".st .w{font-style:italic}");
+  if (s.maiuscolo === "su") c.push(".st{text-transform:uppercase}");
+  if (s.maiuscolo === "giu") c.push(".st{text-transform:lowercase}");
+  if (s.maiuscolo === "no") c.push(".st{text-transform:none}");
+  if (s.ombra) c.push(`.st,.st .w{text-shadow:${ombra(s.ombra)}}`);
+  if (s.testo) c.push(x.modo === "karaoke" ? `.st .w[data-on]{color:${s.testo}}` : `.st{color:${s.testo}}`);
+  if (s.evidenza) c.push(x.k_fondo ? `.st .k{background:${s.evidenza};background-image:none}` : `.st .k,.st .k[data-on],.st .rb{color:${s.evidenza}}`);
+  if (s.riquadro && x.riquadro) { const h = s.riquadro; c.push(`.st{background:rgba(${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)},.82)}`); }
+  return c.join("");
 }
-
-function disegnaStili() {
-  $("#stili").innerHTML = D.stili.map(s => `
-    <button class="scheda" data-stile="${s.chiave}" aria-pressed="${s.chiave === stato.stile}">
-      <span class="spunta"></span>
-      ${s.anteprima ? `<span class="media"><video class="vid" src="/file/anteprima-${s.chiave}" poster="/file/anteprima-${s.chiave}-jpg" playsinline preload="none"></video>
-                      <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
-                    : `<div class="vuoto t">${esc(s.nome)}</div>`}
-      <div class="corpo"><div class="t">${esc(s.nome)}</div>
-        <div class="tag">${s.grafiche ? "Grafiche animate" : "Scene e lavagna"}</div>
-        <p class="desc">${esc(s.descrizione)}</p></div>
-    </button>`).join("");
-  document.querySelectorAll("#stili .scheda").forEach(b => {
-    const v = b.querySelector("video");
-    if (v) v.onended = () => fermaVideo();
-    b.onclick = e => {
-      if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
-      if (stato.stile !== b.dataset.stile) { stato.suoni = {}; stato.musica = null; stato.sottotitoli = null; stato.effetti = null; }
-      stato.stile = b.dataset.stile;
-      document.querySelectorAll("#stili .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
-      mostraModifica();
-      aggiorna();
-    };
-  });
+// le stesse regole di ritocchi.titoli
+function disegnaTitolo() {
+  const t = S.titoli, f = t.font && F(t.font);
+  const fam = f ? f.nome : TIT_BASE.fam;
+  let peso = f ? f.peso : TIT_BASE.peso;
+  if (t.grassetto === true) peso = 900; if (t.grassetto === false) peso = 400;
+  const g = (t.grandezza || 100) / 100;
+  let css = `.tit-vivo{font-family:'${fam}';font-weight:${peso};${f ? "" : "font-stretch:125%;"}text-transform:${t.maiuscolo === "su" ? "uppercase" : t.maiuscolo === "giu" ? "lowercase" : "none"};font-style:${t.corsivo ? "italic" : "normal"}}`
+          + `.tit-vivo .t1{font-size:${64 * g}px}.tit-vivo .t2{font-size:${(f ? 150 : 120) * g}px}`;
+  if (t.ombra) css += `.tit-vivo .t1,.tit-vivo .t2{text-shadow:${ombra(t.ombra)}}`;
+  $("#css-tit").textContent = css;
 }
-
-// i video degli stili partono solo col play, con l'audio, uno alla volta
-function fermaVideo() {
-  document.querySelectorAll(".scheda video").forEach(x => x.pause());
-  document.querySelectorAll(".gioca").forEach(x => { x.classList.remove("on"); x.textContent = "▶"; });
-}
-function guardaVideo(btn, v) {
-  const parti = v.paused;
-  fermaVideo();
-  if (parti) {
-    if (suona) { audio.pause(); suona.classList.remove("on"); suona.textContent = "▶"; }
-    v.play().catch(() => {}); btn.classList.add("on"); btn.textContent = "❚❚";
-  }
-}
-
-function disegnaVel() {
-  const scelta = stato.velocita || 1.12;
-  $("#vel").innerHTML = VELOCITA.map(x => `
-    <button class="scheda" data-vel="${x.v}" aria-pressed="${x.v === scelta}">
-      <span class="spunta"></span><div class="vuoto t">${x.tag}</div>
-      <div class="corpo"><div class="t">${x.nome}</div><div class="tag">${x.v === 1.12 ? "di serie" : "velocità"}</div>
-        <p class="desc">${x.per}</p></div>
-    </button>`).join("");
-  document.querySelectorAll("#vel .scheda").forEach(b => b.onclick = () => {
-    stato.velocita = +b.dataset.vel === 1.12 ? null : +b.dataset.vel;
-    document.querySelectorAll("#vel .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
-    aggiorna();
-  });
-}
-
-function disegnaDiv() {
-  const scelta = stato.diviso || "stacchi";
-  $("#div").innerHTML = DIVISO.map(x => `
-    <button class="scheda" data-div="${x.k}" aria-pressed="${x.k === scelta}">
-      <span class="spunta"></span><div class="vuoto t">${x.tag}</div>
-      <div class="corpo"><div class="t">${x.nome}</div><div class="tag">${x.k === "stacchi" ? "di serie" : "pannello"}</div>
-        <p class="desc">${x.per}</p></div>
-    </button>`).join("");
-  document.querySelectorAll("#div .scheda").forEach(b => b.onclick = () => {
-    stato.diviso = b.dataset.div === "stacchi" ? null : b.dataset.div;
-    document.querySelectorAll("#div .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
-    aggiorna();
-  });
-}
-
-function disegnaTr() {
-  const s = stile(); if (!s) return;
-  const serie = s.transizione || "bande", scelta = stato.transizione || serie;
-  $("#tr").innerHTML = TRANSIZIONI.map(x => `
-    <button class="scheda" data-tr="${x.k}" aria-pressed="${x.k === scelta}">
-      <span class="spunta"></span>
-      ${D.transizioni[x.k] ? `<span class="media"><video class="vid" src="/file/tr-${x.k}" poster="/file/tr-${x.k}-jpg" playsinline preload="none"></video>
-                      <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
-                    : `<div class="vuoto t">${esc(x.nome)}</div>`}
-      <div class="corpo"><div class="t">${esc(x.nome)}</div><div class="tag">${x.k === serie ? "di serie" : "transizione"}</div>
-        <p class="desc">${esc(x.per)}</p></div>
-    </button>`).join("");
-  document.querySelectorAll("#tr .scheda").forEach(b => {
-    const v = b.querySelector("video");
-    if (v) v.onended = () => fermaVideo();
-    b.onclick = e => {
-      if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
-      stato.transizione = b.dataset.tr === serie ? null : b.dataset.tr;
-      document.querySelectorAll("#tr .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
-      aggiorna();
-    };
-  });
-}
-
-function disegnaCol() {
-  const scelto = stato.colore || "originale";
-  $("#col").innerHTML = D.colori.map(x => `
-    <button class="scheda" data-col="${x.chiave}" aria-pressed="${x.chiave === scelto}">
-      <span class="spunta"></span>
-      ${x.anteprima ? `<img class="vid" src="/file/look-${x.chiave}" alt="">` : `<div class="vuoto t">${esc(x.nome)}</div>`}
-      <div class="corpo"><div class="t">${esc(x.nome)}</div>
-        <div class="tag">${x.chiave === "originale" ? "di serie" : "look"}</div>
-        <p class="desc">${esc(x.per)}</p></div>
-    </button>`).join("");
-  document.querySelectorAll("#col .scheda").forEach(b => b.onclick = () => {
-    stato.colore = b.dataset.col === "originale" ? null : b.dataset.col;
-    document.querySelectorAll("#col .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
-    aggiorna();
-  });
-}
-
 function disegnaSott() {
-  const s = stile(); if (!s) { $("#sott").innerHTML = ""; return; }
-  const serie = s.di_serie.sottotitoli || null, scelto = stato.sottotitoli || serie;
-  const lista = [...D.sottotitoli].sort((a, b) => (b.chiave === serie) - (a.chiave === serie));
-  $("#sott").innerHTML = lista.map(x => `
-    <button class="scheda" data-sott="${x.chiave}" aria-pressed="${x.chiave === scelto}">
-      <span class="spunta"></span>
-      ${x.anteprima ? `<span class="media"><video class="vid" src="/file/sott-${x.chiave}" poster="/file/sott-${x.chiave}-jpg" playsinline preload="none"></video>
-                      <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
-                    : `<div class="vuoto t">${esc(x.nome)}</div>`}
-      <div class="corpo"><div class="t">${esc(x.nome)}</div>
-        <div class="tag">${x.chiave === serie ? "di serie · " : ""}${esc(x.per)}</div>
-        <p class="desc">${esc(x.descrizione)}</p></div>
-    </button>`).join("");
-  document.querySelectorAll("#sott .scheda").forEach(b => {
-    const v = b.querySelector("video");
-    if (v) v.onended = () => fermaVideo();
-    b.onclick = e => {
-      if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
-      stato.sottotitoli = b.dataset.sott;
-      document.querySelectorAll("#sott .scheda").forEach(x => x.setAttribute("aria-pressed", x === b));
-      aggiorna();
-    };
-  });
+  const x = sottDi(), box = $("#sott");
+  if (!x || !x.vivo) { box.innerHTML = ""; return; }
+  $("#css-sott").textContent = x.vivo.css.split("#A1C0E5").join(S.accento).split("#A1C0E6").join(luce(S.accento)) + cssSott(x);
+  box.innerHTML = x.vivo.html;
+  box.querySelectorAll(".w").forEach((w, i) => { if (i < 2) w.setAttribute("data-on", 1); });
+}
+function disegnaSopra() {
+  document.documentElement.style.setProperty("--brand", S.accento);
+  $("#tela").style.transform = `scale(${$("#schermo").clientWidth / 1080})`;
+  disegnaTitolo(); disegnaSott();
+  const fx = $("#fisso"); fx.hidden = !S.testo_fisso; fx.textContent = S.testo_fisso; $("#tit").style.top = S.testo_fisso ? "330px" : "";   // col testo fisso il titolo scende per fargli posto
+  const f = S.titoli.font && F(S.titoli.font);
+  fx.style.fontFamily = `'${f ? f.nome : TIT_BASE.fam}'`;
+  fx.style.color = S.fisso.testo || "#fff";
+  fx.style.background = S.fisso.sfondo === "nessuno" ? "transparent" : (S.fisso.sfondo || "rgba(12,12,14,.72)");
+  const fine = $("#fine"); fine.hidden = S.chiusura === "niente";
+  fine.innerHTML = S.chiusura === "commenta" ? `<span>Commenta</span><b>${esc(S.parola || "INFO")}</b>`
+                 : S.chiusura === "segui" ? `<span>@il_tuo_profilo</span><b>Segui</b>` : `<span>Scopri di più</span><b>Clicca qui sotto</b>`;
 }
 
-// quando si sceglie, gli effetti partono tutti spenti: li accende l'utente (lo stile pronto usa i suoi, senza passare di qui)
-const diSerie = s => [];
+// pezzi della pagina
+function passo(n, nome, val, html) {
+  return `<section class="passo ${aperto === n ? "aperto" : ""}" data-n="${n}">
+    <button class="testa"><span class="num">${n}</span><span class="nome">${nome}</span><span class="val">${esc(val)}</span><span class="fr">›</span></button>
+    <div class="corpo">${html}</div></section>`;
+}
+function scelte(cosa, chiave, valore, opzioni) {   // una riga di bottoni: [[valore, nome]]
+  return `<div class="riga nome"><span class="cosa">${cosa}</span><div>${opzioni.map(([v, n]) =>
+    `<button class="chip ${valore === v ? "si" : ""}" data-set="${chiave}" data-v='${JSON.stringify(v)}'>${n}</button>`).join("")}</div></div>`;
+}
+function colori(cosa, chiave, valore, opzioni) {   // bottoni con il pallino del colore, più "Altro" col selettore
+  const noti = opzioni.map(o => o[0]);
+  return `<div class="riga nome"><span class="cosa">${cosa}</span><div>${opzioni.map(([v, n]) =>
+    `<button class="chip ${valore === v ? "si" : ""}" data-set="${chiave}" data-v='${JSON.stringify(v)}'>${v && v.startsWith("#") ? `<span class="bollo" style="background:${v}"></span>` : ""}${n}</button>`).join("")}
+    <span class="chip ${valore && !noti.includes(valore) ? "si" : ""}">Altro <input type="color" data-col="${chiave}" value="${valore && valore.startsWith("#") ? valore : "#ffffff"}"></span></div></div>`;
+}
+function fonts(chiavi, scelto, chiave, prova, prima) {   // tutte in una griglia sola, piccole: si vedono tutte insieme
+  return `<div class="fonts">${prima ? `<button class="font ${!scelto ? "si" : ""}" data-set="${chiave}" data-v='null'><span class="prova" style="font-size:16px;font-weight:700;line-height:1.5">${prima}</span><span class="fn">Di serie</span></button>` : ""}`
+    + chiavi.map(F).filter(Boolean).map(f => `<button class="font ${scelto === f.chiave ? "si" : ""}" data-set="${chiave}" data-v='"${f.chiave}"'><span class="prova" style="font-family:'${f.nome}';font-weight:${f.peso}">${prova}</span><span class="fn">${esc(f.nome.replace(/ Italic$/, " corsivo"))}</span></button>`).join("") + `</div>`;
+}
+const blocco = (titolo, html) => `<div class="blocco"><p class="blocco-t">${titolo}</p>${html}</div>`;
+const bottoneSott = v => `<button class="chip ${S.sottotitoli === v.chiave ? "si" : ""}" data-sott="${v.chiave}" title="${esc(v.per)}">${esc(v.nome)}</button>`;
+const nomeFont = (k, base) => k && F(k) ? F(k).nome.replace(/ Italic$/, " corsivo") : base;
 
-function disegnaEff() {
-  const s = stile();
-  if (!s) { $("#eff").innerHTML = ""; $("#eff-tutti").hidden = true; $("#eff-avviso").hidden = true; return; }
-  const spento = !s.grafiche;  // stile con scene e omini: gli effetti si vedono ma non si usano
-  const altro = D.stili.find(x => x.grafiche);
-  $("#eff-avviso").hidden = !spento;
-  if (spento) {
-    $("#eff-avviso-testo").textContent = `Lo stile "${s.nome}" usa scene e lavagna, non questi effetti.` +
-      (altro ? ` Funzionano con lo stile "${altro.nome}".` : "");
-    $("#eff-passa").hidden = !altro;
-    if (altro) { $("#eff-passa").textContent = `Passa a ${altro.nome}`;
-                 $("#eff-passa").onclick = () => document.querySelector(`#stili [data-stile="${altro.chiave}"]`).click(); }
-  }
-  $("#aiuto-eff").textContent = "Metti la spunta a quelli che vuoi nei tuoi video. Li uso solo quando c'entrano con quello che dici.";
-  $("#eff-tutti").hidden = spento;
-  const presi = stato.effetti || diSerie(s);
-  $("#eff").innerHTML = D.effetti.map(x => `
-    <button class="scheda${spento ? " spento" : ""}" data-eff="${x.chiave}" aria-pressed="${!spento && presi.includes(x.chiave)}">
-      <span class="spunta quadro"></span>
-      ${x.anteprima ? `<span class="media"><video class="vid" src="/file/eff-${x.chiave}" poster="/file/eff-${x.chiave}-jpg" playsinline preload="none"></video>
-                      <span class="gioca" role="button" aria-label="Guarda il video">▶</span></span>`
-                    : `<div class="vuoto t">${esc(x.nome)}</div>`}
-      <div class="corpo"><div class="t">${esc(x.nome)}</div>
-        <div class="tag">${esc(x.per)}</div>
-        <p class="desc">${esc(x.descrizione)}</p></div>
-    </button>`).join("");
-  const tutti = () => (stato.effetti || diSerie(s)).length === D.effetti.length;
-  $("#eff-tutti").textContent = tutti() ? "Togli tutti" : "Seleziona tutti";
-  document.querySelectorAll("#eff .scheda").forEach(b => {
-    const v = b.querySelector("video");
-    if (v) v.onended = () => fermaVideo();
-    b.onclick = e => {
-      if (e.target.closest(".gioca")) return guardaVideo(e.target.closest(".gioca"), v);
-      if (b.classList.contains("spento")) return;
-      const set = new Set(stato.effetti || diSerie(s));
-      set.has(b.dataset.eff) ? set.delete(b.dataset.eff) : set.add(b.dataset.eff);
-      stato.effetti = D.effetti.map(x => x.chiave).filter(k => set.has(k));
-      b.setAttribute("aria-pressed", set.has(b.dataset.eff));
-      $("#eff-tutti").textContent = tutti() ? "Togli tutti" : "Seleziona tutti";
-      aggiorna();
-    };
-  });
+function disegna() {
+  const st = stileDi(S.stile);
+  const look = D.colori.find(x => x.chiave === S.colore);
+  const x = sottDi(), t = S.titoli, s = S.sott;
+  const html = [
+   passo(1, "Il modello", st ? st.nome.replace(/^Stile /, "") : "Da scegliere", `<p class="spieg">Come viene montato il video. Il look che scegli sotto vale per tutti i modelli.</p>
+     <div class="carte">${modelli().map(m => `<button class="carta ${m.anteprima ? "" : "senza"} ${S.stile === m.chiave ? "si" : ""}" data-mio="${m.chiave}">
+       ${m.anteprima ? `<img class="mini" src="/file/anteprima-${m.chiave}-jpg" alt="">` : ""}
+       <div class="n">${esc(m.nome.replace(/^Stile /, ""))}</div><div class="d">${esc(m.descrizione)}</div></button>`).join("")}</div>
+     ${miei().length ? `<label class="l">I tuoi stili</label><div class="carte">${miei().map(m => `<button class="carta ${S.stile === m.chiave ? "si" : ""}" data-mio="${m.chiave}">
+       ${m.anteprima ? `<img class="mini" src="/file/anteprima-${m.chiave}-jpg" alt="">` : `<div class="mini"></div>`}<span class="pill c">TUO</span>
+       <div class="n">${esc(m.nome.replace(/^Stile /, ""))}</div><div class="d">${esc(m.descrizione || "Creato da te")}</div></button>`).join("")}</div>` : ""}`),
+   passo(2, "Il look del video", look ? look.nome : "Naturale", `<p class="spieg">Come esce il colore del tuo girato. La pelle resta naturale. Il colore del tuo brand lo usiamo già: ce l'hai detto all'inizio.</p>
+     <div class="carte">${[{chiave:null, nome:"Naturale", per:"Com'è girato"}].concat(D.colori).map(c => `<button class="carta ${S.colore === c.chiave ? "si" : ""}" data-look="${c.chiave ?? ""}">
+       ${c.anteprima ? `<img class="mini" src="/file/look-${c.chiave}" alt="">` : `<div class="mini"></div>`}<div class="n">${esc(c.nome)}</div><div class="d">${esc(c.per)}</div></button>`).join("")}</div>`),
+   passo(3, "Il font dei titoli", nomeFont(t.font, "Quello del modello"),
+     blocco("Scegli il tuo font", fonts(R.titoli, t.font, "titoli.font", "Il tuo titolo", "Del modello")
+       + `<div class="riga" style="margin:14px 0 0"><b>Grandezza di titoli e grafiche</b><input type="range" min="70" max="140" step="5" value="${t.grandezza}" data-num="titoli.grandezza"><b id="gr-val">${t.grandezza}%</b></div>`)
+     + blocco("Le lettere dei titoli", `<p class="spieg">L'ombra fa staccare il titolo dal video quando dietro c'è qualcosa dello stesso colore.</p>`
+       + scelte("Grassetto", "titoli.grassetto", t.grassetto, [[null,"Come il font"],[true,"Sì"],[false,"No"]])
+       + scelte("Corsivo", "titoli.corsivo", t.corsivo, [[false,"No"],[true,"Sì"]])
+       + scelte("Maiuscolo", "titoli.maiuscolo", t.maiuscolo, [[null,"Come lo scrivo"],["su","Tutto maiuscolo"],["giu","Tutto minuscolo"]])
+       + scelte("Ombra", "titoli.ombra", t.ombra, [[null,"Del modello"]].concat(OMBRE_N)))),
+   passo(4, "I sottotitoli", x.nome + (s.font ? ", " + nomeFont(s.font) : ""),
+     blocco("Lo stile", `<div class="riga" style="margin:0">${D.sottotitoli.filter(v => v.base).map(bottoneSott).join("")}</div>
+       <p class="spieg" style="margin:10px 0 0">${esc(x.descrizione)}</p>
+       <p class="blocco-t2">Gli altri nostri</p><div class="riga" style="margin:0">${D.sottotitoli.filter(v => !v.base).map(bottoneSott).join("")}</div>`)
+     + blocco(x.due ? "Il font della riga sopra" : "Il font dei sottotitoli", fonts(R.sott, s.font, "sott.font", "come cambia", "Dello stile")
+       + (x.due ? `<p class="blocco-t2">Il font della riga sotto</p>` + fonts(R.sott_k, s.font_k, "sott.font_k", "come cambia", "Automatico") : ""))
+     + blocco("Le lettere dei sottotitoli", `<p class="spieg">L'ombra fa staccare i sottotitoli dal video quando dietro c'è qualcosa dello stesso colore.${x.riquadro ? " Con il riquadro dietro l'ombra non serve." : ""}</p>`
+       + scelte("Maiuscolo", "sott.maiuscolo", s.maiuscolo, [[null,"Come lo stile"],["no","Come li dici"],["su","Tutto maiuscolo"],["giu","Tutto minuscolo"]])
+       + scelte("Grassetto", "sott.grassetto", s.grassetto, [[null,"Come il font"],[true,"Sì"],[false,"No"]])
+       + scelte("Corsivo", "sott.corsivo", s.corsivo, [[false,"No"],[true,"Sì"]])
+       + scelte("Ombra", "sott.ombra", s.ombra, [[null,"Dello stile"]].concat(OMBRE_N)))
+     + blocco("I colori dei sottotitoli", `<p class="spieg">Il testo e le parole che risaltano. Se sul tuo video un colore si legge male, lo studio lo rinforza da solo.</p>`
+       + colori("Testo", "sott.testo", s.testo, [[null,"Dello stile"],["#FFFFFF","Bianco"],["#111111","Nero"],["#FFD84D","Giallo"],[S.accento,"Il tuo colore"]])
+       + colori("Parole in evidenza", "sott.evidenza", s.evidenza, [[null,"Dello stile"],[S.accento,"Il tuo colore"],["#FFFFFF","Bianco"],["#FFD84D","Giallo"],["#111111","Nero"]])
+       + (x.riquadro ? colori("Riquadro", "sott.riquadro", s.riquadro, [[null,"Scuro"],[S.accento,"Il tuo colore"],["#FFFFFF","Chiaro"],["#000000","Nero"]]) : ""))),
+   passo(5, "Chiusura e durata", CHIUSURE.find(c => c.k === S.chiusura).nome + ", " + (S.durata < 120 ? S.durata + " secondi" : S.durata / 60 + " minuti"),
+     blocco("La chiusura", `<div class="riga" style="margin:0">${CHIUSURE.map(c => `<button class="chip ${S.chiusura === c.k ? "si" : ""}" data-chi="${c.k}" title="${c.d}">${c.nome}</button>`).join("")}</div>
+       <div ${S.chiusura === "commenta" ? "" : "hidden"} style="margin-top:12px"><p class="spieg" style="margin:0 0 6px">La parola da commentare</p><input type="text" id="parola" value="${esc(S.parola)}" maxlength="20" placeholder="INFO" style="max-width:220px"></div>`)
+     + blocco("La durata massima", `<p class="spieg">Se il video è più lungo, lo studio lo taglia tenendo ritmo e significato.</p><div class="riga" style="margin:0">${DURATE.map(d => `<button class="chip ${S.durata === d ? "si" : ""}" data-dur="${d}">${d < 120 ? d + " secondi" : d / 60 + " minuti"}</button>`).join("")}</div>`)
+     + blocco("Musica e velocità", `<div class="riga nome"><span class="cosa">Musica</span><div>
+         <button class="chip ${S.musica !== "nessuna" ? "si" : ""}" data-mus="">Quella del modello</button>
+         <button class="chip ${S.musica === "nessuna" ? "si" : ""}" data-mus="nessuna">Nessuna, la metto io su Instagram</button></div></div>
+       <div class="riga nome"><span class="cosa">Velocità</span><div>${VELOCITA.map(v => `<button class="chip ${S.velocita === v.v ? "si" : ""}" data-vel="${v.v}">${v.nome}</button>`).join("")}</div></div>`)),
+   passo(6, "Un testo fisso per tutto il reel", S.testo_fisso || "Nessuno",
+     blocco("La scritta fissa", `<p class="spieg">Una scritta che resta in alto dall'inizio alla fine: il nome della tua rubrica o il tema del video.</p>
+       <input type="text" id="fisso-t" value="${esc(S.testo_fisso)}" maxlength="40" placeholder="Per esempio 3 errori che fai nei reel">`)
+     + blocco("I colori", colori("Testo", "fisso.testo", S.fisso.testo, [[null,"Bianco"],["#111111","Nero"],[S.accento,"Il tuo colore"],["#FFD84D","Giallo"]])
+       + colori("Sfondino", "fisso.sfondo", S.fisso.sfondo, [[null,"Scuro"],[S.accento,"Il tuo colore"],["#F4EDE0","Chiaro"],["#FFFFFF","Bianco"],["nessuno","Nessuno"]]))),
+   passo(7, "Le tue note per il montaggio", S.note ? "Scritte" : "Facoltative",
+     blocco("Scrivi qui", `<p class="spieg">Scrivi con parole tue quello che vuoi in più: una scritta in grande, una frase da togliere, una foto da mostrare. Le note valgono più delle scelte sopra.</p>
+       <textarea id="note" placeholder="Per esempio: quando dico tre errori fai la lista con i tre errori">${esc(S.note)}</textarea>`)),
+  ].join("");
+  $("#passi").innerHTML = html;
+  riassunto(); disegnaSopra(); stringi();
 }
 
-function carta(id, nome, sotto, scelto, serie) {
-  const niente = id === "" || id === "nessuna";
-  return `<button class="suono${niente ? " niente" : ""}" data-id="${id}" aria-pressed="${scelto}">
-    <span class="play" ${niente ? "" : `data-play="${id}"`}>${niente ? "✕" : "▶"}</span>
-    <span class="nome"><b>${esc(nome)}</b><small class="${serie ? "serie" : ""}">${esc(sotto)}</small></span></button>`;
+function riassunto() {
+  const st = stileDi(S.stile);
+  $("#riass").textContent = [st ? st.nome.replace(/^Stile /, "") : null, "Titoli " + nomeFont(S.titoli.font, "del modello"),
+    "Sottotitoli " + sottDi().nome, CHIUSURE.find(c => c.k === S.chiusura).nome + (S.chiusura === "commenta" ? " " + S.parola : ""), "max " + S.durata + "s"].filter(Boolean).join(" · ");
 }
+function avviso(t) { const a = $("#avviso"); a.textContent = t; a.style.display = "block"; clearTimeout(a._t); a._t = setTimeout(() => a.style.display = "none", 2800); }
+function metti(chiave, v) { const [a, b] = chiave.split("."); if (b) S[a][b] = v; else S[a] = v; }
 
-function fila(el, voci, scelto, serie, vuoto, quando, alClic) {
-  // in testa: nessuno, quello di serie, poi gli altri; il resto dietro "mostra tutti"
-  const prima = voci.filter(v => v.id === serie), altri = voci.filter(v => v.id !== serie);
-  const tutti = el.dataset.tutti === "1";
-  const vis = tutti ? altri : altri.slice(0, MOSTRA);
-  if (!tutti && scelto && !vis.some(v => v.id === scelto)) { const x = altri.find(v => v.id === scelto); if (x) vis.unshift(x); }
-  el.innerHTML = carta(vuoto, vuoto === "" ? "Nessun suono" : "Nessuna musica", quando, scelto === vuoto, false)
-    + prima.map(v => carta(v.id, v.nome, "di serie", scelto === v.id, true)).join("")
-    + vis.map(v => carta(v.id, v.nome, v.da, scelto === v.id, false)).join("")
-    + (!tutti && altri.length > MOSTRA ? `<button class="altri">Mostra tutti (${altri.length})</button>` : "");
-  el.querySelectorAll(".suono").forEach(b => b.onclick = e => {
-    if (e.target.closest("[data-play]")) return ascolta(e.target.closest("[data-play]"), b.dataset.id);
-    alClic(b.dataset.id);
-    el.querySelectorAll(".suono").forEach(x => x.setAttribute("aria-pressed", x === b));
-    aggiorna();
-  });
-  const piu = el.querySelector(".altri");
-  if (piu) piu.onclick = () => { el.dataset.tutti = "1"; fila(el, voci, scelto, serie, vuoto, quando, alClic); };
-}
-
-function disegnaSuoni() {
-  const s = stile();
-  if (!s) { $("#momenti").innerHTML = `<p class="aiuto">Prima scegli uno stile qui sopra.</p>`; $("#musiche").innerHTML = ""; return; }
-  $("#momenti").innerHTML = s.momenti.map(m => `<div class="momento"><h3><span class="t">${esc(m.titolo)}</span><span>${esc(m.quando)}</span></h3>
-    <div class="fila" data-m="${m.chiave}"></div></div>`).join("");
-  s.momenti.forEach(m => {
-    const voci = D.suoni.filter(x => m.categorie.includes(x.cat) || x.id === s.di_serie[m.chiave])
-      .sort((a, b) => m.categorie.indexOf(a.cat) - m.categorie.indexOf(b.cat));  // prima la categoria giusta per quel momento
-    const serie = s.di_serie[m.chiave] || null;
-    const scelto = m.chiave in stato.suoni ? stato.suoni[m.chiave] : (serie || "");
-    fila($(`.fila[data-m="${m.chiave}"]`), voci, scelto, serie, "", m.quando, id => { stato.suoni[m.chiave] = id; });
-  });
-  const serieM = s.di_serie.musica || null;
-  fila($("#musiche"), D.suoni.filter(x => x.cat === "Musiche" || x.id === serieM), stato.musica || serieM || "nessuna", serieM,
-       "nessuna", "solo la voce", id => { stato.musica = id; });
-}
-
-function aggiorna() {
-  const s = stile();
-  let t = "Scegli una strada", ok = false;
-  if (stato.strada === "replica") t = "Mandami il reel in chat";
-  else if (stato.strada && !s) t = "Scegli uno stile";
-  else if (s && !modifica()) { t = s.nome; ok = true; }
-  else if (s) {
-    const cambiati = Object.entries(stato.suoni).filter(([m, id]) => id !== (s.di_serie[m] || "")).length;
-    const mus = stato.musica === "nessuna" ? "senza musica" : (stato.musica && stato.musica !== s.di_serie.musica ? "musica cambiata" : "musica di serie");
-    const st = stato.sottotitoli && stato.sottotitoli !== s.di_serie.sottotitoli
-      ? (D.sottotitoli.find(x => x.chiave === stato.sottotitoli) || {}).nome : null;
-    const ne = s.grafiche && modifica() ? (stato.effetti || []).length : null;  // null = quelli dello stile
-    const co = stato.colore ? (D.colori.find(x => x.chiave === stato.colore) || {}).nome : null;
-    t = `${s.nome}${co ? " · look " + co : ""}${st ? " · sottotitoli " + st : ""}${ne === null ? "" : ne === 0 ? " · nessun effetto" : " · " + ne + (ne === 1 ? " effetto" : " effetti")} · ${cambiati ? cambiati + (cambiati === 1 ? " suono cambiato" : " suoni cambiati") : "suoni di serie"} · ${mus}`;
-    ok = true;
-  }
-  const vs = stato.strada !== "replica" && !!s;
-  if ($("#sez-vel").hidden === vs) { $("#sez-vel").hidden = !vs; if (vs) disegnaVel(); }
-  const vd = vs && !!s.diviso;
-  if ($("#sez-div").hidden === vd) { $("#sez-div").hidden = !vd; if (vd) disegnaDiv(); }
-  if (ok && vd && stato.diviso) t += " · sempre in vista";
-  const vel = VELOCITA.find(x => x.v === (stato.velocita || 1.12));
-  if (ok && stato.velocita) t += " · " + vel.nome.toLowerCase();
-  if (ok && modifica() && stato.transizione) t += " · " + TRANSIZIONI.find(x => x.k === stato.transizione).nome.toLowerCase();
-  $("#riass").textContent = t;
-  $("#salva").disabled = !ok;
-}
-
-$("#salva").onclick = async () => {
-  const r = await fetch("/salva", {method: "POST", headers: {"Content-Type": "application/json"},
-                                   body: JSON.stringify({...stato, effetti: stato.effetti || [], strada: modifica() ? "crea" : "pronto"})});
-  if (r.ok) { $("#fatto-scelte").textContent = $("#riass").textContent; $("#fatto").hidden = false; } else { avviso((await r.json()).errore || "Non sono riuscito a salvare"); }
-};
-$("#continua").onclick = () => { $("#fatto").hidden = true; };
-$("#copia-frase").onclick = () => { navigator.clipboard.writeText("Replica questo reel: ").then(() => avviso("Frase copiata"), () => avviso("Scrivi: Replica questo reel")); };
-document.querySelectorAll(".strada").forEach(b => b.onclick = () => strada(b.dataset.strada));
-$("#eff-tutti").onclick = () => {
-  const tutti = (stato.effetti || diSerie(stile())).length === D.effetti.length;
-  stato.effetti = tutti ? [] : D.effetti.map(x => x.chiave); disegnaEff(); aggiorna();
-};
-$("#cambia").onclick = () => {
-  stato.cambia = !stato.cambia; mostraModifica(); aggiorna();
-  if (stato.cambia) $("#sez-sott").scrollIntoView({behavior: "smooth"});
-};
-
-setInterval(() => fetch("/ping", {method: "POST", body: "{}"}).catch(() => {}), 5000);
-fetch("/ping", {method: "POST", body: "{}"}).catch(() => {});
-
-fetch("/dati").then(r => r.json()).then(d => {
-  D = d;
-  const sc = d.scelte;
-  if (sc && d.stili.some(s => s.chiave === sc.stile)) {
-    stato.stile = sc.stile;
-    stato.suoni = Object.fromEntries(Object.entries(sc.suoni || {}).filter(([, v]) => v !== null && v !== undefined));
-    stato.musica = sc.musica;
-    stato.sottotitoli = sc.sottotitoli || null;
-    stato.effetti = sc.effetti || null;
-    stato.colore = sc.colore || null;
-    stato.velocita = sc.velocita || null;
-    stato.transizione = sc.transizione || null;
-    stato.diviso = sc.diviso || null;
-  }
-  disegnaStili();
-  strada(sc && sc.strada ? sc.strada : "pronto", false);
+// clic: tutto passa da qui (la pagina si ridisegna, il telefono mostra la scelta)
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.classList.contains("testa")) { const n = +t.closest(".passo").dataset.n; aperto = aperto === n ? 0 : n; disegna(); return; }
+  if (t.dataset.set) { metti(t.dataset.set, JSON.parse(t.dataset.v)); disegna(); base(); return; }
+  if (t.dataset.mio) { S.stile = S.stile === t.dataset.mio ? null : t.dataset.mio; S.modello = S.stile ? (stileDi(S.stile).mio ? "mio" : S.stile) : null; const s = stileDi(S.stile); disegna();
+    if (s && s.anteprima) telefono(`/file/anteprima-${s.chiave}`, "video", s.nome, false); else base(); return; }
+  if ("look" in t.dataset) { S.colore = t.dataset.look || null; disegna(); if (S.colore) telefono(`/file/look-${S.colore}`, "img", "Il look del video", false); else base(); return; }
+  if (t.dataset.sott) { S.sottotitoli = t.dataset.sott; disegna(); base("Sottotitoli " + sottDi().nome); return; }
+  if ("mus" in t.dataset) { S.musica = t.dataset.mus || null; disegna(); return; }
+  if ("vel" in t.dataset) { S.velocita = t.dataset.vel === "null" ? null : +t.dataset.vel; disegna(); return; }
+  if (t.dataset.chi) { S.chiusura = t.dataset.chi; disegna(); base(); return; }
+  if (t.dataset.dur) { S.durata = +t.dataset.dur; disegna(); return; }
 });
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.id === "parola") { S.parola = t.value.toUpperCase().replace(/[^A-ZÀ-Ý0-9]/g, ""); riassunto(); disegnaSopra(); }
+  if (t.id === "fisso-t") { S.testo_fisso = t.value; disegnaSopra(); }
+  if (t.id === "note") S.note = t.value;
+  if (t.dataset.num) { metti(t.dataset.num, +t.value); $("#gr-val").textContent = t.value + "%"; disegnaSopra(); }
+  if (t.dataset.col) { metti(t.dataset.col, t.value.toUpperCase()); disegnaSopra(); }
+});
+document.addEventListener("change", e => { const t = e.target; if (t.dataset.col || t.id === "fisso-t" || t.dataset.num) disegna(); });
+window.addEventListener("resize", () => { if (D) { disegnaSopra(); stringi(); } });
+// i font larghi si rimpiccioliscono finché la scritta di prova sta tutta nella casella
+function stringi() { document.querySelectorAll(".passo.aperto .font .prova").forEach(e => { if (!e.clientWidth) return;
+  e.style.fontSize = e.dataset.fs ?? (e.dataset.fs = e.style.fontSize); let z = parseFloat(getComputedStyle(e).fontSize);
+  while (e.scrollWidth > e.clientWidth && z > 11) e.style.fontSize = (z -= 1) + "px"; }); }
+document.fonts.addEventListener("loadingdone", stringi);
+
+$("#carica").onclick = () => $("#file").click();
+$("#file").onchange = e => { const f = e.target.files[0]; if (!f) return; mioVideo = URL.createObjectURL(f); $("#torna").hidden = false; base(); };
+$("#torna").onclick = () => { mioVideo = null; $("#torna").hidden = true; base(); };
+
+function corpo() {
+  return {stile:S.stile, modello:S.modello, colore:S.colore, sottotitoli:S.sottotitoli, velocita:S.velocita, musica:S.musica, suoni:{},
+          chiusura:S.chiusura, parola:S.parola, durata:S.durata, punti:S.punti, testo_fisso:S.testo_fisso, note:S.note,
+          titoli:S.titoli, sott:S.sott, fisso:S.fisso};
+}
+$("#salva").onclick = async () => {
+  const r = await fetch("/salva", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(corpo())});
+  if (r.ok) avviso("Salvato. Ora in chat scrivi: monta questo video"); else avviso((await r.json()).errore || "Non sono riuscito a salvare");
+};
+
+// i 3 stili salvati
+function disegnaSlot() {
+  $("#slots").innerHTML = `<span class="t">I tuoi stili salvati</span>` + D.slot.map((s, i) => `<div class="slot">
+    <button class="usa" data-usa="${i}" ${s ? "" : "disabled"}>${i + 1} · ${s ? esc(s.nome) : "vuoto"}</button><button class="salva" data-salvaslot="${i}">Salva qui</button></div>`).join("");
+}
+$("#slots").addEventListener("click", async e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.usa) { const s = D.slot[+t.dataset.usa]; if (!s) return; prendi(s.scelte); disegna(); base(); avviso("Ho ripreso " + s.nome); return; }
+  if (t.dataset.salvaslot) { const n = +t.dataset.salvaslot; const nome = prompt("Come lo chiami?", D.slot[n]?.nome || "Il mio stile " + (n + 1));
+    if (nome === null) return;
+    const r = await fetch("/slot", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({n, nome, scelte:JSON.parse(JSON.stringify(S))})});
+    if (r.ok) { D.slot = await r.json(); disegnaSlot(); avviso("Salvato come " + nome); } }
+});
+function prendi(sc) {   // rimette nella pagina delle scelte salvate
+  for (const k of ["stile", "modello", "colore", "sottotitoli", "velocita", "chiusura", "parola", "durata", "punti", "testo_fisso", "note"]) if (sc[k] != null) S[k] = sc[k];
+  for (const k of ["titoli", "sott", "fisso"]) if (sc[k]) Object.assign(S[k], sc[k]);
+  if (sc.accento) S.accento = sc.accento;
+  S.musica = sc.musica === "nessuna" ? "nessuna" : null;
+  if (S.stile && !stileDi(S.stile)) { S.stile = null; S.modello = null; }
+}
+
+setInterval(() => fetch("/ping", {method:"POST", body:"{}"}).catch(() => {}), 5000);
+fetch("/ping", {method:"POST", body:"{}"}).catch(() => {});
+fetch("/dati").then(r => r.json()).then(d => {
+  D = d; R = d.ritocchi;
+  // i font, tutti dal computer: il browser li scarica solo quando servono
+  $("#css-font").textContent = R.font.map(f => `@font-face{font-family:'${f.nome}';src:url('/file/font/${f.file}');${f.pesi ? "font-weight:" + f.pesi + ";" : ""}${f.chiave.endsWith("-c") ? "font-style:italic;" : ""}}`).join("")
+    + `@font-face{font-family:'Archivo';src:url('/file/font/Archivo.ttf');font-weight:100 900;font-stretch:62% 125%}`;
+  if (d.brand) S.accento = d.brand;
+  else $("#senza-brand").hidden = false;   // colore non ancora scelto: si vede lo stesso, con l'invito ad andare sul Brand
+  if (d.parola_brand) S.parola = d.parola_brand;
+  if (d.scelte) prendi(d.scelte);
+  disegnaSlot(); disegna(); base();
+}).catch(e => { console.error("avvio", e); avviso("La pagina non si è caricata: chiudila e riaprila"); });
 </script>
-</body>
-</html>
+</body></html>
