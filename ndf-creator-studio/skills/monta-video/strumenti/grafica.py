@@ -2874,7 +2874,7 @@ html,body{{margin:0;background:{scuro}}}
 {'<div class="pan"><i class="pan-luce"></i></div>' if diviso else ''}
 {f'<div id="riq" style="left:{riq["left"]}px;top:{riq["top"]}px;width:{riq["w"]}px">' if riq else ''}<div id="cam" class="cam"{f' style="inset:auto;left:0;top:0;width:{riq["w"]}px;height:{1980 - riq["top"]}px"' if riq else ''}><video id="bg" src="assets/tagliato.mp4" style="{f'top:{riq["y"]}px;width:{riq["w"]}px;height:{round(1920 * riq["s"])}px' if riq else f'top:{sposta}px'}" muted playsinline data-start="0" data-media-start="0" data-duration="{D:.3f}"></video>
 {chr(10).join(r.camera)}</div>{'</div>' if riq else ''}
-<div class="mirino" id="mir"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i>
+<div class="mirino" id="mir"{'' if stile.get('mirino', True) else ' style="display:none"'}><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i>
 <div class="mir-lab" style="left:150px"><span class="rosso">●</span> REC <span id="tc">00:00:00</span></div>
 <div class="mir-lab" style="right:200px">4K · 30FPS</div></div>
 {chr(10).join(r.corpo)}
