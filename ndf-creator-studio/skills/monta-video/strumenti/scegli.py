@@ -186,7 +186,7 @@ def raccogli():
             if os.path.exists(p[:-4] + ".jpg"):
                 file["tr-" + k + "-jpg"] = p[:-4] + ".jpg"
         transizioni[k] = os.path.exists(p)
-    tel = os.path.join(DATI, "telefono.mp4")
+    tel = os.path.join(STUDIO, "pagina", "telefono.mp4")   # il video di esempio del telefono, uguale per tutti
     if os.path.exists(tel):
         file["telefono"] = tel
         if os.path.exists(tel[:-4] + ".jpg"):
@@ -274,7 +274,7 @@ def profilo_per_la_pagina():
     c = lambda k: bool(pr.get(k)) and os.path.isfile(os.path.join(DATI, os.path.basename(pr[k])))
     return {"colore": pr.get("colore"), "nome": pr.get("nome", ""), "sotto": pr.get("sotto", ""), "parola": pr.get("parola", ""),
             "parole": pr.get("parole") or [], "ha_logo": c("logo"), "ha_foto": c("foto"),
-            "telefono": os.path.exists(os.path.join(DATI, "telefono.jpg"))}
+            "telefono": os.path.exists(os.path.join(STUDIO, "pagina", "telefono.jpg"))}
 
 
 def salva_brand(corpo):
