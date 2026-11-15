@@ -101,6 +101,37 @@ def raccogli():
             if os.path.exists(font):
                 file.setdefault("font-titoli", font)
 
+    # i sottotitoli a tempo con la voce del video di esempio (pagina/telefono.json: parole dette e parole chiave).
+    # Ogni pezzo = quello che il reel vero mostra in quel momento; la pagina lo accende seguendo il video.
+    tj = os.path.join(STUDIO, "pagina", "telefono.json")
+    tel_parole = leggi(tj) if os.path.exists(tj) else None
+
+    def a_tempo(k, s):
+        if not tel_parole:
+            return None
+        par, chi = tel_parole["parole"], set(tel_parole.get("chiave", []))
+        _, corpo, tl, _ = sottotitoli.parti(k, par, chi, 1180, [], {"accento": "#A1C0E5", "accento_luce": "#A1C0E6"}, {"maiuscolo": "no"})
+        tempi = "".join(tl)
+        pezzi = []
+        for c in corpo:
+            m = re.match(r'<div class="st" id="u(\d+)"', c)
+            if not m:
+                continue
+            i = m.group(1)
+            da = re.search(r'tl\.set\("#u%s",\{opacity:1\},([\d.]+)\)' % i, tempi)
+            fine = re.search(r'tl\.set\("#u%s",\{opacity:0\},([\d.]+)\)' % i, tempi)
+            if not (da and fine):
+                continue
+            # ogni parola con il secondo in cui si dice (karaoke e parole che entrano una alla volta)
+            def con_tempo(mw):
+                j = mw.group(1)
+                t = re.search(r'tl\.set\("#u%sw%s",\{(?:opacity:1|attr:\{"data-on":1\})\},([\d.]+)\)' % (i, j), tempi)
+                return mw.group(0) + (f' data-t="{t.group(1)}"' if t else "")
+            h = re.sub(r'id="u%s"' % i, f'id="v{i}"', c)
+            h = re.sub(r'id="u%sw(\d+)"' % i, con_tempo, h)
+            pezzi.append({"da": float(da.group(1)), "a": float(fine.group(1)), "html": h.replace("top:1180px", "top:1270px")})
+        return pezzi
+
     # i sottotitoli disegnati dal vivo sul telefono della pagina: css e la riga di esempio, come nel reel vero.
     # Il colore del brand è un segnaposto che la pagina sostituisce con quello scelto.
     campione = [{"testo": t, "da": i * 0.4, "a": i * 0.4 + 0.35} for i, t in enumerate("ti faccio vedere come cambia".split())]
@@ -123,7 +154,7 @@ def raccogli():
                 riga = prima.replace("top:1180px", "top:1205px") + chiave.replace("top:1180px", "top:1345px")
             else:
                 riga = prima.replace("top:1180px", "top:1270px")
-            vivo = {"css": css.replace("url('assets/", "url('/file/font/"), "html": riga}
+            vivo = {"css": css.replace("url('assets/", "url('/file/font/"), "html": riga, "pezzi": a_tempo(k, s)}
         except Exception:   # uno stile che non si disegna: resta solo l'anteprima video
             vivo = None
         p = os.path.join(STUDIO, "sottotitoli", "anteprime", k + ".mp4")
@@ -172,7 +203,7 @@ def raccogli():
                             for m, v in sc.get("suoni", {}).items()},
                   "sottotitoli": sc.get("sottotitoli"), "effetti": sc.get("effetti"), "colore": sc.get("colore"), "velocita": sc.get("velocita"),
                   "transizione": sc.get("transizione"), "diviso": sc.get("diviso"),
-                  **{k: sc[k] for k in ("modello", "accento", "chiusura", "parola", "durata", "punti", "testo_fisso", "note",
+                  **{k: sc[k] for k in ("modello", "accento", "chiusura", "parola", "ricevi", "durata", "punti", "testo_fisso", "note",
                                          "titoli", "sott", "fisso") if k in sc},
                   "musica": "nessuna" if sc.get("musica") == "nessuna" else per_percorso.get(os.path.realpath(sc["musica"]))
                   if sc.get("musica") else None}
@@ -215,6 +246,9 @@ def extra(corpo):
         parola = re.sub(r"[^A-Za-zÀ-ÿ0-9]", "", str(corpo.get("parola") or ""))[:20]
         if parola:
             out["parola"] = parola.upper()
+        ricevi = re.sub(r"\s+", " ", str(corpo.get("ricevi") or "")).strip()[:40]
+        if ricevi and corpo["chiusura"] == "commenta":
+            out["ricevi"] = ricevi
     try:
         d = int(corpo.get("durata") or 0)
         if 15 <= d <= 180:

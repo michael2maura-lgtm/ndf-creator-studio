@@ -115,7 +115,12 @@ di ogni reel (valgono finché non le cambia):
   ritmo veloce, finale "CLICCA QUI SOTTO" (mai "commenta").
 - `accento`: il colore del brand. Nel piano del motore grafica `"colori": {"accento": "<accento>"}`; negli altri sulle
   parole chiave e sui titoli.
-- `chiusura` (commenta / segui / clicca / niente) e `parola` (la parola da commentare): il finale del reel.
+- `chiusura` (commenta / segui / clicca / niente), `parola` (la parola da commentare) e `ricevi` (cosa riceve chi
+  commenta): il finale del reel. **commenta**: "COMMENTA" + la parola sul bottone, e se c'è `ricevi` la riga
+  "PER RICEVERE <ricevi>" (motore grafica: `finale_testo`, `finale_bottone`, `finale_sopra`; altri: `finale_testo`
+  "COMMENTA <PAROLA>", `finale_sotto` "per ricevere <ricevi>"). **segui**: il tasto Segui del profilo. **clicca**:
+  "CLICCA QUI SOTTO" con la freccia (scopri di più). **niente** (o nessuna scelta): nessun finale, il reel chiude
+  sull'ultima frase. Se l'utente lo dice in chat per un video, vale quello.
 - `durata`: secondi massimi. Se il tagliato è più lungo, proponi all'utente le frasi da togliere prima di tagliarle.
 - `punti`: [{"quando": parole dette, "effetto": chiave, "testo": scritta}] = in quel punto esattamente quell'effetto
   (trova le parole in `parole.json`); se il testo è vuoto usa le parole dette. È un obbligo, non spostarlo.

@@ -37,11 +37,13 @@ h1 i{font-family:"Instrument Serif",serif;font-style:italic;text-transform:none;
 .tela{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;pointer-events:none}
 .tela .st{opacity:1!important}
 .tela .w{opacity:1!important}
+.tela .w[data-dopo]{visibility:hidden}
 .tit-vivo{position:absolute;left:70px;right:70px;top:125px;text-align:center;color:#fff;line-height:1}
 .tit-vivo .t1{font-size:64px;text-shadow:0 4px 16px rgba(0,0,0,.6)}
 .tit-vivo .t2{font-size:150px;color:var(--brand,var(--acc));text-shadow:0 4px 16px rgba(0,0,0,.6);margin-top:6px}
 .fisso-vivo{position:absolute;left:50%;top:235px;transform:translateX(-50%);white-space:nowrap;font-weight:800;font-size:40px;padding:12px 26px 14px;border-radius:14px}
 .fine-vivo{position:absolute;left:110px;right:110px;bottom:300px;background:rgba(255,255,255,.95);color:#1C1A18;border-radius:36px;padding:26px 34px;font-size:40px;font-weight:700;display:flex;justify-content:space-between;align-items:center;font-family:"Plus Jakarta Sans",sans-serif}
+.fine-vivo small{display:block;font-size:24px;font-weight:600;opacity:.7;margin-top:4px}
 .fine-vivo b{color:var(--brand,var(--acc))}
 .voce{position:absolute;top:44px;right:12px;z-index:7;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .voce[hidden]{display:none}
@@ -170,7 +172,7 @@ const MODELLI = [];
 const CHIUSURE = [
  {k:"commenta", nome:"Commenta la parola", d:"Chi commenta riceve le info"},
  {k:"segui", nome:"Seguimi", d:"Il tasto Segui con il tuo profilo"},
- {k:"clicca", nome:"Clicca qui sotto", d:"Per le ads"},
+ {k:"clicca", nome:"Clicca qui sotto", d:"Clicca qui sotto e scopri di più"},
  {k:"niente", nome:"Niente", d:"Finisce sulla tua ultima frase"},
 ];
 const DURATE = [60, 90, 120, 180];
@@ -179,7 +181,7 @@ const OMBRE_N = [["leggera","Leggera"],["nera","Nera"],["bianca","Bianca"],["col
 const TIT_BASE = {fam:"Archivo", peso:900};   // il titolo di prova quando non scegli un font: quello degli stili pronti
 
 let D, R, S = {modello:null, stile:null, colore:null, accento:"#E86530", sottotitoli:"b-semplici", musica:null, velocita:null,
-            chiusura:"niente", parola:"", durata:90, punti:[], testo_fisso:"", note:"",
+            chiusura:"niente", parola:"", ricevi:"", durata:90, punti:[], testo_fisso:"", note:"",
             titoli:{font:null, grandezza:100, grassetto:null, corsivo:false, maiuscolo:null, ombra:null},
             sott:{font:null, font_k:null, maiuscolo:null, grassetto:null, corsivo:false, ombra:null, testo:null, evidenza:null, riquadro:null},
             fisso:{testo:null, sfondo:null}};
@@ -191,17 +193,18 @@ const modelli = () => D.stili.filter(s => s.modello);   // i modelli pronti, rif
 const F = k => R.font.find(f => f.chiave === k);
 const sottDi = () => D.sottotitoli.find(v => v.chiave === S.sottotitoli) || D.sottotitoli[0];
 
+let voceSpenta = false;   // il tasto altoparlante: se l'utente la spegne, resta spenta
 function voceIcona() { $("#voce").textContent = $("#vid").muted ? "🔇" : "🔊"; }
-function telefono(src, tipo, etichetta, sopra, voce) {   // voce: l'anteprima di un modello si sente (il clic del cliente la permette)
+function telefono(src, tipo, etichetta, sopra, voce, daCapo) {   // voce: si sente (il clic del cliente la permette); daCapo: riparte dall'inizio
   const v = $("#vid"), im = $("#img");
-  v.muted = !voce; $("#voce").hidden = !voce || tipo === "img"; voceIcona();
+  v.muted = !voce || voceSpenta; $("#voce").hidden = !voce || tipo === "img"; voceIcona();
   if (tipo === "img") { v.hidden = true; v.pause(); im.hidden = false; im.src = src; }
-  else { im.hidden = true; v.hidden = false; if (v.getAttribute("src") !== src) { v.src = src; v.play().catch(() => { v.muted = true; voceIcona(); v.play().catch(() => {}); }); } else if (voce) { v.currentTime = 0; v.play().catch(() => {}); } }
+  else { im.hidden = true; v.hidden = false; if (v.getAttribute("src") !== src) { v.src = src; v.play().catch(() => { v.muted = true; voceIcona(); v.play().catch(() => {}); }); } else if (daCapo) { v.currentTime = 0; v.play().catch(() => {}); } else if (v.paused) v.play().catch(() => {}); }
   $("#etich").textContent = etichetta;
   $("#sopra").style.display = sopra ? "block" : "none";
 }
 function base(etichetta) {   // il video di partenza con le scritte che cambiano con le scelte
-  telefono(mioVideo || (D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : "Esempio"), true);
+  telefono(mioVideo || (D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : "Esempio"), true, true);
   disegnaSopra();
 }
 function luce(c) { const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)); return "#" + v.map(x => Math.min(255, Math.round(x + (255 - x) * 0.3)).toString(16).padStart(2, "0")).join(""); }
@@ -241,9 +244,30 @@ function disegnaSott() {
   const x = sottDi(), box = $("#sott");
   if (!x || !x.vivo) { box.innerHTML = ""; return; }
   $("#css-sott").textContent = x.vivo.css.split("#A1C0E5").join(S.accento).split("#A1C0E6").join(luce(S.accento)) + cssSott(x);
+  vivoPezzi = !mioVideo && x.vivo.pezzi && x.vivo.pezzi.length ? x.vivo.pezzi : null; vivoQuale = -2;
+  if (vivoPezzi) { aTempo(); return; }
   box.innerHTML = x.vivo.html;
   box.querySelectorAll(".w").forEach((w, i) => { if (i < 2) w.setAttribute("data-on", 1); });
 }
+// il telefono segue il video: il pezzo di sottotitolo detto in quel momento, parola per parola; la chiusura negli ultimi secondi
+let vivoPezzi = null, vivoQuale = -2;
+function aTempo() {
+  const v = $("#vid"), t = v.currentTime || 0;
+  if (vivoPezzi) {
+    const i = vivoPezzi.findIndex(p => p.da <= t && t < p.a);
+    const box = $("#sott");
+    if (i !== vivoQuale) { vivoQuale = i; box.innerHTML = i >= 0 ? vivoPezzi[i].html : ""; }
+    const modo = sottDi().modo;
+    box.querySelectorAll(".w[data-t]").forEach(w => {
+      const detta = t >= parseFloat(w.dataset.t);
+      if (modo === "karaoke") { if (detta) w.setAttribute("data-on", 1); else w.removeAttribute("data-on"); }
+      else if (modo === "accumula" || modo === "scrivi") { if (detta) w.removeAttribute("data-dopo"); else w.setAttribute("data-dopo", 1); }
+    });
+  }
+  const fine = $("#fine");
+  fine.hidden = S.chiusura === "niente" || aperto !== 5;   // la chiusura solo mentre la scegli (Michael, 15/11/2026)
+}
+(function giro() { try { if (D && $("#sopra").style.display !== "none") aTempo(); } catch (e) {} requestAnimationFrame(giro); })();
 function disegnaSopra() {
   document.documentElement.style.setProperty("--brand", S.accento);
   $("#tela").style.transform = `scale(${$("#schermo").clientWidth / 1080})`;
@@ -253,8 +277,9 @@ function disegnaSopra() {
   fx.style.fontFamily = `'${f ? f.nome : TIT_BASE.fam}'`;
   fx.style.color = S.fisso.testo || "#fff";
   fx.style.background = S.fisso.sfondo === "nessuno" ? "transparent" : (S.fisso.sfondo || "rgba(12,12,14,.72)");
-  const fine = $("#fine"); fine.hidden = S.chiusura === "niente";
-  fine.innerHTML = S.chiusura === "commenta" ? `<span>Commenta</span><b>${esc(S.parola || "INFO")}</b>`
+  $("#tit").hidden = aperto !== 3;   // il titolo di prova solo mentre scegli il font dei titoli (il Pulito non ne ha)
+  const fine = $("#fine");
+  fine.innerHTML = S.chiusura === "commenta" ? `<span>Commenta${S.ricevi ? `<small>per ricevere ${esc(S.ricevi)}</small>` : ""}</span><b>${esc(S.parola || "INFO")}</b>`
                  : S.chiusura === "segui" ? `<span>@il_tuo_profilo</span><b>Segui</b>` : `<span>Scopri di più</span><b>Clicca qui sotto</b>`;
 }
 
@@ -322,7 +347,7 @@ function disegna() {
        + (x.riquadro ? colori("Riquadro", "sott.riquadro", s.riquadro, [[null,"Scuro"],[S.accento,"Il tuo colore"],["#FFFFFF","Chiaro"],["#000000","Nero"]]) : ""))),
    passo(5, "Chiusura e durata", CHIUSURE.find(c => c.k === S.chiusura).nome + ", " + (S.durata < 120 ? S.durata + " secondi" : S.durata / 60 + " minuti"),
      blocco("La chiusura", `<div class="riga" style="margin:0">${CHIUSURE.map(c => `<button class="chip ${S.chiusura === c.k ? "si" : ""}" data-chi="${c.k}" title="${c.d}">${c.nome}</button>`).join("")}</div>
-       <div ${S.chiusura === "commenta" ? "" : "hidden"} style="margin-top:12px"><p class="spieg" style="margin:0 0 6px">La parola da commentare</p><input type="text" id="parola" value="${esc(S.parola)}" maxlength="20" placeholder="INFO" style="max-width:220px"></div>`)
+       <div ${S.chiusura === "commenta" ? "" : "hidden"} style="margin-top:12px"><p class="spieg" style="margin:0 0 6px">La parola da commentare</p><input type="text" id="parola" value="${esc(S.parola)}" maxlength="20" placeholder="INFO" style="max-width:220px"><p class="spieg" style="margin:12px 0 6px">Cosa riceve chi commenta (si legge: per ricevere…)</p><input type="text" id="ricevi" value="${esc(S.ricevi)}" maxlength="40" placeholder="la guida gratuita" style="max-width:320px"></div>`)
      + blocco("La durata massima", `<p class="spieg">Se il video è più lungo, lo studio lo taglia tenendo ritmo e significato.</p><div class="riga" style="margin:0">${DURATE.map(d => `<button class="chip ${S.durata === d ? "si" : ""}" data-dur="${d}">${d < 120 ? d + " secondi" : d / 60 + " minuti"}</button>`).join("")}</div>`)
      + blocco("Musica e velocità", `<div class="riga nome"><span class="cosa">Musica</span><div>
          <button class="chip ${S.musica !== "nessuna" ? "si" : ""}" data-mus="">Quella del modello</button>
@@ -355,7 +380,7 @@ document.addEventListener("click", e => {
   if (t.classList.contains("testa")) { const n = +t.closest(".passo").dataset.n; aperto = aperto === n ? 0 : n; disegna(); return; }
   if (t.dataset.set) { metti(t.dataset.set, JSON.parse(t.dataset.v)); disegna(); base(); return; }
   if (t.dataset.mio) { S.stile = S.stile === t.dataset.mio ? null : t.dataset.mio; S.modello = S.stile ? (stileDi(S.stile).mio ? "mio" : S.stile) : null; const s = stileDi(S.stile); disegna();
-    if (s && s.anteprima) telefono(`/file/anteprima-${s.chiave}`, "video", s.nome, false, true); else base(); return; }
+    if (s && s.anteprima) telefono(`/file/anteprima-${s.chiave}`, "video", s.nome, false, true, true); else base(); return; }
   if ("look" in t.dataset) { S.colore = t.dataset.look || null; disegna(); if (S.colore) telefono(`/file/look-${S.colore}`, "img", "Il look del video", false); else base(); return; }
   if (t.dataset.sott) { S.sottotitoli = t.dataset.sott; disegna(); base("Sottotitoli " + sottDi().nome); return; }
   if ("mus" in t.dataset) { S.musica = t.dataset.mus || null; disegna(); return; }
@@ -365,6 +390,7 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("input", e => {
   const t = e.target;
+  if (t.id === "ricevi") { S.ricevi = t.value.slice(0, 40); disegnaSopra(); }
   if (t.id === "parola") { S.parola = t.value.toUpperCase().replace(/[^A-ZÀ-Ý0-9]/g, ""); riassunto(); disegnaSopra(); }
   if (t.id === "fisso-t") { S.testo_fisso = t.value; disegnaSopra(); }
   if (t.id === "note") S.note = t.value;
@@ -385,7 +411,7 @@ $("#torna").onclick = () => { mioVideo = null; $("#torna").hidden = true; base()
 
 function corpo() {
   return {stile:S.stile, modello:S.modello, colore:S.colore, sottotitoli:S.sottotitoli, velocita:S.velocita, musica:S.musica, suoni:{},
-          chiusura:S.chiusura, parola:S.parola, durata:S.durata, punti:S.punti, testo_fisso:S.testo_fisso, note:S.note,
+          chiusura:S.chiusura, parola:S.parola, ricevi:S.ricevi, durata:S.durata, punti:S.punti, testo_fisso:S.testo_fisso, note:S.note,
           titoli:S.titoli, sott:S.sott, fisso:S.fisso};
 }
 $("#salva").onclick = async () => {
@@ -398,7 +424,7 @@ function disegnaSlot() {
   $("#slots").innerHTML = `<span class="t">I tuoi stili salvati</span>` + D.slot.map((s, i) => `<div class="slot">
     <button class="usa" data-usa="${i}" ${s ? "" : "disabled"}>${i + 1} · ${s ? esc(s.nome) : "vuoto"}</button><button class="salva" data-salvaslot="${i}">Salva qui</button></div>`).join("");
 }
-$("#voce").addEventListener("click", e => { e.stopPropagation(); const v = $("#vid"); v.muted = !v.muted; voceIcona(); if (!v.muted) v.play().catch(() => {}); });
+$("#voce").addEventListener("click", e => { e.stopPropagation(); const v = $("#vid"); v.muted = !v.muted; voceSpenta = v.muted; voceIcona(); if (!v.muted) v.play().catch(() => {}); });
 $("#slots").addEventListener("click", async e => {
   const t = e.target.closest("button"); if (!t) return;
   if (t.dataset.usa) { const s = D.slot[+t.dataset.usa]; if (!s) return; prendi(s.scelte); disegna(); base(); avviso("Ho ripreso " + s.nome); return; }
@@ -408,7 +434,7 @@ $("#slots").addEventListener("click", async e => {
     if (r.ok) { D.slot = await r.json(); disegnaSlot(); avviso("Salvato come " + nome); } }
 });
 function prendi(sc) {   // rimette nella pagina delle scelte salvate
-  for (const k of ["stile", "modello", "colore", "sottotitoli", "velocita", "chiusura", "parola", "durata", "punti", "testo_fisso", "note"]) if (sc[k] != null) S[k] = sc[k];
+  for (const k of ["stile", "modello", "colore", "sottotitoli", "velocita", "chiusura", "parola", "ricevi", "durata", "punti", "testo_fisso", "note"]) if (sc[k] != null) S[k] = sc[k];
   for (const k of ["titoli", "sott", "fisso"]) if (sc[k]) Object.assign(S[k], sc[k]);
   if (sc.accento) S.accento = sc.accento;
   S.musica = sc.musica === "nessuna" ? "nessuna" : null;

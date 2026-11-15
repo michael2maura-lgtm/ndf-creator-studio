@@ -2137,19 +2137,26 @@ class Reel:
     def finale(self, piano, da):
         self.bande(da)
         self.scuro(da, self.D)
-        f = self.stile.get("finale", {})
+        f = (self.stile.get("finale") or {})
         testo = piano.get("finale_testo", f.get("testo", "COMMENTA"))
         bottone = piano.get("finale_bottone", f.get("bottone", "INFO"))
         sopra = piano.get("finale_sopra", f.get("sopra", ""))
         self.corpo.append(f'<div class="finale" id="fin"><div class="mono-sotto" style="position:static;opacity:1" id="fm"></div>'
                           f'<div class="fin-g">{html.escape(testo)}</div><div class="bottone" id="bot">{html.escape(bottone)}</div>'
-                          f'<div class="freccia" id="fr">↓</div></div>')
+                          f'<div class="freccia" id="fr">↓</div>'
+                          f'<svg class="fin-m" id="fmo" viewBox="0 0 24 24"><path d="M4 2l15 11-7 1-3 7z" fill="#fff" stroke="#111" stroke-width="1.5"/></svg></div>')
         self.tl.append(f'tl.fromTo("#fin",{{opacity:0,y:60}},{{opacity:1,y:0,duration:0.4,ease:"power3.out"}},{da + 0.1:.3f});'
                        f'tl.fromTo("#bot",{{scale:0.6}},{{scale:1,duration:0.35,ease:"back.out(2)"}},{da + 0.35:.3f});'
                        f'tl.fromTo("#fr",{{y:0}},{{y:22,duration:0.4,repeat:{int((self.D - da) / 0.4)},yoyo:true,ease:"sine.inOut"}},{da + 0.5:.3f});')
         if sopra:
             self.decodifica("#fm", sopra, da + 0.3)
         self.suono("impatto", da + 0.35, 0.4)
+        # la freccia del mouse arriva e clicca il bottone, col suo clic (Michael, 15/11/2026)
+        clic = min(da + 1.5, self.D - 0.3)
+        self.tl.append(f'tl.fromTo("#fmo",{{opacity:0,x:220,y:260}},{{opacity:1,x:0,y:0,duration:0.55,ease:"power2.out",immediateRender:false}},{clic - 0.6:.3f});'
+                       f'tl.fromTo("#fmo",{{scale:1}},{{keyframes:[{{scale:0.85,duration:0.08}},{{scale:1,duration:0.12}}],immediateRender:false}},{clic:.3f});'
+                       f'tl.fromTo("#bot",{{scale:1}},{{keyframes:[{{scale:0.92,duration:0.08}},{{scale:1,duration:0.14}}],immediateRender:false}},{clic:.3f});')
+        self.suono("click", clic, 0.5)
 
     def sottotitoli(self, parole, chiave, y):
         """1-3 parole alla volta; la parola chiave su targhetta d'accento. Spariscono prima di ogni grafica."""
@@ -2593,6 +2600,7 @@ html,body{{margin:0;background:{scuro}}}
 .et2-fr{{display:block;width:70px;height:80px;margin:0 0 8px 150px}}.et2-fr path{{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}}
 .finale{{position:absolute;left:80px;right:110px;top:640px;text-align:center;z-index:36;opacity:0}}
 .fin-g{{{W};font-size:120px;color:#fff;margin-top:30px}}
+.fin-m{{position:absolute;left:62%;top:330px;width:120px;height:120px;opacity:0;transform-origin:20% 10%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}}
 .bottone{{display:inline-block;margin-top:24px;background:{acc};color:#fff;{W};font-size:150px;padding:10px 60px 18px;border-radius:30px;
  box-shadow:0 0 60px rgba({rgb},.6)}}
 .freccia{{margin:30px auto 0;width:110px;height:110px;border-radius:50%;background:{acc};color:#fff;font-size:70px;font-weight:900;
