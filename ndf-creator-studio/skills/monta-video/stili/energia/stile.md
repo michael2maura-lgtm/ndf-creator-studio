@@ -20,3 +20,6 @@ Modello rifatto da zero (15/11/2026) guardando un reel che piace a Michael: tutt
   animato accanto alla testa: tempo → orologio che gira, "non serve / niente / mai" → X rossa, "fatto / ecco" →
   spunta, soldi → soldi che cadono, amore/clienti felici → cuore, veloce/energia → fulmine. Una ogni 4-6 secondi,
   insieme alla parola forte, mai due icone insieme.
+- Disegni: prima i disegni animati della scatola (`icona`: orologio, x, spunta, soldi, cuore, fulmine). Se la parola
+  detta non ha un disegno adatto, un'emoji che salta fuori (`"emoji": "🏠"`) come riserva: sempre qualcosa da far
+  vedere, qualunque sia l'argomento. Emoji chiare e comuni, mai due insieme, mai sulla faccia.

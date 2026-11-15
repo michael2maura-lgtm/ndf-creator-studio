@@ -14,6 +14,7 @@ Nel piano (tempi del video TAGLIATO):
      bordino bianco, davanti a un fondo nuovo; sopra resta mezzo schermo libero per le scritte (forte, pila).
      Su "carta" (chiaro) usa solo targhe, non parole giganti bianche.
  {"tipo": "icona", "da", "a", "icona": "orologio" | "x" | "spunta" | "soldi" | "cuore" | "fulmine", "lato": "destra" | "sinistra"}
+ {"tipo": "icona", "da", "a", "emoji": "🏠"}     la riserva quando non c'è un disegno animato adatto: un'emoji che salta fuori
      un disegno animato accanto alla testa che fa vedere la parola detta: l'orologio con le lancette che girano
      ("5 minuti", "tre ore"), la X rossa che si disegna ("non serve", "niente"), la spunta ("fatto"), i soldi che
      cadono, il cuore che batte, il fulmine. Il format vive di queste trovate: una ogni 4-6 secondi.
@@ -162,6 +163,14 @@ def icona(r, e, faccia):
     su_fondo = any(x <= da < z for x, z in getattr(r, "su_fondo", []))
     y = 640 if su_fondo else int(max(faccia["occhi"] - 120, 430))
     x = 70 if e.get("lato") == "sinistra" else 770
+    if e.get("emoji"):   # la riserva: qualsiasi cosa si dica c'è un'emoji; salta fuori, rimbalza e oscilla piano
+        r.corpo.append(f'<div id="ei{n}" style="position:absolute;left:{x}px;top:{y}px;width:230px;height:230px;z-index:32;opacity:0;'
+                       f'font-size:180px;line-height:230px;text-align:center;font-family:\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Noto Color Emoji\',sans-serif;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))">{E(e["emoji"])}</div>')
+        r.tl.append(f'tl.fromTo("#ei{n}",{{opacity:0,scale:.2,rotation:-30,y:60}},{{opacity:1,scale:1,rotation:0,y:0,duration:.45,ease:"back.out(2.6)",immediateRender:false}},{da:.3f});'
+                    f'tl.to("#ei{n}",{{rotation:8,duration:.35,repeat:{max(int((a - da - 0.6) / 0.35), 1)},yoyo:true,ease:"sine.inOut"}},{da + 0.45:.3f});'
+                    f'tl.to("#ei{n}",{{opacity:0,scale:.5,duration:.2}},{a - 0.2:.3f});')
+        r.suono("pop", da, 0.25)
+        return
     k = e.get("icona", "spunta")
     ombra = "filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))"
     if k == "orologio":
