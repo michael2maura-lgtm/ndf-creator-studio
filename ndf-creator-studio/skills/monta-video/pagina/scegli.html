@@ -258,14 +258,14 @@ let vivoPezzi = null, vivoQuale = -2;
 // col font, il colore del brand e le lettere scelte. Se cambi il video d'esempio, cambia anche questi secondi.
 const MOSSE = {
   energia: {sopra: true, mosse: [
-    {da: 0.86, a: 2.15, tipo: "gigante", testo: "CAMBIATO"},
-    {da: 2.30, a: 3.30, tipo: "targa", testo: "il modo di fare video", colore: 2, emoji: "🎬"},
-    {da: 4.04, a: 5.15, tipo: "targa", testo: "non serve saper montare", colore: 1, x: true},
+    {da: 0.86, a: 2.15, tipo: "gigante", testo: "CAMBIATO", sopra: "questa cosa mi ha"},
+    {da: 4.18, a: 5.15, tipo: "targa", testo: "non serve saper montare", colore: 1, emoji: "😎", sopra: "e la cosa bella"},
     {da: 5.24, a: 7.85, tipo: "pila", voci: [["niente programmi", 5.24], ["niente montatore", 6.88]]},
   ]},
   pulito: {sopra: false, mosse: []},
 };
-function famTitoli() { const f = S.titoli.font && F(S.titoli.font); return f ? `'${f.nome}'` : `'${TIT_BASE.fam}'`; }
+function famTitoli() { const f = S.titoli.font && F(S.titoli.font); return f ? `'${f.nome}'` : S.stile === "energia" ? "'Poppins'" : `'${TIT_BASE.fam}'`; }
+const rigaSopra = (testo, y) => testo ? `<div style="position:absolute;left:40px;right:40px;top:${y}px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:46px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.8)">${esc(testo)}</div>` : "";
 let mossaQuale = "";
 function mosseModello(t) {
   const m = !mioVideo && MOSSE[S.stile], box = $("#modvivo");
@@ -277,13 +277,13 @@ function mosseModello(t) {
     mossaQuale = chiave;
     let h = "";
     if (e && e.tipo === "gigante") {
-      h = `<div style="position:absolute;left:40px;right:40px;top:${alto}px;text-align:center;font-family:${famTitoli()};font-weight:900;font-stretch:125%;font-size:${Math.min(150 * g, 900 / (e.testo.length * .78))}px;line-height:1;color:#fff;text-transform:uppercase;white-space:nowrap;text-shadow:0 8px 30px rgba(0,0,0,.55)">${esc(e.testo)}</div>`;
+      h = rigaSopra(e.sopra, alto) + `<div style="position:absolute;left:40px;right:40px;top:${alto + (e.sopra ? 62 : 0)}px;text-align:center;font-family:${famTitoli()};font-weight:700;font-size:${Math.min(160 * g, 920 / (e.testo.length * .64))}px;line-height:1;color:#fff;text-transform:uppercase;white-space:nowrap;text-shadow:0 8px 30px rgba(0,0,0,.55)">${esc(e.testo)}</div>`;
     } else if (e && e.tipo === "targa") {
-      h = `<div style="position:absolute;left:40px;right:40px;top:${alto}px;text-align:center"><span style="display:inline-block;padding:12px 30px 16px;background:${e.colore === 2 ? blu : S.accento};color:#fff;font-family:${famTitoli()};font-weight:900;font-stretch:125%;font-size:${Math.min(74 * g, 860 / (e.testo.length * .78))}px;white-space:nowrap;border-radius:10px;transform:rotate(-3deg) skewX(-6deg);box-shadow:0 10px 30px rgba(0,0,0,.35)">${esc(e.testo)}</span></div>`;
+      h = rigaSopra(e.sopra, alto) + `<div style="position:absolute;left:40px;right:40px;top:${alto + (e.sopra ? 66 : 0)}px;text-align:center"><span style="display:inline-block;padding:12px 30px 16px;background:${e.colore === 2 ? blu : S.accento};color:#fff;font-family:${famTitoli()};font-weight:700;font-size:${Math.min(74 * g, 860 / (e.testo.length * .64))}px;white-space:nowrap;border-radius:10px;transform:rotate(-3deg) skewX(-6deg);box-shadow:0 10px 30px rgba(0,0,0,.35)">${esc(e.testo)}</span></div>`;
       if (e.x) h += `<svg viewBox="0 0 200 200" width="230" height="230" style="position:absolute;left:770px;top:520px;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))"><circle cx="100" cy="100" r="84" fill="#E5322D" stroke="#fff" stroke-width="10"/><path d="M66 66L134 134M134 66L66 134" stroke="#fff" stroke-width="20" stroke-linecap="round"/></svg>`;
       if (e.emoji) h += `<div style="position:absolute;left:770px;top:520px;width:230px;font-size:180px;line-height:230px;text-align:center">${e.emoji}</div>`;
     } else if (e && e.tipo === "pila") {
-      h = `<div style="position:absolute;left:0;right:0;top:0;height:1150px;background:linear-gradient(rgba(10,10,14,.88),rgba(10,10,14,.75) 60%,rgba(10,10,14,0))"></div><div style="position:absolute;left:50px;right:50px;top:${alto}px;text-align:center;font-family:${famTitoli()};font-weight:900;font-stretch:125%;line-height:1.05">`
+      h = `<div style="position:absolute;left:0;right:0;top:0;height:1150px;background:linear-gradient(rgba(10,10,14,.88),rgba(10,10,14,.75) 60%,rgba(10,10,14,0))"></div><div style="position:absolute;left:50px;right:50px;top:${alto}px;text-align:center;font-family:${famTitoli()};font-weight:700;line-height:1.05">`
         + e.voci.filter(v => v[1] <= t).map((v, j) => `<div style="font-size:${84 * g}px;color:${j % 2 ? S.accento : "#fff"}">${esc(v[0])}</div>`).join("") + "</div>";
     }
     box.innerHTML = h;
@@ -488,7 +488,9 @@ fetch("/dati").then(r => r.json()).then(d => {
   D = d; R = d.ritocchi;
   // i font, tutti dal computer: il browser li scarica solo quando servono
   $("#css-font").textContent = R.font.map(f => `@font-face{font-family:'${f.nome}';src:url('/file/font/${f.file}');${f.pesi ? "font-weight:" + f.pesi + ";" : ""}${f.chiave.endsWith("-c") ? "font-style:italic;" : ""}}`).join("")
-    + `@font-face{font-family:'Archivo';src:url('/file/font/Archivo.ttf');font-weight:100 900;font-stretch:62% 125%}`;
+    + `@font-face{font-family:'Archivo';src:url('/file/font/Archivo.ttf');font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:'Poppins';src:url('/file/font/Poppins-Bold.ttf');font-weight:700}
+@font-face{font-family:'Plus Jakarta Sans';src:url('/file/font/PlusJakartaSans.ttf');font-weight:200 800}`;
   if (d.brand) S.accento = d.brand;
   else $("#senza-brand").hidden = false;   // colore non ancora scelto: si vede lo stesso, con l'invito ad andare sul Brand
   if (d.parola_brand) S.parola = d.parola_brand;

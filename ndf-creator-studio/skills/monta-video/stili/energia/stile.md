@@ -23,3 +23,10 @@ Modello rifatto da zero (15/11/2026) guardando un reel che piace a Michael: tutt
 - Disegni: prima i disegni animati della scatola (`icona`: orologio, x, spunta, soldi, cuore, fulmine). Se la parola
   detta non ha un disegno adatto, un'emoji che salta fuori (`"emoji": "🏠"`) come riserva: sempre qualcosa da far
   vedere, qualunque sia l'argomento. Emoji chiare e comuni, mai due insieme, mai sulla faccia.
+- Parola forte (aggiornato 15/11, confronto col riferimento): sempre con "sopra" = le 2-4 parole dette appena prima,
+  nella riga piccola; la parola gigante passa dietro la testa (di serie). Carattere: Poppins grassetto, tondo.
+- Passi detti in fila (primo, secondo, terzo / un metodo): `numeri`, ogni voce con un'icona emoji adatta.
+- `numeri` va sempre insieme a un `fondo` negli stessi secondi (la persona scende in basso e lascia posto ai passi).
+- Quando si parla di usare un'app o uno strumento (mandare un video, scrivere a Claude o ChatGPT, un messaggio da
+  inviare): `app` (Davanti all'app): lo schermo scende dietro la persona, il file si allega, il messaggio si scrive e
+  parte, arriva la risposta, i passi si spuntano.

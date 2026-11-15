@@ -3,7 +3,11 @@ che piace a Michael (mai copiate): una riga piccola con quello che dici (i sotto
 e sotto, sulle parole importanti, il pezzo forte. Due colori che si alternano: colore del brand e "accento2".
 
 Nel piano (tempi del video TAGLIATO):
- {"tipo": "forte", "da", "a", "testo": "STUFATA", "modo": "gigante" | "targa", "colore": 1 | 2}
+ {"tipo": "forte", "da", "a", "sopra": "io mi sono", "testo": "STUFATA", "modo": "gigante" | "targa", "colore": 1 | 2}
+     "sopra" = le parole dette appena prima, in una riga piccola sopra. La parola gigante passa dietro la testa
+     (ritaglio, lento: ~30 s per secondo; "dietro": false per tenerla davanti).
+ {"tipo": "numeri", "da" (= la prima voce), "a", "voci": [["cosa tagliare", t, "✂️"], ["cosa dire", t, "⏱️"]]}
+     passi numerati in alto: 1, 2, 3 grandi a colori alternati, la frase e un'icona; ogni voce al secondo in cui la dici.
      gigante = parola enorme bianca; targa = riga su una targa inclinata colorata. I sottotitoli continuano sopra.
  {"tipo": "pila", "a", "voci": [["programmi", t], ["montatore", t]], "finale": ["STRESS", t]}
      le parole entrano una sotto l'altra mentre le dici, colori alternati; l'ultima su una targa. Sotto, un velo scuro.
@@ -35,8 +39,15 @@ def _css(r):
     r.css_sopra = True
     ft = r.stile["font"]["titoli"]
     fam = f"font-family:'{ft['famiglia']}';font-weight:{ft.get('peso', 900)};font-stretch:{ft.get('larghezza', 100)}%"
+    r.font_extra("PlusJakartaSans.ttf")
     r.corpo.append(
-        "<style>"
+        "<style>@font-face{font-family:'Plus Jakarta Sans';src:url('assets/PlusJakartaSans.ttf');font-weight:200 800}"
+        ".es-riga{position:absolute;left:60px;right:60px;text-align:center;z-index:31;opacity:0;font-family:'Plus Jakarta Sans',sans-serif;"
+        "font-weight:600;font-size:46px;line-height:1.2;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.8)}"
+        ".es-n{position:absolute;left:70px;right:60px;z-index:31}"
+        f".es-n .r{{display:flex;align-items:center;gap:26px;height:118px;opacity:0}}.es-n b{{{fam};font-size:118px;line-height:1;width:80px;text-align:center}}"
+        ".es-n span{flex:1;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:44px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.8)}"
+        ".es-n img{width:74px;height:74px;object-fit:contain}"
         f".es-f{{position:absolute;left:60px;right:60px;text-align:center;z-index:31;opacity:0;{fam};color:#fff;line-height:1}}"
         ".es-g{white-space:nowrap;letter-spacing:-2px;text-transform:uppercase;text-shadow:0 8px 30px rgba(0,0,0,.55)}"
         ".es-t span{display:inline-block;white-space:nowrap;padding:12px 30px 16px;transform:rotate(-3deg) skewX(-6deg);"
@@ -58,7 +69,8 @@ def _misura(testo, largo, massimo, r=None):
     g = 1.0
     if r is not None:
         g = max(70, min(140, int((r.stile.get("ritocchi_titoli") or {}).get("grandezza") or 100))) / 100
-    return int(max(40, min(massimo * g, largo / (max(len(testo), 1) * 0.78))))
+    lettera = 0.78 if r is None or r.stile["font"]["titoli"].get("larghezza", 100) > 100 else 0.64
+    return int(max(40, min(massimo * g, largo / (max(len(testo), 1) * lettera))))
 
 
 def _y(r):
@@ -66,20 +78,65 @@ def _y(r):
 
 
 def forte(r, e, faccia):
+    """La riga piccola con le parole dette prima ("io mi sono") e sotto il pezzo forte: la parola gigante che passa
+    DIETRO la testa (ritaglio della persona) o la targa inclinata davanti."""
     _css(r)
     n, da, a = len(r.corpo), e["da"], e["a"]
     c1, c2 = _colori(r)
     col = c2 if e.get("colore") == 2 else c1
+    riga = e.get("sopra", "")
+    y = _y(r)
     if e.get("modo") == "targa":
-        r.corpo.append(f'<div class="es-f es-t" id="ef{n}" style="top:{_y(r)}px"><span style="background:{col};font-size:{_misura(e["testo"], 860, 74, r)}px">{E(e["testo"])}</span></div>')
+        if riga:
+            r.corpo.append(f'<div class="es-riga" id="ef{n}r" style="top:{y}px">{E(riga)}</div>')
+        r.corpo.append(f'<div class="es-f es-t" id="ef{n}" style="top:{y + (66 if riga else 0)}px"><span style="background:{col};font-size:{_misura(e["testo"], 860, 74, r)}px">{E(e["testo"])}</span></div>')
         r.tl.append(f'tl.fromTo("#ef{n}",{{opacity:0,clipPath:"inset(0 100% 0 0)"}},{{opacity:1,clipPath:"inset(0 0% 0 0)",duration:.3,ease:"power3.out",immediateRender:false}},{da:.3f});')
         r.suono("pop", da, 0.25)
+        r.tl.append(f'tl.to("#ef{n}",{{opacity:0,y:-20,duration:.2}},{a - 0.2:.3f});')
     else:
-        r.corpo.append(f'<div class="es-f es-g" id="ef{n}" style="top:{_y(r) - 10}px;font-size:{_misura(e["testo"], 900, 150, r)}px">{E(e["testo"])}</div>')
-        r.tl.append(f'tl.fromTo("#ef{n}",{{opacity:0,scale:1.5}},{{opacity:1,scale:1,duration:.22,ease:"power4.out",immediateRender:false}},{da:.3f});')
+        dim = _misura(e["testo"], 920, 170, r)
+        dietro = e.get("dietro", True) and not any(x <= da < z for x, z in getattr(r, "su_fondo", []))
+        if dietro:   # la parola sta tra il video e la persona ritagliata: la testa la copre in basso
+            sel = r.ritaglio(da - 0.1, a + 0.1)
+            cima = r.cima_testa(r.ultimo_ritaglio, 0.2) or faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
+            yp = int(max(cima - dim * 0.62, y + (60 if riga else 0)))
+            r.camera.insert(0, f'<div class="es-f es-g" id="ef{n}" style="top:{yp}px;font-size:{dim}px;z-index:2">{E(e["testo"])}</div>')
+            r.tl.append(f'tl.set("{sel}",{{opacity:1}},{da:.3f});tl.set("{sel}",{{opacity:0}},{a:.3f});')
+        else:
+            yp = y + (60 if riga else 0)
+            r.corpo.append(f'<div class="es-f es-g" id="ef{n}" style="top:{yp}px;font-size:{dim}px">{E(e["testo"])}</div>')
+        if riga:
+            r.corpo.append(f'<div class="es-riga" id="ef{n}r" style="top:{yp - 66}px">{E(riga)}</div>')
+        r.tl.append(f'tl.fromTo("#ef{n}",{{opacity:0,scale:1.5}},{{opacity:1,scale:1,duration:.22,ease:"power4.out",immediateRender:false}},{da:.3f});'
+                    f'tl.set("#ef{n}",{{opacity:0}},{a:.3f});')
         r.suono("impatto", da, 0.3)
-    r.tl.append(f'tl.to("#ef{n}",{{opacity:0,y:-20,duration:.2}},{a - 0.2:.3f});')
-    r.nascondi.append((da, a))   # mentre c'è la parola forte la riga sopra si toglie: niente parole doppie
+    if riga:
+        r.tl.append(f'tl.set("#ef{n}r",{{opacity:1}},{da - 0.05:.3f});tl.set("#ef{n}r",{{opacity:0}},{a:.3f});')
+    r.nascondi.append((da, a))   # al posto dei sottotitoli: la riga piccola e il pezzo forte
+
+
+def numeri(r, e, faccia):
+    """Passi numerati in alto: numeri grandi a colori alternati, la frase e una piccola icona; restano fino ad "a"."""
+    _css(r)
+    n, a = len(r.corpo), e["a"]
+    c1, c2 = _colori(r)
+    righe = []
+    for j, v in enumerate(e["voci"]):
+        testo, t = v[0], v[1]
+        ic = _emoji_png(r, v[2]) if len(v) > 2 and v[2] else None
+        righe.append(f'<div class="r" id="en{n}v{j}"><b style="color:{c1 if j % 2 == 0 else c2}">{j + 1}</b><span>{E(testo)}</span>'
+                     + (f'<img src="assets/{ic}">' if ic else "") + "</div>")
+        r.tl.append(f'tl.fromTo("#en{n}v{j}",{{opacity:0,x:-60}},{{opacity:1,x:0,duration:.3,ease:"back.out(1.8)",immediateRender:false}},{t:.3f});')
+        r.suono("pop", t, 0.25)
+    da = e["voci"][0][1]
+    su_fondo = any(x <= da < z for x, z in getattr(r, "su_fondo", []))
+    # come nel riferimento i passi stanno su uno sfondo nuovo (fondo), con la persona in basso; senza fondo, un velo scuro
+    velo = "" if su_fondo else f'<div class="es-velo" id="en{n}velo" style="opacity:1"></div>'
+    r.corpo.append(f'{velo}<div class="es-n" id="en{n}" style="top:{_y(r)}px">{"".join(righe)}</div>')
+    if velo:
+        r.tl.append(f'tl.fromTo("#en{n}velo",{{opacity:0}},{{opacity:1,duration:.25,immediateRender:false}},{da - 0.1:.3f});tl.set("#en{n}velo",{{opacity:0}},{a:.3f});')
+    r.tl.append(f'tl.to("#en{n}",{{opacity:0,duration:.25}},{a - 0.25:.3f});')
+    r.nascondi.append((e["voci"][0][1], a))
 
 
 def pila(r, e, faccia):
@@ -245,4 +302,4 @@ def icona(r, e, faccia):
     r.suono(suono[0], da + 0.15, suono[1])
 
 
-TIPI = {"forte": forte, "pila": pila, "schermata": schermata, "fondo": fondo, "icona": icona}
+TIPI = {"forte": forte, "pila": pila, "schermata": schermata, "fondo": fondo, "icona": icona, "numeri": numeri}

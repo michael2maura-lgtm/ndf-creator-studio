@@ -11,10 +11,10 @@
  },
  "font": {
   "titoli": {
-   "file": "font/Archivo.ttf",
-   "famiglia": "Archivo",
-   "peso": 900,
-   "larghezza": 125
+   "file": "font/Poppins-Bold.ttf",
+   "famiglia": "Poppins",
+   "peso": 700,
+   "larghezza": 100
   },
   "mono": {
    "file": "font/JetBrainsMono.ttf",
@@ -36,15 +36,17 @@
  "descrizione": "Tutto sopra la testa: una riga con quello che dici e, sulle parole importanti, una parola enorme o una targa colorata. Elenchi che si costruiscono, schermate a colore per le frasi secche. Ritmo vivo.",
  "sottotitoli_nome": "sopra",
  "effetti": [
-  "zoom",
+  "app",
+  "commento",
+  "fondo",
   "forte",
+  "icona",
+  "numeri",
+  "orbita",
   "pila",
   "schermata",
-  "commento",
   "segui",
-  "fondo",
-  "icona",
-  "orbita"
+  "zoom"
  ],
  "transizione": "sfumatura",
  "mirino": false,
