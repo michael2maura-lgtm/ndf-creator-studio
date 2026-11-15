@@ -236,7 +236,7 @@ def extra(corpo):
     """Le scelte in più della pagina (come le usa Claude nel piano): colore del brand, chiusura, durata, effetti in punti
     precisi ("quando dico"), testo fisso e note. Solo valori puliti."""
     out = {}
-    if corpo.get("modello") in ("pulito", "glow", "scene", "impact", "diviso", "ads", "animato"):
+    if corpo.get("modello") in ("pulito", "energia", "glow", "scene", "impact", "diviso", "ads", "animato"):
         out["modello"] = corpo["modello"]
     acc = str(corpo.get("accento") or "").strip()
     if re.fullmatch(r"#?[0-9A-Fa-f]{6}", acc):

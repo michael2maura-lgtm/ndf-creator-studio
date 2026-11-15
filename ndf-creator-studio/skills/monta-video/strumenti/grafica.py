@@ -71,6 +71,7 @@ import subprocess
 
 import effetti
 import effetti_nuovi
+import effetti_sopra
 import sottotitoli
 import ritocchi
 import suoni_reel
@@ -2310,6 +2311,9 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             # avvicinamento lentissimo per tutto il video, attorno alla faccia
             r.tl.append(f'tl.set("#bg",{{transformOrigin:"50% {(faccia["occhi"] / 1920) * 100:.0f}%"}},0);'
                         f'tl.fromTo("#bg",{{scale:1}},{{scale:1.06,duration:{D:.3f},ease:"none",immediateRender:false}},0);')
+    if stile.get("sott_sopra") and not diviso:   # modello Energia: la riga dei sottotitoli sopra la testa
+        cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
+        y_sub = int(max(cima - 260, 290))
     r.sposta, r.y_sub = sposta, y_sub
     ap = piano.get("apertura")
     # effetti accesi: quelli scelti nella pagina, se no quelli dello stile (stile.json "effetti"), se no tutti
@@ -2419,6 +2423,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.scena(e, faccia)
         elif tipo == "pannello":
             r.pannello(e, faccia)
+        elif tipo in effetti_sopra.TIPI:
+            effetti_sopra.TIPI[tipo](r, e, faccia)
         elif tipo in effetti_nuovi.TIPI:
             effetti_nuovi.TIPI[tipo](r, e, faccia)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude

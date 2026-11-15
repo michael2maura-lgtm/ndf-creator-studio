@@ -76,6 +76,13 @@ CATALOGO = {
         "css": ".st{font-family:%f-jakarta%;font-weight:800;font-size:124px;line-height:1.05;color:#fff;"
                "text-shadow:0 3px 18px rgba(0,0,0,.75)}.st .k{color:%acc%}",
     },
+    "sopra": {   # modello Energia: la riga piccola sopra la testa (stile.json "sott_sopra")
+        "nome": "Riga in alto", "per": "Con le parole forti sotto",
+        "descrizione": "Una riga piccola e bianca sopra la testa, con quello che dici.",
+        "modo": "gruppo", "parole": 4, "lettere": 24, "entra": ENTRA_MORBIDO, "font": ["jakarta"],
+        "css": ".st{font-family:%f-jakarta%;font-weight:600;font-size:48px;line-height:1.2;color:#fff;"
+               "text-shadow:0 2px 10px rgba(0,0,0,.8)}.st .k{color:#fff}",
+    },
     "b-semplici": {
         "nome": "Semplici", "per": "Tutti i giorni, va bene sempre", "base": True,
         "descrizione": "Una riga piccola e leggibile, la parola importante nel tuo colore.",
