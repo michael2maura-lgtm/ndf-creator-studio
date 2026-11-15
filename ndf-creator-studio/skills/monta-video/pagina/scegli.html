@@ -43,6 +43,8 @@ h1 i{font-family:"Instrument Serif",serif;font-style:italic;text-transform:none;
 .fisso-vivo{position:absolute;left:50%;top:235px;transform:translateX(-50%);white-space:nowrap;font-weight:800;font-size:40px;padding:12px 26px 14px;border-radius:14px}
 .fine-vivo{position:absolute;left:110px;right:110px;bottom:300px;background:rgba(255,255,255,.95);color:#1C1A18;border-radius:36px;padding:26px 34px;font-size:40px;font-weight:700;display:flex;justify-content:space-between;align-items:center;font-family:"Plus Jakarta Sans",sans-serif}
 .fine-vivo b{color:var(--brand,var(--acc))}
+.voce{position:absolute;top:44px;right:12px;z-index:7;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.voce[hidden]{display:none}
 .etich{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:6px;z-index:6;white-space:nowrap}
 .tel-bt{display:flex;gap:10px;margin-top:18px;justify-content:center}
 .bt{border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:14px}
@@ -139,6 +141,7 @@ textarea{min-height:110px;resize:vertical}
        <div class="fine-vivo" id="fine" hidden></div>
      </div></div>
      <div class="etich" id="etich">Esempio</div>
+     <button class="voce" id="voce" hidden title="Voce accesa / spenta">🔊</button>
    </div></div>
    <div class="tel-bt">
      <button class="bt pieno" id="carica">Carica il tuo video</button>
@@ -188,10 +191,12 @@ const modelli = () => D.stili.filter(s => s.modello);   // i modelli pronti, rif
 const F = k => R.font.find(f => f.chiave === k);
 const sottDi = () => D.sottotitoli.find(v => v.chiave === S.sottotitoli) || D.sottotitoli[0];
 
-function telefono(src, tipo, etichetta, sopra) {
+function voceIcona() { $("#voce").textContent = $("#vid").muted ? "🔇" : "🔊"; }
+function telefono(src, tipo, etichetta, sopra, voce) {   // voce: l'anteprima di un modello si sente (il clic del cliente la permette)
   const v = $("#vid"), im = $("#img");
+  v.muted = !voce; $("#voce").hidden = !voce || tipo === "img"; voceIcona();
   if (tipo === "img") { v.hidden = true; v.pause(); im.hidden = false; im.src = src; }
-  else { im.hidden = true; v.hidden = false; if (v.getAttribute("src") !== src) { v.src = src; v.play().catch(() => {}); } }
+  else { im.hidden = true; v.hidden = false; if (v.getAttribute("src") !== src) { v.src = src; v.play().catch(() => { v.muted = true; voceIcona(); v.play().catch(() => {}); }); } else if (voce) { v.currentTime = 0; v.play().catch(() => {}); } }
   $("#etich").textContent = etichetta;
   $("#sopra").style.display = sopra ? "block" : "none";
 }
@@ -350,7 +355,7 @@ document.addEventListener("click", e => {
   if (t.classList.contains("testa")) { const n = +t.closest(".passo").dataset.n; aperto = aperto === n ? 0 : n; disegna(); return; }
   if (t.dataset.set) { metti(t.dataset.set, JSON.parse(t.dataset.v)); disegna(); base(); return; }
   if (t.dataset.mio) { S.stile = S.stile === t.dataset.mio ? null : t.dataset.mio; S.modello = S.stile ? (stileDi(S.stile).mio ? "mio" : S.stile) : null; const s = stileDi(S.stile); disegna();
-    if (s && s.anteprima) telefono(`/file/anteprima-${s.chiave}`, "video", s.nome, false); else base(); return; }
+    if (s && s.anteprima) telefono(`/file/anteprima-${s.chiave}`, "video", s.nome, false, true); else base(); return; }
   if ("look" in t.dataset) { S.colore = t.dataset.look || null; disegna(); if (S.colore) telefono(`/file/look-${S.colore}`, "img", "Il look del video", false); else base(); return; }
   if (t.dataset.sott) { S.sottotitoli = t.dataset.sott; disegna(); base("Sottotitoli " + sottDi().nome); return; }
   if ("mus" in t.dataset) { S.musica = t.dataset.mus || null; disegna(); return; }
@@ -393,6 +398,7 @@ function disegnaSlot() {
   $("#slots").innerHTML = `<span class="t">I tuoi stili salvati</span>` + D.slot.map((s, i) => `<div class="slot">
     <button class="usa" data-usa="${i}" ${s ? "" : "disabled"}>${i + 1} · ${s ? esc(s.nome) : "vuoto"}</button><button class="salva" data-salvaslot="${i}">Salva qui</button></div>`).join("");
 }
+$("#voce").addEventListener("click", e => { e.stopPropagation(); const v = $("#vid"); v.muted = !v.muted; voceIcona(); if (!v.muted) v.play().catch(() => {}); });
 $("#slots").addEventListener("click", async e => {
   const t = e.target.closest("button"); if (!t) return;
   if (t.dataset.usa) { const s = D.slot[+t.dataset.usa]; if (!s) return; prendi(s.scelte); disegna(); base(); avviso("Ho ripreso " + s.nome); return; }
