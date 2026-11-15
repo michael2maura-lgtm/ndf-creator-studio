@@ -44,6 +44,7 @@ h1 i{font-family:"Instrument Serif",serif;font-style:italic;text-transform:none;
 .fisso-vivo{position:absolute;left:50%;top:235px;transform:translateX(-50%);white-space:nowrap;font-weight:800;font-size:40px;padding:12px 26px 14px;border-radius:14px}
 .fine-vivo{position:absolute;left:110px;right:110px;bottom:300px;background:rgba(255,255,255,.95);color:#1C1A18;border-radius:36px;padding:26px 34px;font-size:40px;font-weight:700;display:flex;justify-content:space-between;align-items:center;font-family:"Plus Jakarta Sans",sans-serif}
 .fine-vivo small{display:block;font-size:24px;font-weight:600;opacity:.7;margin-top:4px}
+[hidden]{display:none!important}   /* hidden vince sempre: prima la chiusura restava visibile */
 .fine-vivo b{color:var(--brand,var(--acc))}
 .voce{position:absolute;top:44px;right:12px;z-index:7;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .voce[hidden]{display:none}
@@ -140,6 +141,7 @@ textarea{min-height:110px;resize:vertical}
        <div class="fisso-vivo" id="fisso" hidden></div>
        <div class="tit-vivo" id="tit"><div class="t1">ecco il</div><div class="t2">tuo titolo</div></div>
        <div id="sott"></div>
+       <div id="modvivo"></div>
        <div class="fine-vivo" id="fine" hidden></div>
      </div></div>
      <div class="etich" id="etich">Esempio</div>
@@ -204,7 +206,8 @@ function telefono(src, tipo, etichetta, sopra, voce, daCapo) {   // voce: si sen
   $("#sopra").style.display = sopra ? "block" : "none";
 }
 function base(etichetta) {   // il video di partenza con le scritte che cambiano con le scelte
-  telefono(mioVideo || (D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : "Esempio"), true, true);
+  const sm = S.stile && stileDi(S.stile);
+  telefono(mioVideo || (D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : sm && sm.modello ? sm.nome.replace(/^Stile /, "") + " · le tue scelte" : "Esempio"), true, true);
   disegnaSopra();
 }
 function luce(c) { const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)); return "#" + v.map(x => Math.min(255, Math.round(x + (255 - x) * 0.3)).toString(16).padStart(2, "0")).join(""); }
@@ -251,12 +254,49 @@ function disegnaSott() {
 }
 // il telefono segue il video: il pezzo di sottotitolo detto in quel momento, parola per parola; la chiusura negli ultimi secondi
 let vivoPezzi = null, vivoQuale = -2;
+// Le mosse dei modelli sul video d'esempio (pagina/telefono.mp4): stesse grafiche del motore, disegnate in diretta
+// col font, il colore del brand e le lettere scelte. Se cambi il video d'esempio, cambia anche questi secondi.
+const MOSSE = {
+  energia: {sopra: true, mosse: [
+    {da: 0.86, a: 2.15, tipo: "gigante", testo: "CAMBIATO"},
+    {da: 2.30, a: 3.30, tipo: "targa", testo: "il modo di fare video", colore: 2, emoji: "🎬"},
+    {da: 4.04, a: 5.15, tipo: "targa", testo: "non serve saper montare", colore: 1, x: true},
+    {da: 5.24, a: 7.85, tipo: "pila", voci: [["niente programmi", 5.24], ["niente montatore", 6.88]]},
+  ]},
+  pulito: {sopra: false, mosse: []},
+};
+function famTitoli() { const f = S.titoli.font && F(S.titoli.font); return f ? `'${f.nome}'` : `'${TIT_BASE.fam}'`; }
+let mossaQuale = "";
+function mosseModello(t) {
+  const m = !mioVideo && MOSSE[S.stile], box = $("#modvivo");
+  if (!m) { if (mossaQuale) { box.innerHTML = ""; mossaQuale = ""; } return false; }
+  const e = m.mosse.find(x => x.da <= t && t < x.a);
+  const g = (S.titoli.grandezza || 100) / 100, alto = S.testo_fisso ? 340 : 270, blu = "#2F7DF6";
+  const chiave = e ? e.da + "|" + JSON.stringify(S.titoli) + S.accento + S.testo_fisso + (e.voci ? e.voci.filter(v => v[1] <= t).length : "") : "";
+  if (chiave !== mossaQuale) {
+    mossaQuale = chiave;
+    let h = "";
+    if (e && e.tipo === "gigante") {
+      h = `<div style="position:absolute;left:40px;right:40px;top:${alto}px;text-align:center;font-family:${famTitoli()};font-weight:900;font-stretch:125%;font-size:${Math.min(150 * g, 900 / (e.testo.length * .78))}px;line-height:1;color:#fff;text-transform:uppercase;white-space:nowrap;text-shadow:0 8px 30px rgba(0,0,0,.55)">${esc(e.testo)}</div>`;
+    } else if (e && e.tipo === "targa") {
+      h = `<div style="position:absolute;left:40px;right:40px;top:${alto}px;text-align:center"><span style="display:inline-block;padding:12px 30px 16px;background:${e.colore === 2 ? blu : S.accento};color:#fff;font-family:${famTitoli()};font-weight:900;font-stretch:125%;font-size:${Math.min(74 * g, 860 / (e.testo.length * .78))}px;white-space:nowrap;border-radius:10px;transform:rotate(-3deg) skewX(-6deg);box-shadow:0 10px 30px rgba(0,0,0,.35)">${esc(e.testo)}</span></div>`;
+      if (e.x) h += `<svg viewBox="0 0 200 200" width="230" height="230" style="position:absolute;left:770px;top:520px;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))"><circle cx="100" cy="100" r="84" fill="#E5322D" stroke="#fff" stroke-width="10"/><path d="M66 66L134 134M134 66L66 134" stroke="#fff" stroke-width="20" stroke-linecap="round"/></svg>`;
+      if (e.emoji) h += `<div style="position:absolute;left:770px;top:520px;width:230px;font-size:180px;line-height:230px;text-align:center">${e.emoji}</div>`;
+    } else if (e && e.tipo === "pila") {
+      h = `<div style="position:absolute;left:0;right:0;top:0;height:1150px;background:linear-gradient(rgba(10,10,14,.88),rgba(10,10,14,.75) 60%,rgba(10,10,14,0))"></div><div style="position:absolute;left:50px;right:50px;top:${alto}px;text-align:center;font-family:${famTitoli()};font-weight:900;font-stretch:125%;line-height:1.05">`
+        + e.voci.filter(v => v[1] <= t).map((v, j) => `<div style="font-size:${84 * g}px;color:${j % 2 ? S.accento : "#fff"}">${esc(v[0])}</div>`).join("") + "</div>";
+    }
+    box.innerHTML = h;
+  }
+  return !!e;
+}
 function aTempo() {
   const v = $("#vid"), t = v.currentTime || 0;
   if (vivoPezzi) {
     const i = vivoPezzi.findIndex(p => p.da <= t && t < p.a);
     const box = $("#sott");
-    if (i !== vivoQuale) { vivoQuale = i; box.innerHTML = i >= 0 ? vivoPezzi[i].html : ""; }
+    if (i !== vivoQuale) { vivoQuale = i; box.innerHTML = i >= 0 ? vivoPezzi[i].html : "";
+      if (MOSSE[S.stile] && MOSSE[S.stile].sopra && !mioVideo) box.querySelectorAll(".st").forEach(x => x.style.top = (S.testo_fisso ? 440 : 360) + "px"); }
     const modo = sottDi().modo;
     box.querySelectorAll(".w[data-t]").forEach(w => {
       const detta = t >= parseFloat(w.dataset.t);
@@ -264,6 +304,7 @@ function aTempo() {
       else if (modo === "accumula" || modo === "scrivi") { if (detta) w.removeAttribute("data-dopo"); else w.setAttribute("data-dopo", 1); }
     });
   }
+  $("#sott").style.visibility = mosseModello(t) ? "hidden" : "";   // come nel reel: la riga si toglie sotto la mossa
   const fine = $("#fine");
   fine.hidden = S.chiusura === "niente" || aperto !== 5;   // la chiusura solo mentre la scegli (Michael, 15/11/2026)
 }
@@ -379,8 +420,8 @@ document.addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
   if (t.classList.contains("testa")) { const n = +t.closest(".passo").dataset.n; aperto = aperto === n ? 0 : n; disegna(); return; }
   if (t.dataset.set) { metti(t.dataset.set, JSON.parse(t.dataset.v)); disegna(); base(); return; }
-  if (t.dataset.mio) { S.stile = S.stile === t.dataset.mio ? null : t.dataset.mio; S.modello = S.stile ? (stileDi(S.stile).mio ? "mio" : S.stile) : null; const s = stileDi(S.stile); if (s && s.di_serie && s.di_serie.sottotitoli) S.sottotitoli = s.di_serie.sottotitoli;   // i sottotitoli del modello: poi si cambiano al passo 4 disegna();
-    if (s && s.anteprima) telefono(`/file/anteprima-${s.chiave}`, "video", s.nome, false, true, true); else base(); return; }
+  if (t.dataset.mio) { S.stile = S.stile === t.dataset.mio ? null : t.dataset.mio; S.modello = S.stile ? (stileDi(S.stile).mio ? "mio" : S.stile) : null; const s = stileDi(S.stile); if (s && s.di_serie && s.di_serie.sottotitoli) S.sottotitoli = s.di_serie.sottotitoli;   // i sottotitoli del modello: poi si cambiano al passo 4
+    disegna(); base(); return; }   // come nella pagina di riferimento: il modello si disegna in diretta sul video, e ogni scelta cambia lì sopra
   if ("look" in t.dataset) { S.colore = t.dataset.look || null; disegna(); if (S.colore) telefono(`/file/look-${S.colore}`, "img", "Il look del video", false); else base(); return; }
   if (t.dataset.sott) { S.sottotitoli = t.dataset.sott; disegna(); base("Sottotitoli " + sottDi().nome); return; }
   if ("mus" in t.dataset) { S.musica = t.dataset.mus || null; disegna(); return; }
