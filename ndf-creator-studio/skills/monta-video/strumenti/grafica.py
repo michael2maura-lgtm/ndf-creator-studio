@@ -2314,6 +2314,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     if stile.get("sott_sopra") and not diviso:   # modello Energia: la riga dei sottotitoli sopra la testa
         cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
         y_sub = int(max(cima - 260, 290))
+        if stile.get("testo_fisso"):   # il testo fisso sta in alto (235-305 px): le scritte di Energia scendono sotto
+            y_sub = max(y_sub, 400)
     r.sposta, r.y_sub = sposta, y_sub
     ap = piano.get("apertura")
     # effetti accesi: quelli scelti nella pagina, se no quelli dello stile (stile.json "effetti"), se no tutti

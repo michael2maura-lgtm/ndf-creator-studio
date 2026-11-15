@@ -52,13 +52,17 @@ def _css(r):
         "</style>")
 
 
-def _misura(testo, largo, massimo):
-    """Grandezza del carattere perché il testo stia in una riga larga `largo` px (Archivo larga: ~0,78 em a lettera)."""
-    return int(max(40, min(massimo, largo / (max(len(testo), 1) * 0.78))))
+def _misura(testo, largo, massimo, r=None):
+    """Grandezza del carattere perché il testo stia in una riga larga `largo` px (Archivo larga: ~0,78 em a lettera).
+    Con `r`, tiene conto della grandezza dei titoli scelta nella pagina (70-140%), sempre dentro la riga."""
+    g = 1.0
+    if r is not None:
+        g = max(70, min(140, int((r.stile.get("ritocchi_titoli") or {}).get("grandezza") or 100))) / 100
+    return int(max(40, min(massimo * g, largo / (max(len(testo), 1) * 0.78))))
 
 
 def _y(r):
-    return max(getattr(r, "y_sub", 300) - 70, 240)   # al posto della riga dei sottotitoli (che si toglie): ben sopra la testa (Michael)
+    return max(getattr(r, "y_sub", 300) - 70, 330 if r.stile.get("testo_fisso") else 240)   # sotto il testo fisso, se c'è   # al posto della riga dei sottotitoli (che si toglie): ben sopra la testa (Michael)
 
 
 def forte(r, e, faccia):
@@ -67,11 +71,11 @@ def forte(r, e, faccia):
     c1, c2 = _colori(r)
     col = c2 if e.get("colore") == 2 else c1
     if e.get("modo") == "targa":
-        r.corpo.append(f'<div class="es-f es-t" id="ef{n}" style="top:{_y(r)}px"><span style="background:{col};font-size:{_misura(e["testo"], 860, 74)}px">{E(e["testo"])}</span></div>')
+        r.corpo.append(f'<div class="es-f es-t" id="ef{n}" style="top:{_y(r)}px"><span style="background:{col};font-size:{_misura(e["testo"], 860, 74, r)}px">{E(e["testo"])}</span></div>')
         r.tl.append(f'tl.fromTo("#ef{n}",{{opacity:0,clipPath:"inset(0 100% 0 0)"}},{{opacity:1,clipPath:"inset(0 0% 0 0)",duration:.3,ease:"power3.out",immediateRender:false}},{da:.3f});')
         r.suono("pop", da, 0.25)
     else:
-        r.corpo.append(f'<div class="es-f es-g" id="ef{n}" style="top:{_y(r) - 10}px;font-size:{_misura(e["testo"], 900, 150)}px">{E(e["testo"])}</div>')
+        r.corpo.append(f'<div class="es-f es-g" id="ef{n}" style="top:{_y(r) - 10}px;font-size:{_misura(e["testo"], 900, 150, r)}px">{E(e["testo"])}</div>')
         r.tl.append(f'tl.fromTo("#ef{n}",{{opacity:0,scale:1.5}},{{opacity:1,scale:1,duration:.22,ease:"power4.out",immediateRender:false}},{da:.3f});')
         r.suono("impatto", da, 0.3)
     r.tl.append(f'tl.to("#ef{n}",{{opacity:0,y:-20,duration:.2}},{a - 0.2:.3f});')
@@ -90,9 +94,9 @@ def pila(r, e, faccia):
         col = "#fff" if j % 2 == 0 else (c1 if j % 4 == 1 else c2)
         righe.append(f'<div id="ep{n}v{j}" style="color:{col}">{E(testo)}</div>')
     if e.get("finale"):
-        righe.append(f'<div class="es-t" id="ep{n}f"><span style="background:{c1};font-size:{_misura(e["finale"][0], 860, 74)}px">{E(e["finale"][0])}</span></div>')
+        righe.append(f'<div class="es-t" id="ep{n}f"><span style="background:{c1};font-size:{_misura(e["finale"][0], 860, 74, r)}px">{E(e["finale"][0])}</span></div>')
     su_fondo = any(x <= da < z for x, z in getattr(r, "su_fondo", []))   # sul fondo nuovo il velo scuro non serve
-    r.corpo.append(f'<div class="es-velo" id="ep{n}velo"{' style="display:none"' if su_fondo else ''}></div><div class="es-p" id="ep{n}" style="top:{max(getattr(r, "y_sub", 300) - 40, 260)}px">{"".join(righe)}</div>')
+    r.corpo.append(f'<div class="es-velo" id="ep{n}velo"{' style="display:none"' if su_fondo else ''}></div><div class="es-p" id="ep{n}" style="top:{max(getattr(r, "y_sub", 300) - 40, 330 if r.stile.get("testo_fisso") else 260)}px">{"".join(righe)}</div>')
     r.tl.append(f'tl.to("#ep{n}velo",{{opacity:1,duration:.25}},{da:.3f});')
     for j, (_, t) in enumerate(voci):
         r.tl.append(f'tl.fromTo("#ep{n}v{j}",{{opacity:0,y:30}},{{opacity:1,y:0,duration:.22,ease:"back.out(2)",immediateRender:false}},{t:.3f});')
@@ -111,7 +115,7 @@ def schermata(r, e, faccia):
     c1, c2 = _colori(r)
     col = c2 if e.get("colore") == 2 else c1
     r.corpo.append(f'<div class="es-s" id="es{n}" style="background:{col}">'
-                   f'<b style="font-size:{_misura(e["testo"], 940, 260)}px">{E(e["testo"])}</b>' + (f'<i>{E(e["sotto"])}</i>' if e.get("sotto") else "") + '</div>')
+                   f'<b style="font-size:{_misura(e["testo"], 940, 260, r)}px">{E(e["testo"])}</b>' + (f'<i>{E(e["sotto"])}</i>' if e.get("sotto") else "") + '</div>')
     r.tl.append(f'tl.set("#es{n}",{{opacity:1}},{da:.3f});tl.fromTo("#es{n} b",{{scale:1.25}},{{scale:1,duration:.3,ease:"power3.out",immediateRender:false}},{da:.3f});'
                 f'tl.set("#es{n}",{{opacity:0}},{a:.3f});')
     r.suono("impatto", da, 0.35)
@@ -153,6 +157,30 @@ def fondo(r, e, faccia):
     r.su_fondo = getattr(r, "su_fondo", []) + [(da, a)]
 
 
+def _emoji_png(r, emoji):
+    """L'emoji disegnata una volta come immagine (come lettera nella pagina rallenta il montaggio e blocca le foto).
+    Mac: Apple Color Emoji; Windows: Segoe UI Emoji. None se il computer non sa disegnarla."""
+    import os
+    from PIL import Image, ImageDraw, ImageFont
+    nome = "emoji-" + "-".join(f"{ord(c):x}" for c in emoji) + ".png"
+    dest = os.path.join(r.assets, nome)
+    if os.path.exists(dest):
+        return nome
+    for font, misura in (("/System/Library/Fonts/Apple Color Emoji.ttc", 160), ("C:/Windows/Fonts/seguiemj.ttf", 160)):
+        if not os.path.exists(font):
+            continue
+        try:
+            f = ImageFont.truetype(font, misura)
+            im = Image.new("RGBA", (220, 220), (0, 0, 0, 0))
+            ImageDraw.Draw(im).text((110, 110), emoji, font=f, embedded_color=True, anchor="mm")
+            if im.getbbox():
+                im.crop(im.getbbox()).save(dest)
+                return nome
+        except Exception:
+            continue
+    return None
+
+
 _TRATTO = 'fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"'
 
 
@@ -164,8 +192,12 @@ def icona(r, e, faccia):
     y = 640 if su_fondo else int(max(faccia["occhi"] - 120, 430))
     x = 70 if e.get("lato") == "sinistra" else 770
     if e.get("emoji"):   # la riserva: qualsiasi cosa si dica c'è un'emoji; salta fuori, rimbalza e oscilla piano
-        r.corpo.append(f'<div id="ei{n}" style="position:absolute;left:{x}px;top:{y}px;width:230px;height:230px;z-index:32;opacity:0;'
-                       f'font-size:180px;line-height:230px;text-align:center;font-family:\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Noto Color Emoji\',sans-serif;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))">{E(e["emoji"])}</div>')
+        nome = _emoji_png(r, e["emoji"])
+        if not nome:
+            print(f'NOTA: non riesco a disegnare l\'emoji {e["emoji"]} su questo computer, la salto')
+            return
+        r.corpo.append(f'<img id="ei{n}" src="assets/{nome}" style="position:absolute;left:{x}px;top:{y}px;width:230px;height:230px;'
+                       f'z-index:32;opacity:0;object-fit:contain;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))">')
         r.tl.append(f'tl.fromTo("#ei{n}",{{opacity:0,scale:.2,rotation:-30,y:60}},{{opacity:1,scale:1,rotation:0,y:0,duration:.45,ease:"back.out(2.6)",immediateRender:false}},{da:.3f});'
                     f'tl.to("#ei{n}",{{rotation:8,duration:.35,repeat:{max(int((a - da - 0.6) / 0.35), 1)},yoyo:true,ease:"sine.inOut"}},{da + 0.45:.3f});'
                     f'tl.to("#ei{n}",{{opacity:0,scale:.5,duration:.2}},{a - 0.2:.3f});')
