@@ -142,6 +142,7 @@ textarea{min-height:110px;resize:vertical}
        <div class="tit-vivo" id="tit"><div class="t1">ecco il</div><div class="t2">tuo titolo</div></div>
        <div id="sott"></div>
        <div id="modvivo"></div>
+       <div id="sfuvivo" style="position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle at 50% 45%,#fff 0%,#fff 30%,rgba(255,170,90,.95) 60%,rgba(255,120,40,.6) 100%)"></div>
        <div class="fine-vivo" id="fine" hidden></div>
      </div></div>
      <div class="etich" id="etich">Esempio</div>
@@ -207,7 +208,7 @@ function telefono(src, tipo, etichetta, sopra, voce, daCapo) {   // voce: si sen
 }
 function base(etichetta) {   // il video di partenza con le scritte che cambiano con le scelte
   const sm = S.stile && stileDi(S.stile);
-  telefono(mioVideo || (D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : sm && sm.modello ? sm.nome.replace(/^Stile /, "") + " · le tue scelte" : "Esempio"), true, true);
+  telefono(mioVideo || (sm && sm.telefono ? "/file/telefono-" + sm.chiave : D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : sm && sm.modello ? sm.nome.replace(/^Stile /, "") + " · le tue scelte" : "Esempio"), true, true);
   disegnaSopra();
 }
 function luce(c) { const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)); return "#" + v.map(x => Math.min(255, Math.round(x + (255 - x) * 0.3)).toString(16).padStart(2, "0")).join(""); }
@@ -257,20 +258,24 @@ let vivoPezzi = null, vivoQuale = -2;
 // Le mosse dei modelli sul video d'esempio (pagina/telefono.mp4): stesse grafiche del motore, disegnate in diretta
 // col font, il colore del brand e le lettere scelte. Se cambi il video d'esempio, cambia anche questi secondi.
 const MOSSE = {
-  energia: {sopra: true, mosse: [
+  energia: {sopra: true, vuoti: [[0.86, 2.15], [4.18, 5.15], [5.24, 12.0], [13.92, 15.0], [15.02, 16.8]], mosse: [
     {da: 0.86, a: 2.15, tipo: "gigante", testo: "CAMBIATO", sopra: "questa cosa mi ha"},
     {da: 4.18, a: 5.15, tipo: "targa", testo: "non serve saper montare", colore: 1, emoji: "😎", sopra: "e la cosa bella"},
     {da: 5.24, a: 7.85, tipo: "pila", voci: [["niente programmi", 5.24], ["niente montatore", 6.88]]},
     {da: 10.56, a: 11.96, tipo: "targa", testo: "il gioco è fatto", colore: 0, emoji: "✅", sopra: "monta questo video"},
     {da: 13.5, a: 14.95, tipo: "gigante", testo: "5 MINUTI", sopra: "adesso"},
   ]},
-  pulito: {sopra: false, mosse: []},
+  pulito: {sopra: false, transizioni: [9.1], zoom: [[5.18, 1.08], [9.09, 1], [11.98, 1.1], [12.68, 1], [14.19, 1.1], [14.9, 1]], mosse: []},
 };
 function famTitoli() { const f = S.titoli.font && F(S.titoli.font); return f ? `'${f.nome}'` : S.stile === "energia" ? "'Poppins'" : `'${TIT_BASE.fam}'`; }
 const rigaSopra = (testo, y) => testo ? `<div style="position:absolute;left:40px;right:40px;top:${y}px;text-align:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:46px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.8)">${esc(testo)}</div>` : "";
 let mossaQuale = "";
 function mosseModello(t) {
-  const m = !mioVideo && MOSSE[S.stile], box = $("#modvivo");
+  const m = !mioVideo && MOSSE[S.stile], box = $("#modvivo"), stm = m && stileDi(S.stile);
+  if (stm && stm.telefono) {   // il video è già il reel montato del modello: qui solo dove i sottotitoli si tolgono
+    if (mossaQuale) { box.innerHTML = ""; mossaQuale = ""; }
+    return (m.vuoti || []).some(([a, b]) => a <= t && t < b);
+  }
   if (!m) { if (mossaQuale) { box.innerHTML = ""; mossaQuale = ""; } return false; }
   const e = m.mosse.find(x => x.da <= t && t < x.a);
   const g = (S.titoli.grandezza || 100) / 100, alto = S.testo_fisso ? 340 : 270, blu = "#2F7DF6";
@@ -292,6 +297,22 @@ function mosseModello(t) {
   }
   return !!e;
 }
+// la sfumatura di luce sui cambi di argomento, come nel reel montato: sale in 0,5 s fino al bianco, poi si ritira
+function sfumaVivo(t) {
+  const m = !mioVideo && MOSSE[S.stile], st = m && stileDi(S.stile), box = $("#sfuvivo"), v = $("#vid");
+  let o = 0;
+  if (st && st.telefono) { box.style.opacity = 0; v.style.transform = v.style.filter = ""; return; }   // già nel reel montato
+  if (m && st && st.transizione === "sfumatura") for (const T of (m.transizioni || [])) {
+    const d = t - T;
+    if (d > -0.52 && d <= 0) o = Math.max(o, Math.pow((d + 0.52) / 0.52, 2));
+    else if (d > 0 && d < 0.8) o = Math.max(o, 1 - d / 0.8);
+  }
+  box.style.opacity = o.toFixed(3);
+  let z = 1;   // lo zoom leggero sui tagli, come nel reel montato
+  if (m && m.zoom) for (const [T, k] of m.zoom) if (t >= T) z = k;
+  v.style.transformOrigin = "50% 38%"; v.style.transform = z !== 1 ? `scale(${z})` : "";
+  v.style.filter = o > 0.01 ? `blur(${(o * 6).toFixed(1)}px) brightness(${(1 + o * .5).toFixed(2)}) saturate(${(1 + o * .25).toFixed(2)})` : "";
+}
 function aTempo() {
   const v = $("#vid"), t = v.currentTime || 0;
   if (vivoPezzi) {
@@ -306,6 +327,7 @@ function aTempo() {
       else if (modo === "accumula" || modo === "scrivi") { if (detta) w.removeAttribute("data-dopo"); else w.setAttribute("data-dopo", 1); }
     });
   }
+  sfumaVivo(t);
   $("#sott").style.visibility = mosseModello(t) ? "hidden" : "";   // come nel reel: la riga si toglie sotto la mossa
   const fine = $("#fine");
   fine.hidden = S.chiusura === "niente" || aperto !== 5;   // la chiusura solo mentre la scegli (Michael, 15/11/2026)

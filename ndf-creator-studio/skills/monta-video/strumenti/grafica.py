@@ -2443,7 +2443,9 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     chiave = {p.lower() for p in piano.get("parole_chiave", [])}
     css_sott = ""
     propri = stile.get("sottotitoli_nome") if stile.get("sottotitoli_nome") not in (None, "ndf-targhetta") else None
-    if stile.get("sottotitoli_scelti") or propri:  # scelti nella pagina, o quelli dello stile (strumenti/sottotitoli.py)
+    if piano.get("sottotitoli") is False:   # video d'esempio della pagina: i sottotitoli li disegna la pagina dal vivo
+        pass
+    elif stile.get("sottotitoli_scelti") or propri:  # scelti nella pagina, o quelli dello stile (strumenti/sottotitoli.py)
         css_sott, c_sott, tl_sott, f_sott = sottotitoli.parti(stile.get("sottotitoli_scelti") or propri, parole, chiave, y_sub,
                                                             r.nascondi + [(finale_da, D + 1)], stile["colori"], stile.get("ritocchi_sott"))
         r.corpo += c_sott
