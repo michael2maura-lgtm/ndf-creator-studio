@@ -25,10 +25,10 @@ def _css(r):
     r.corpo.append(
         "<style>@font-face{font-family:'Plus Jakarta Sans';src:url('assets/PlusJakartaSans.ttf');font-weight:200 800}"
         ".ch-e{position:absolute;left:50px;right:50px;text-align:center;z-index:31;opacity:0}"
-        ".ch-e .s{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:#fff;line-height:1.1;"
+        ".ch-e .s{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;color:#fff;line-height:1.1;"
         "text-shadow:0 3px 16px rgba(0,0,0,.65)}"
         f".ch-e .k{{font-family:'{ft['famiglia']}';font-weight:{ft.get('peso', 400)};font-stretch:{ft.get('larghezza', 100)}%;color:{c['accento']};"
-        "line-height:.95;white-space:nowrap;-webkit-text-stroke:2px rgba(20,10,6,.55);paint-order:stroke fill;text-shadow:0 3px 0 rgba(0,0,0,.35),0 6px 26px rgba(0,0,0,.9),0 0 50px rgba(0,0,0,.5)}"
+        "display:inline-block;line-height:.95;white-space:nowrap;-webkit-text-stroke:2px rgba(20,10,6,.55);paint-order:stroke fill;text-shadow:0 3px 0 rgba(0,0,0,.35),0 6px 26px rgba(0,0,0,.9),0 0 50px rgba(0,0,0,.5)}"
         ".ch-c{position:absolute;left:50px;width:920px;bottom:450px;z-index:31;opacity:0;display:flex;align-items:center;gap:32px;"
         "box-sizing:border-box;padding:28px 36px;border-radius:38px;background:rgba(18,18,20,.92);"
         "border:2px solid rgba(255,255,255,.12);box-shadow:0 22px 50px rgba(0,0,0,.5)}"
@@ -57,10 +57,20 @@ def evidenza(r, e, faccia):
     dim_s = int((52 if grande else 46) * min(g, 1.2))
     testa = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95   # la cima della testa
     alto = 320 if r.stile.get("testo_fisso") else 175
-    y = int(max(alto, min(testa - dim - (dim_s if sopra else 0) - 150, 460)))   # largo sopra i capelli, anche con lo zoom
+    alta_s = dim_s * 1.1 if sopra else 0
+    lim = testa + 85   # fin dove può arrivare la parola senza toccare i capelli (misurato sui reel approvati)
+    dim_max = (lim - alto - alta_s) / 0.95
+    if dim_max >= 110:   # c'è posto sopra la testa: la parola al massimo grande quanto entra
+        dim = int(min(dim, dim_max))
+        y = int(max(alto, min(lim - alta_s - dim * 0.95 - 60, 460)))
+    else:   # testa molto in alto o testo fisso: sopra non c'è posto, la parola va sul petto (i sottotitoli lì sono spenti)
+        y = int(faccia["mento"] + 60)
     r.corpo.append(f'<div class="ch-e" id="ce{n}" style="top:{y}px">'
                    + (f'<div class="s" id="ce{n}s" style="font-size:{dim_s}px">{E(sopra)}</div>' if sopra else "")
-                   + f'<div class="k" id="ce{n}k" style="font-size:{dim}px">{E(testo)}</div></div>')
+                   + f'<div class="k" id="ce{n}k" data-fs="{dim}" style="font-size:{dim}px">{E(testo)}</div></div>')
+    # qualsiasi font dei titoli scelto nella pagina (largo, maiuscolo, più grande): la parola si misura nel video e,
+    # se non sta in 940 px, si rimpicciolisce quanto basta. Mai fuori dallo schermo.
+    r.tl.append(f'tl.set("#ce{n}k",{{fontSize:(i,el)=>{{const b=+el.dataset.fs;el.style.fontSize=b+"px";const w=el.offsetWidth;return (w>940?Math.floor(b*940/w):b)+"px"}}}},{da - 0.07:.3f});')
     r.tl.append(f'tl.set("#ce{n}",{{opacity:1}},{da - 0.05:.3f});')
     if sopra:
         r.tl.append(f'tl.fromTo("#ce{n}s",{{opacity:0,y:18}},{{opacity:1,y:0,duration:.25,ease:"power2.out",immediateRender:false}},{da - 0.05:.3f});')
@@ -79,18 +89,22 @@ def scheda(r, e, faccia):
         dentro = f'<img src="assets/{effetti_sopra._emoji_png(r, e["icona"])}">'
     else:
         dentro = E(str(e.get("numero", "")))
-    # in basso, appoggiata al bordo della zona sicura (1470 px): i sottotitoli salgono sopra la scheda per il suo tempo
-    righe = (1 if len(e["testo"]) <= 18 else 2) * 67 + ((1 if len(e.get("sotto", "")) <= 30 else 2) * 48 + 8 if e.get("sotto") else 0)
-    alta = max(128, righe) + 60
-    y_sub = int(max(1470 - alta - 150, faccia["mento"] + 50))
+    # in basso, appoggiata al bordo della zona sicura (1470 px). I sottotitoli salgono subito sopra la scheda per il suo tempo:
+    # la misura si prende nel video (font, grandezza e righe scelti nella pagina cambiano l'altezza). Se sopra non c'è posto
+    # senza coprire il mento, per quei secondi i sottotitoli si tolgono: mai uno sopra l'altro.
+    mento = int(faccia["mento"])
+    sopra_js = f'(i,el)=>{{const c=document.getElementById("cc{n}");return Math.min({r.y_sub},c.offsetTop-28-el.offsetHeight/2)}}'
+    vede_js = f'(i,el)=>{{const c=document.getElementById("cc{n}");return c.offsetTop-28-el.offsetHeight<{mento}+15?"hidden":"inherit"}}'
     r.corpo.append(f'<div class="ch-c" id="cc{n}"><b id="cc{n}b">{dentro}</b><div>'
                    f'<div class="t">{E(e["testo"])}</div>' + (f'<div class="u">{E(e["sotto"])}</div>' if e.get("sotto") else "")
                    + "</div></div>")
     r.tl.append(f'tl.fromTo("#cc{n}",{{opacity:0,y:60}},{{opacity:1,y:0,duration:.35,ease:"power3.out",immediateRender:false}},{da:.3f});'
                 f'tl.fromTo("#cc{n}b",{{scale:.4,rotation:-12}},{{scale:1,rotation:0,duration:.35,ease:"back.out(2.2)",immediateRender:false}},{da + 0.12:.3f});'
                 f'tl.to("#cc{n}",{{opacity:0,y:30,duration:.25}},{a - 0.25:.3f});'
-                f'tl.to(".st,.sub",{{top:{y_sub},duration:.3,ease:"power2.out"}},{da - 0.05:.3f});'
-                f'tl.to(".st,.sub",{{top:{r.y_sub},duration:.3,ease:"power2.inOut"}},{a - 0.2:.3f});')
+                f'tl.set(".st,.sub",{{visibility:{vede_js}}},{da - 0.05:.3f});'
+                f'tl.to(".st,.sub",{{top:{sopra_js},duration:.3,ease:"power2.out"}},{da - 0.05:.3f});'
+                f'tl.to(".st,.sub",{{top:{r.y_sub},duration:.3,ease:"power2.inOut"}},{a - 0.2:.3f});'
+                f'tl.set(".st,.sub",{{visibility:"inherit"}},{a + 0.1:.3f});')
     r.suono("pop", da + 0.1, 0.22)
     r.sotto_scheda = getattr(r, "sotto_scheda", []) + [(da, a)]
 

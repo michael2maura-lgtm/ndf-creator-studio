@@ -208,7 +208,8 @@ function telefono(src, tipo, etichetta, sopra, voce, daCapo) {   // voce: si sen
 }
 function base(etichetta) {   // il video di partenza con le scritte che cambiano con le scelte
   const sm = S.stile && stileDi(S.stile);
-  telefono(mioVideo || (sm && sm.telefono ? "/file/telefono-" + sm.chiave : D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : sm && sm.modello ? sm.nome.replace(/^Stile /, "") + " · le tue scelte" : "Esempio"), true, true);
+  // mentre scegli il font dei titoli (passo 3) il video è quello senza scritte: sopra c'è solo "ecco il tuo titolo" (Michael, 16/11/2026)
+  telefono(mioVideo || (sm && sm.telefono && aperto !== 3 ? "/file/telefono-" + sm.chiave : D.telefono ? "/file/telefono" : ""), "video", etichetta || (mioVideo ? "Il tuo video" : sm && sm.modello ? sm.nome.replace(/^Stile /, "") + " · le tue scelte" : "Esempio"), true, true);
   disegnaSopra();
 }
 function luce(c) { const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)); return "#" + v.map(x => Math.min(255, Math.round(x + (255 - x) * 0.3)).toString(16).padStart(2, "0")).join(""); }
@@ -241,8 +242,27 @@ function disegnaTitolo() {
   const g = (t.grandezza || 100) / 100;
   let css = `.tit-vivo{font-family:'${fam}';font-weight:${peso};${f ? "" : "font-stretch:125%;"}text-transform:${t.maiuscolo === "su" ? "uppercase" : t.maiuscolo === "giu" ? "lowercase" : "none"};font-style:${t.corsivo ? "italic" : "normal"}}`
           + `.tit-vivo .t1{font-size:${64 * g}px}.tit-vivo .t2{font-size:${(f ? 150 : 120) * g}px}`;
+  const mt = !mioVideo && MOSSE[S.stile] && MOSSE[S.stile].titolo;
+  if (mt) {   // il titolo di prova uguale a quello del modello nel reel: riga piccola sopra, parola chiave nel font dei titoli, stesso punto
+    const fb = F(mt.fam);
+    if (!f && fb) css = css.replace(`font-family:'${fam}';font-weight:${peso};font-stretch:125%;`, `font-family:'${fb.nome}';font-weight:${fb.peso};`);
+    css += `.tit-vivo{top:${S.testo_fisso ? mt.petto : mt.top}px!important;left:215px;right:215px}`   // lontano dal tasto dell'audio del telefono
+         + `.tit-vivo .t1{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-style:normal;text-transform:none;color:#fff;font-size:${52 * Math.min(g, 1.2)}px;line-height:1.1}`
+         + `.tit-vivo .t2{font-size:${mt.k * Math.min(g, 1)}px;line-height:.95;margin-top:0;white-space:nowrap;-webkit-text-stroke:2px rgba(20,10,6,.55);paint-order:stroke fill;`
+         + `text-shadow:0 3px 0 rgba(0,0,0,.35),0 6px 26px rgba(0,0,0,.9)}`;
+  }
   if (t.ombra) css += `.tit-vivo .t1,.tit-vivo .t2{text-shadow:${ombra(t.ombra)}}`;
   $("#css-tit").textContent = css;
+  const k = $("#tit .t2");   // come nel reel: se la parola non sta in larghezza si rimpicciolisce, mai fuori dal telefono
+  if (k) { k.style.fontSize = ""; k.dataset.ok = ""; document.fonts.ready.then(() => { k.dataset.ok = ""; }); setTimeout(() => { k.dataset.ok = ""; }, 700); }   // si misura appena il titolo si vede (fitTit)
+}
+function fitTit() {   // la parola di prova non sta in larghezza: si rimpicciolisce quanto basta (come nel reel)
+  const k = $("#tit .t2"); if (!k || k.dataset.ok || $("#tit").hidden) return;
+  k.style.fontSize = ""; const r = document.createRange(); r.selectNodeContents(k);
+  const w = r.getBoundingClientRect().width, c = k.getBoundingClientRect().width;
+  if (c <= 0) return;
+  if (w > c) k.style.fontSize = (parseFloat(getComputedStyle(k).fontSize) * c / w * 0.98) + "px";
+  k.dataset.ok = 1;
 }
 function disegnaSott() {
   const x = sottDi(), box = $("#sott");
@@ -265,7 +285,7 @@ const MOSSE = {
     {da: 10.56, a: 11.96, tipo: "targa", testo: "il gioco è fatto", colore: 0, emoji: "✅", sopra: "monta questo video"},
     {da: 13.5, a: 14.95, tipo: "gigante", testo: "5 MINUTI", sopra: "adesso"},
   ]},
-  chiaro: {sopra: false, vuoti: [[0.86, 2.6], [15.02, 16.76]], su: [[5.25, 8.9, 1132], [12.05, 14.95, 1070]], mosse: []},   // su: i sottotitoli salgono sopra la scheda
+  chiaro: {sopra: false, titolo: {fam: "instrument-c", top: 175, petto: 1062, k: 133}, vuoti: [[0.86, 2.6], [15.02, 16.76]], su: [[5.25, 8.9, 1132], [12.05, 14.95, 1070]], mosse: []},   // su: i sottotitoli salgono sopra la scheda
   pulito: {sopra: false, transizioni: [9.1], zoom: [[5.18, 1.08], [9.09, 1], [11.98, 1.1], [12.68, 1], [14.19, 1.1], [14.9, 1]], mosse: []},
 };
 function famTitoli() { const f = S.titoli.font && F(S.titoli.font); return f ? `'${f.nome}'` : S.stile === "energia" ? "'Poppins'" : `'${TIT_BASE.fam}'`; }
@@ -273,6 +293,7 @@ const rigaSopra = (testo, y) => testo ? `<div style="position:absolute;left:40px
 let mossaQuale = "";
 function mosseModello(t) {
   const m = !mioVideo && MOSSE[S.stile], box = $("#modvivo"), stm = m && stileDi(S.stile);
+  if (stm && stm.telefono && aperto === 3) { if (mossaQuale) { box.innerHTML = ""; mossaQuale = ""; } return false; }   // passo 3: video senza scritte
   if (stm && stm.telefono) {   // il video è già il reel montato del modello: qui solo dove i sottotitoli si tolgono
     if (mossaQuale) { box.innerHTML = ""; mossaQuale = ""; }
     return (m.vuoti || []).some(([a, b]) => a <= t && t < b);
@@ -302,6 +323,7 @@ function mosseModello(t) {
 function sfumaVivo(t) {
   const m = !mioVideo && MOSSE[S.stile], st = m && stileDi(S.stile), box = $("#sfuvivo"), v = $("#vid");
   let o = 0;
+  if (st && st.telefono && aperto === 3) { box.style.opacity = 0; v.style.transform = v.style.filter = ""; return; }
   if (st && st.telefono) { box.style.opacity = 0; v.style.transform = v.style.filter = ""; return; }   // già nel reel montato
   if (m && st && st.transizione === "sfumatura") for (const T of (m.transizioni || [])) {
     const d = t - T;
@@ -335,7 +357,10 @@ function aTempo() {
     });
   }
   sfumaVivo(t);
-  $("#sott").style.visibility = mosseModello(t) ? "hidden" : "";   // come nel reel: la riga si toglie sotto la mossa
+  const solo = mosseModello(t) || (aperto === 3 && !mioVideo);   // passo 3: sul telefono solo il titolo di prova, niente sottotitoli
+  $("#sott").style.visibility = solo ? "hidden" : "";   // come nel reel: la riga si toglie sotto la mossa
+  $("#tit").hidden = aperto !== 3;   // il titolo di prova solo al passo 3 (lì il video del modello è quello senza scritte)
+  fitTit();
   const fine = $("#fine");
   fine.hidden = S.chiusura === "niente" || aperto !== 5;   // la chiusura solo mentre la scegli (Michael, 15/11/2026)
 }
@@ -449,7 +474,9 @@ function metti(chiave, v) { const [a, b] = chiave.split("."); if (b) S[a][b] = v
 // clic: tutto passa da qui (la pagina si ridisegna, il telefono mostra la scelta)
 document.addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
-  if (t.classList.contains("testa")) { const n = +t.closest(".passo").dataset.n; aperto = aperto === n ? 0 : n; disegna(); return; }
+  if (t.classList.contains("testa")) { const n = +t.closest(".passo").dataset.n, prima = aperto; aperto = aperto === n ? 0 : n; disegna();
+    const sm = S.stile && stileDi(S.stile); if (sm && sm.telefono && (prima === 3) !== (aperto === 3)) base();   // entra o esce dal passo 3: cambia il video
+    return; }
   if (t.dataset.set) { metti(t.dataset.set, JSON.parse(t.dataset.v)); disegna(); base(); return; }
   if (t.dataset.mio) { S.stile = S.stile === t.dataset.mio ? null : t.dataset.mio; S.modello = S.stile ? (stileDi(S.stile).mio ? "mio" : S.stile) : null; const s = stileDi(S.stile); if (s && s.di_serie && s.di_serie.sottotitoli) S.sottotitoli = s.di_serie.sottotitoli;   // i sottotitoli del modello: poi si cambiano al passo 4
     disegna(); base(); return; }   // come nella pagina di riferimento: il modello si disegna in diretta sul video, e ogni scelta cambia lì sopra
