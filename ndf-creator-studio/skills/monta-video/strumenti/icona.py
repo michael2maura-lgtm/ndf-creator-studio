@@ -29,6 +29,27 @@ subprocess.Popen([sys.executable, os.path.join(studio, "strumenti", "scegli.py")
 '''
 
 
+PNG = os.path.join(os.path.dirname(QUI), "pagina", "icona.png")   # il logo dell'icona, 1024 px
+
+
+def icona_mac(app):
+    """Mette il logo (pagina/icona.png) sull'app: tutte le misure in un .icns al posto dell'icona di serie."""
+    if not os.path.exists(PNG):
+        return
+    tmp = os.path.join(CASA, "icona.iconset")
+    shutil.rmtree(tmp, ignore_errors=True)
+    os.makedirs(tmp)
+    for n in (16, 32, 128, 256, 512):
+        for k, suf in ((1, ""), (2, "@2x")):
+            subprocess.run(["sips", "-z", str(n * k), str(n * k), PNG, "--out", os.path.join(tmp, f"icon_{n}x{n}{suf}.png")],
+                           check=True, capture_output=True)
+    subprocess.run(["iconutil", "-c", "icns", tmp, "-o", os.path.join(app, "Contents", "Resources", "applet.icns")], check=True)
+    shutil.rmtree(tmp, ignore_errors=True)
+    subprocess.run(["xattr", "-cr", app], check=False)
+    subprocess.run(["codesign", "--force", "--deep", "-s", "-", app], check=False, capture_output=True)   # firma di nuovo
+    subprocess.run(["touch", app], check=False)   # il Finder rilegge l'icona
+
+
 def scrivania():
     casa = os.path.expanduser("~")
     for p in (os.path.join(casa, "Desktop"), os.path.join(casa, "OneDrive", "Desktop"), os.path.join(casa, "Scrivania")):
@@ -51,13 +72,25 @@ def main():
         comando = f"'{py}' '{apri}' > /dev/null 2>&1 &"
         script = 'do shell script "' + comando.replace("\\", "\\\\").replace('"', '\\"') + '"'
         subprocess.run(["osacompile", "-o", app, "-e", script], check=True)
+        icona_mac(app)
         print("ICONA", app)
     elif platform.system() == "Windows":
         pyw = os.path.join(CASA, "venv", "Scripts", "pythonw.exe")
-        bat = os.path.join(dove, NOME + ".bat")
-        with open(bat, "w", encoding="utf-8") as f:
-            f.write(f'@echo off\r\nstart "" "{pyw}" "{apri}"\r\n')
-        print("ICONA", bat)
+        ico = os.path.join(CASA, "icona.ico")
+        try:
+            from PIL import Image
+            Image.open(PNG).save(ico, sizes=[(256, 256), (64, 64), (48, 48), (32, 32), (16, 16)])
+        except Exception:
+            ico = ""
+        lnk = os.path.join(dove, NOME + ".lnk")   # collegamento con il logo (un .bat non può avere un'icona)
+        ps = (f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}');$s.TargetPath='{pyw}';"
+              f"$s.Arguments='\"{apri}\"';" + (f"$s.IconLocation='{ico}';" if ico else "") + "$s.Save()")
+        r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], check=False)
+        if r.returncode != 0 or not os.path.exists(lnk):   # ripiego: il .bat, senza logo
+            lnk = os.path.join(dove, NOME + ".bat")
+            with open(lnk, "w", encoding="utf-8") as f:
+                f.write(f'@echo off\r\nstart "" "{pyw}" "{apri}"\r\n')
+        print("ICONA", lnk)
     else:
         sys.exit("Lo studio funziona su Mac e su Windows.")
 
