@@ -92,7 +92,7 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    quello che hai usato davvero. Di' in poche righe cosa hai fatto, se hai messo la musica e perché, e cosa deve
    ascoltare o controllare (le parole corrette a intuito, con il secondo). Tu non senti l'audio: dillo.
 
-Modelli rifatti da zero (quelli che la pagina mostra al passo 1, stile.json "modello": true), per ora due: **Pulito** (`pulito`: solo la persona, tagli netti, sottotitoli, zoom leggero, sfumatura di luce sui cambi di argomento; niente grafiche, titoli, musica: vedi il suo stile.md) ed **Energia** (`energia`: tutto il testo sopra la testa, parole giganti e targhe inclinate a due colori, elenchi che si costruiscono, sfondi nuovi dietro la persona staccata, disegni animati sulle parole che si possono disegnare, l'orbita dei reel; elementi in `strumenti/effetti_sopra.py`, regole nel suo stile.md). In Energia l'inventiva è il format: ogni parola che si può far vedere diventa un disegno o una grafica.
+Modelli rifatti da zero (quelli che la pagina mostra al passo 1, stile.json "modello": true), per ora tre: **Pulito** (`pulito`: solo la persona, tagli netti, sottotitoli, zoom leggero, sfumatura di luce sui cambi di argomento; niente grafiche, titoli, musica: vedi il suo stile.md) ed **Energia** (`energia`: tutto il testo sopra la testa, parole giganti e targhe inclinate a due colori, elenchi che si costruiscono, sfondi nuovi dietro la persona staccata, disegni animati sulle parole che si possono disegnare, l'orbita dei reel; elementi in `strumenti/effetti_sopra.py`, regole nel suo stile.md). In Energia l'inventiva è il format: ogni parola che si può far vedere diventa un disegno o una grafica. **Chiaro** (`chiaro`: il livello di mezzo, va bene per tutti: titolo sul gancio con la parola chiave in corsivo, poi una grafica ogni 7-8 secondi tra parola chiave elegante e scheda numerata sotto il mento; zoom ogni pochi secondi, sfumatura sui cambi di argomento; elementi in `strumenti/effetti_chiaro.py`, regole nel suo stile.md). Se l'utente non sa quale scegliere, consiglia Chiaro.
 Stili pronti, quattro: **Glow** (`glow`: Impact semplice, sfumatura e pop-up, per i contenuti organici), **Scene** (tu che parli e tra una frase e l'altra la scena giusta: clip e foto nella finestra,
 lavagna, lavagna bianca a schede "bianca"; niente omini), **Impact** (`ndf-grafica`, lo stile Notech dei reel di esempio 01 e 04: grafiche sopra la persona e, per numeri e prima/dopo, le scene animate "scena" della pasta; poche per un video
 semplice, con la sfumatura come passaggio, tante per un video d'impatto) e **Diviso** (pannello in alto, persona sotto).
@@ -113,7 +113,7 @@ e ne fai uno stile nuovo, che poi compare nella pagina), crea il tuo (parte da u
 Quando scrive `SCELTE SALVATE`, di' in una riga cosa ha scelto.
 La pagina (telefono con anteprima e 8 passi) salva in `DATI/scelte.json` anche queste scelte, che applichi TU nel piano
 di ogni reel (valgono finché non le cambia):
-- `modello`: pulito, energia, glow, scene, impact, diviso, ads, animato. **ads** = stile Impact, gancio forte nei primi 2 s,
+- `modello`: pulito, chiaro, energia, glow, scene, impact, diviso, ads, animato. **ads** = stile Impact, gancio forte nei primi 2 s,
   ritmo veloce, finale "CLICCA QUI SOTTO" (mai "commenta").
 - `accento`: il colore del brand. Nel piano del motore grafica `"colori": {"accento": "<accento>"}`; negli altri sulle
   parole chiave e sui titoli.

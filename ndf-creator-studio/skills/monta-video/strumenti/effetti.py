@@ -114,6 +114,10 @@ CATALOGO = {
                   "descrizione": "Per un attimo lo schermo diventa del tuo colore con una parola enorme."},
     "postit": {"nome": "Post-it", "gruppo": "Parole forti", "per": "Una regola, un promemoria, una frase da ricordare",
                "descrizione": "Un foglietto colorato si attacca storto e la frase si scrive a mano."},
+    "evidenza": {"nome": "Parola chiave elegante", "gruppo": "Parole forti", "per": "La parola importante della frase, il titolo sul gancio",
+                 "descrizione": "Sopra la testa una riga piccola e sotto la parola chiave in corsivo grande, che sale e si mette a fuoco."},
+    "scheda": {"nome": "Scheda numerata", "gruppo": "Elenchi", "per": "I concetti chiave, i punti di un elenco",
+               "descrizione": "In basso una scheda scura: il quadratino colorato con il numero, il titolo e una riga sotto."},
     "citazione": {"nome": "Citazione", "gruppo": "Parole forti", "per": "Una frase famosa, una frase di un cliente",
                   "descrizione": "Una scheda con le virgolette grandi e la frase in corsivo elegante."},
 }

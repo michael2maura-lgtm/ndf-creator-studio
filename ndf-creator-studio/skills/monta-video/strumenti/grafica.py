@@ -72,6 +72,7 @@ import subprocess
 import effetti
 import effetti_nuovi
 import effetti_sopra
+import effetti_chiaro
 import sottotitoli
 import ritocchi
 import suoni_reel
@@ -2427,6 +2428,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             r.pannello(e, faccia)
         elif tipo in effetti_sopra.TIPI:
             effetti_sopra.TIPI[tipo](r, e, faccia)
+        elif tipo in effetti_chiaro.TIPI:
+            effetti_chiaro.TIPI[tipo](r, e, faccia)
         elif tipo in effetti_nuovi.TIPI:
             effetti_nuovi.TIPI[tipo](r, e, faccia)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude

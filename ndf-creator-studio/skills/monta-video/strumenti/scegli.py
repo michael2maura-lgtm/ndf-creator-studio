@@ -95,7 +95,7 @@ def raccogli():
             momenti = [m for m in MOMENTI_MOTORE.get(motore, MOMENTI_MOTORE[""])]
             stili.append({"chiave": k, "modello": bool(st.get("modello")), "nome": st.get("nome", k), "descrizione": st.get("descrizione", ""), "mio": base == DATI and not os.path.isdir(os.path.join(STUDIO, "stili", k)),   # una copia di uno stile pronto non è "tuo"
                           "effetti": st.get("effetti"), "transizione": st.get("transizione", "bande" if motore == "grafica" else None),
-                          "grafiche": motore == "grafica", "anteprima": os.path.exists(anteprima), "telefono": os.path.exists(tel_m),
+                          "grafiche": motore == "grafica", "anteprima": os.path.exists(anteprima), "telefono": os.path.exists(tel_m), "ordine": st.get("ordine", 50),
                           "diviso": st.get("layout") == "diviso",
                           "di_serie": di_serie,
                           "momenti": [{"chiave": m, "titolo": MOMENTI[m][0], "quando": MOMENTI[m][1],
@@ -220,6 +220,7 @@ def raccogli():
             if os.path.exists(p[:-4] + ".jpg"):
                 file["tr-" + k + "-jpg"] = p[:-4] + ".jpg"
         transizioni[k] = os.path.exists(p)
+    stili.sort(key=lambda x: x.get("ordine", 50))   # i modelli dal più semplice al più movimentato
     tel = os.path.join(STUDIO, "pagina", "telefono.mp4")   # il video di esempio del telefono, uguale per tutti
     if os.path.exists(tel):
         file["telefono"] = tel

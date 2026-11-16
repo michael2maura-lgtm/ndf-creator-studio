@@ -41,5 +41,6 @@
  "transizione": "sfumatura",
  "mirino": false,
  "zoom_tagli_da": 5,
- "modello": true
+ "modello": true,
+ "ordine": 1
 }

@@ -52,5 +52,6 @@
  "mirino": false,
  "zoom_tagli_da": 3,
  "modello": true,
- "sott_sopra": true
+ "sott_sopra": true,
+ "ordine": 3
 }
