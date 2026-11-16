@@ -188,6 +188,10 @@ def main():
     plugin = os.path.join(os.path.dirname(os.path.dirname(QUI)), ".claude-plugin", "plugin.json")
     with open(os.path.join(CASA, "pronto.json"), "w", encoding="utf-8") as f:
         json.dump({"versione": json.load(open(plugin))["version"], "dati": DATI}, f)
+    try:   # l'icona "NDF Creator Studio" sulla scrivania: doppio clic e si apre la pagina
+        subprocess.run([percorsi.get("python") or sys.executable, os.path.join(QUI, "icona.py")], check=False)
+    except Exception:
+        pass
     print("FINE: lo studio è pronto.")
 
 
