@@ -45,6 +45,12 @@ def icona_mac(app):
                            check=True, capture_output=True)
     subprocess.run(["iconutil", "-c", "icns", tmp, "-o", os.path.join(app, "Contents", "Resources", "applet.icns")], check=True)
     shutil.rmtree(tmp, ignore_errors=True)
+    # le versioni nuove del Mac prendono l'icona da Assets.car: lo togliamo, così vale applet.icns
+    car = os.path.join(app, "Contents", "Resources", "Assets.car")
+    if os.path.exists(car):
+        os.remove(car)
+    subprocess.run(["/usr/libexec/PlistBuddy", "-c", "Delete :CFBundleIconName", os.path.join(app, "Contents", "Info.plist")],
+                   check=False, capture_output=True)
     subprocess.run(["xattr", "-cr", app], check=False)
     subprocess.run(["codesign", "--force", "--deep", "-s", "-", app], check=False, capture_output=True)   # firma di nuovo
     subprocess.run(["touch", app], check=False)   # il Finder rilegge l'icona
