@@ -27,7 +27,7 @@ Tutti nel motore grafica, tempi del video TAGLIATO. Mentre ci sono, i sottotitol
      (soldi, ufficio, sveglia, una persona al computer). Clip da Pexels con strumenti/clip.py, foto con lo stesso.
      Al massimo uno ogni 6-8 secondi.
  {"tipo": "spunte", "da", "a", "voci": [["Insegnanti preparati", t], ["Anni di esperienza", t]]}
-     Spunte: sul petto un quadratino verde con la spunta e sotto, grande e verde, la cosa buona detta; ogni voce prende
+     Spunte: sul petto un quadratino con la spunta (colore del brand) e sotto, grande e bianca, la cosa detta; ogni voce prende
      il posto della prima. Per i punti di forza, i vantaggi, "cosa trovi da noi" (2-4 voci).
  {"tipo": "colpiti", "da", "a", "voci": [["Programma uno", t, "riga piccola"], ...]}
      Nomi colpiti: ogni nome sbatte su una targa scura sopra la testa; quando arriva il dopo, il prima viene
@@ -103,10 +103,10 @@ def _css(r):
         ".px-bt{position:absolute;left:60px;right:60px;top:260px;z-index:28;opacity:0;text-align:center;font-family:'Inter Tight';"
         "font-weight:900;font-size:110px;line-height:1.02;letter-spacing:-.03em;color:#fff;text-shadow:0 6px 30px rgba(0,0,0,.6)}"
         ".px-sp2{position:absolute;left:40px;right:40px;z-index:31;opacity:0;text-align:center;font-family:'Inter Tight'}"
-        ".px-sp2 i{display:inline-grid;place-items:center;width:84px;height:84px;border-radius:22px;background:#2BB24C;color:#fff;font-style:normal;"
+        f".px-sp2 i{{display:inline-grid;place-items:center;width:84px;height:84px;border-radius:22px;background:{acc};color:#fff;font-style:normal;"
         "font-weight:900;font-size:56px;box-shadow:0 6px 20px rgba(0,0,0,.35)}"
         ".px-sp2 b{position:absolute;left:0;right:0;top:100px;opacity:0;font-weight:900;font-size:86px;line-height:1;letter-spacing:-.03em;"
-        "color:#3BE36A;-webkit-text-stroke:3px rgba(0,40,10,.55);paint-order:stroke fill;text-shadow:0 6px 24px rgba(0,0,0,.55)}"
+        "color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.4)}"
         "</style>")
 
 
@@ -381,7 +381,7 @@ def broll(r, e, faccia):
 
 
 def spunte(r, e, faccia):
-    """Spunte: sul petto un tondo verde con la spunta e sotto la frase in grassetto; ogni voce prende il posto della prima."""
+    """Spunte: sul petto un quadratino del colore del brand con la spunta e sotto la frase in grassetto; ogni voce prende il posto della prima."""
     _css(r)
     n, da, a = len(r.corpo), e["da"], e["a"]
     voci = e.get("voci", [])[:5]

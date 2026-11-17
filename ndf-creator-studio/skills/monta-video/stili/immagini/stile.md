@@ -16,7 +16,7 @@ mai le immagini, la voce o le parole. Motore: strumenti/grafica.py, grafiche in 
   niente stacco.
 - Domanda a tutto schermo ("schermata", colore del brand): sulla domanda che apre un pezzo nuovo ("ti chiedi
   perché?"), 1-2 volte in un minuto, 1-1,5 s, parole dette.
-- Spunte verdi ("spunte"): sui punti di forza detti uno dopo l'altro (2-4 voci, le parole dette).
+- Spunte ("spunte", nel colore del brand): sui punti di forza detti uno dopo l'altro (2-4 voci, le parole dette).
 - Zoom leggero sui tagli (regole/zoom.md). Sfumatura di luce solo sui cambi veri di argomento.
 - Sottotitoli: quelli scelti nella pagina (di serie una parola alla volta), continuano sopra il B-roll.
 - Suoni: un passaggio morbido sullo stacco, pop sulle spunte, colpo sulla domanda; niente musica di serie.

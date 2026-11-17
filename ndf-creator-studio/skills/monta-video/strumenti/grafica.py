@@ -2336,6 +2336,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     ap = piano.get("apertura")
     # effetti accesi: quelli scelti nella pagina, se no quelli dello stile (stile.json "effetti"), se no tutti
     accesi = stile.get("effetti_scelti", stile.get("effetti"))
+    if accesi is not None:   # i pezzi del modello (es. il B-roll di "Con immagini") valgono sempre, non sono effetti da scegliere
+        accesi = list(accesi) + [k for k in stile.get("effetti", []) if k in effetti.DEL_MODELLO]
     commento = False
     if ap and ap.get("box"):
         r.titolo_box(ap["box"], 0.0, ap.get("a", 4.0), max(faccia["mento"] - 40, 900))

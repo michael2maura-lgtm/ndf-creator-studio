@@ -135,8 +135,8 @@ CATALOGO = {
                 "descrizione": "La stanza si scurisce e dietro di te scorrono righe di parole enormi che cambiano sulla frase dopo."},
     "broll": {"nome": "B-roll", "gruppo": "Mostrare qualcosa", "per": "Una cosa che si può far vedere: soldi, ufficio, sveglia",
               "descrizione": "Per un attimo il video stacca su una clip o una foto vera a tutto schermo, poi torna su di te."},
-    "spunte": {"nome": "Spunte verdi", "gruppo": "Elenchi", "per": "I punti di forza, i vantaggi, cosa trovi da noi",
-               "descrizione": "Sul petto un quadratino verde con la spunta e sotto, grande, la cosa buona che dici."},
+    "spunte": {"nome": "Spunte", "gruppo": "Elenchi", "per": "I punti di forza, i vantaggi, cosa trovi da noi",
+               "descrizione": "Sul petto un quadratino del tuo colore con la spunta e sotto, grande, la cosa che dici."},
     "colpiti": {"nome": "Nomi colpiti", "gruppo": "Confronti", "per": "Senza questo, senza quello, cose da lasciare",
                 "descrizione": "Ogni nome sbatte su una targa sopra la testa; arriva il dopo e il prima viene barrato e vola via."},
 }
@@ -145,7 +145,11 @@ CATALOGO = {
 # Doppioni: restano nel motore (lo Stile NDF Grafica pronto li usa, sono il suo aspetto) ma la pagina non li mostra,
 # perché c'è la versione uguale al Creator Studio: passi -> checklist, contatore -> contachilometri / numero gigante,
 # targhette -> pillole, chat -> prompt, telefono -> telefono 3D.
-NASCOSTI = {"passi", "contatore", "targhette", "chat", "telefono"}
+NASCOSTI = {"passi", "contatore", "targhette", "chat", "telefono", "broll"}
+
+# Pezzi di un modello, non effetti da scegliere: la pagina Effetti non li mostra e il motore li usa sempre quando
+# sono nello stile.json del modello (Michael, 17/11: il B-roll è il modello "Con immagini", non un effetto).
+DEL_MODELLO = {"broll"}
 
 
 def chiave_di(elemento):
