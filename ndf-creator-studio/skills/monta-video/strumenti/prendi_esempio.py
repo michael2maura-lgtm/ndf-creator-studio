@@ -2,6 +2,7 @@
 
 Uso:  PY strumenti/prendi_esempio.py "<link o file>" ["<altro link>" ...] [--nome marco] [--browser chrome]
 
+Anche una foto o uno screenshot (file .jpg .png .webp, o l'indirizzo diretto di una foto): diventa foto.png.
 Link: Instagram, TikTok, YouTube, Pinterest, X e quasi tutti gli altri siti di video. La prima volta installa il
 programma che scarica (yt-dlp, pochi MB) dentro il Python dello studio.
 Per ogni esempio stampa una riga:
@@ -25,18 +26,53 @@ from comune import DATI, FFMPEG, codec_video  # noqa: E402
 ESEMPI = os.path.join(DATI, "esempi")
 
 
+def installa(aggiorna=False):
+    """Installa (o aggiorna all'ultima versione) il programma che scarica. True se è andato."""
+    # il Python dello studio è fatto con uv (niente pip dentro): si usa uv, se no pip
+    uv = next((u for u in (shutil.which("uv"), os.path.expanduser("~/.local/bin/uv"), "/opt/homebrew/bin/uv",
+                           os.path.expanduser("~/.cargo/bin/uv"), os.path.expanduser("~/.local/bin/uv.exe"))
+               if u and os.path.exists(u)), None)
+    su = ["-U"] if aggiorna else []
+    cmd = [uv, "pip", "install", "-q", *su, "--python", sys.executable, "yt-dlp"] if uv else \
+          [sys.executable, "-m", "pip", "install", "-q", *su, "yt-dlp"]
+    return subprocess.run(cmd, capture_output=True).returncode == 0
+
+
+def da_aggiornare(giorni=21):
+    """Instagram e TikTok cambiano spesso: un programma di qualche settimana fa smette di scaricare.
+    Si guarda la data della versione senza aprirlo, e si prova ad aggiornare al massimo una volta al giorno."""
+    import datetime
+    import importlib.metadata
+    segno = os.path.join(os.path.expanduser("~"), ".studio-video", "scaricatore-controllato.txt")
+    oggi = datetime.date.today().isoformat()
+    try:
+        if open(segno, encoding="utf-8").read().strip() == oggi:
+            return False
+    except OSError:
+        pass
+    try:
+        a, m, g = (int(x) for x in importlib.metadata.version("yt-dlp").split(".")[:3])
+        vecchio = (datetime.date.today() - datetime.date(a, m, g)).days > giorni
+    except Exception:  # noqa: BLE001
+        return False
+    if vecchio:
+        os.makedirs(os.path.dirname(segno), exist_ok=True)
+        with open(segno, "w", encoding="utf-8") as f:
+            f.write(oggi)
+    return vecchio
+
+
 def scaricatore():
     try:
-        import yt_dlp  # noqa: F401
-    except ImportError:
+        import importlib.metadata
+        importlib.metadata.version("yt-dlp")
+    except Exception:  # noqa: BLE001
         print("Installo il programma che scarica i video (una volta sola)...", flush=True)
-        # il Python dello studio è fatto con uv (niente pip dentro): si usa uv, se no pip
-        uv = next((u for u in (shutil.which("uv"), os.path.expanduser("~/.local/bin/uv"), "/opt/homebrew/bin/uv",
-                               os.path.expanduser("~/.cargo/bin/uv"), os.path.expanduser("~/.local/bin/uv.exe"))
-                   if u and os.path.exists(u)), None)
-        cmd = [uv, "pip", "install", "-q", "--python", sys.executable, "yt-dlp"] if uv else \
-              [sys.executable, "-m", "pip", "install", "-q", "yt-dlp"]
-        subprocess.run(cmd, check=True)
+        installa()
+    else:
+        if da_aggiornare():
+            print("Controllo che il programma che scarica i video sia aggiornato...", flush=True)
+            installa(aggiorna=True)
     import yt_dlp
     return yt_dlp
 
@@ -60,7 +96,7 @@ def in_mp4(src, dest):
 def scarica(link, cart, browser=None):
     yt_dlp = scaricatore()
     opz = {"outtmpl": os.path.join(cart, "originale.%(ext)s"), "quiet": True, "no_warnings": True,
-           "format": "bv*+ba/b", "merge_output_format": "mp4", "noplaylist": True}
+           "format": "bv*+ba/b", "merge_output_format": "mp4", "noplaylist": True, "noprogress": True}
     if browser:
         opz["cookiesfrombrowser"] = (browser,)
     try:
@@ -75,6 +111,15 @@ def scarica(link, cart, browser=None):
     return os.path.join(cart, fatti[0]) if fatti else "NON RIUSCITO"
 
 
+FOTO = (".jpg", ".jpeg", ".png", ".webp", ".heic")
+
+
+def in_foto(src, dest):
+    """Una foto o uno screenshot (un pin, una grafica che piace) diventa foto.png: lo studia studia.py."""
+    from PIL import Image
+    Image.open(src).convert("RGB").save(dest)
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opz = lambda k: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else None  # noqa: E731
@@ -87,6 +132,23 @@ def main():
         cart = os.path.join(ESEMPI, nome)
         os.makedirs(cart, exist_ok=True)
         dest = os.path.join(cart, "reel.mp4")
+        if os.path.exists(os.path.expanduser(cosa)) and os.path.splitext(cosa)[1].lower() in FOTO:
+            foto = os.path.join(cart, "foto.png")
+            in_foto(os.path.expanduser(cosa), foto)
+            print(f"PRONTO {foto}", flush=True)
+            continue
+        if re.match(r"https?://\S+\.(jpe?g|png|webp)(\?|$)", cosa, re.I):   # l'indirizzo diretto di una foto
+            import urllib.request
+            tmp = os.path.join(cart, "scaricata" + os.path.splitext(cosa.split("?")[0])[1])
+            try:
+                urllib.request.urlretrieve(cosa, tmp)
+                in_foto(tmp, os.path.join(cart, "foto.png"))
+                os.remove(tmp)
+                print(f"PRONTO {os.path.join(cart, 'foto.png')}", flush=True)
+            except Exception:  # noqa: BLE001
+                shutil.rmtree(cart, ignore_errors=True)
+                print(f"NON RIUSCITO {cosa}", flush=True)
+            continue
         if os.path.exists(os.path.expanduser(cosa)):
             in_mp4(os.path.expanduser(cosa), dest)
             print(f"PRONTO {dest}", flush=True)
@@ -96,6 +158,13 @@ def main():
             print(f"NON RIUSCITO {cosa} (non è un link e non trovo il file)", flush=True)
             continue
         esito = scarica(cosa, cart, browser)
+        if esito == "NON RIUSCITO" and "--aggiornato" not in sys.argv and installa(aggiorna=True):
+            # spesso il sito è cambiato: con il programma aggiornato si riprova una volta, da capo
+            shutil.rmtree(cart, ignore_errors=True)
+            print("Il sito è cambiato: ho aggiornato il programma che scarica, riprovo...", flush=True)
+            subprocess.run([sys.executable, os.path.abspath(__file__), cosa, "--nome", nome, "--aggiornato"]
+                           + (["--browser", browser] if browser else []))
+            continue
         if esito in ("SERVE LOGIN", "NON RIUSCITO"):
             shutil.rmtree(cart, ignore_errors=True)
             print(f"{esito} {cosa}", flush=True)

@@ -1,6 +1,7 @@
 """Studia per intero un reel di esempio, per rifarne lo stile: cosa c'è sullo schermo, come si muove, il ritmo, il suono.
 
 Uso:  PY strumenti/studia.py <file o nome dell'esempio>      (es. DATI/esempi/marco/reel.mp4, oppure "marco")
+      Anche una foto o uno screenshot (foto.png): scrive studio/foto.png, dettagli.jpg e i colori principali.
 
 Scrive DATI/esempi/<nome>/studio/:
   foglio_01.jpg ...    tutti i fotogrammi, uno ogni mezzo secondo, con il secondo scritto sopra: COSA c'è
@@ -82,12 +83,45 @@ def parole(video, cart):
         os.remove(wav)
 
 
+def studia_foto(foto):
+    """Una foto o uno screenshot: niente ritmo, movimento o suono, ma caratteri, colori e posizioni sì."""
+    from PIL import Image
+    cart = os.path.join(os.path.dirname(foto), "studio")
+    os.makedirs(cart, exist_ok=True)
+    im = Image.open(foto).convert("RGB")
+    w, h = im.size
+    im.save(os.path.join(cart, "foto.png"))
+    # quattro dettagli ingranditi (alto, centro alto, centro basso, basso): per leggere i caratteri e i bordi
+    pezzi, scritte = [], []
+    for i, nome in enumerate(("alto", "centro alto", "centro basso", "basso")):
+        p = im.crop((0, i * h // 4, w, (i + 1) * h // 4))
+        pezzi.append(p.resize((900, int(900 * p.size[1] / p.size[0]))))
+        scritte.append(nome)
+    hp = max(p.size[1] for p in pezzi)
+    pezzi = [p.crop((0, 0, 900, hp)) for p in pezzi]
+    foglio(pezzi, scritte, 1, os.path.join(cart, "dettagli.jpg"))
+    # i colori principali, dal più usato
+    q = im.resize((200, int(200 * h / w))).quantize(colors=8)
+    pal = q.getpalette()
+    conta = sorted(q.getcolors(), reverse=True)
+    colori = ["#%02X%02X%02X" % tuple(pal[i * 3:i * 3 + 3]) for _, i in conta]
+    with open(os.path.join(cart, "studio.json"), "w", encoding="utf-8") as f:
+        json.dump({"tipo": "foto", "larghezza": w, "altezza": h, "colori": colori}, f, indent=1)
+    print(f"Foto {w}x{h}. Colori principali: {', '.join(colori)}")
+    print(f"Guarda {cart}/foto.png e dettagli.jpg (caratteri, colori, posizioni).")
+    print("Una foto non dice ritmo, movimento e suono: chiedi all'utente una cosa sola, o scegli movimenti calmi e diglielo.")
+
+
 def main():
     import numpy as np
     from PIL import Image
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     video = os.path.expanduser(sys.argv[1])
+    if not os.path.exists(video) and os.path.exists(os.path.join(DATI, "esempi", sys.argv[1], "foto.png")):
+        video = os.path.join(DATI, "esempi", sys.argv[1], "foto.png")
+    if os.path.splitext(video)[1].lower() in (".jpg", ".jpeg", ".png", ".webp") and os.path.exists(video):
+        return studia_foto(video)
     if not os.path.exists(video):
         video = os.path.join(DATI, "esempi", sys.argv[1], "reel.mp4")
     if not os.path.exists(video):
