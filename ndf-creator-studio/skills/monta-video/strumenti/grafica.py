@@ -2386,8 +2386,10 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     zoom_sui_tagli(r, cart, piano, stile, faccia, riq)
     for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][-1] if x.get("voci") else 0):
         tipo = e["tipo"]
-        if tipo not in ("scena", "pannello") and accesi is not None and effetti.chiave_di(e) not in accesi:   # le scene sono lo stile, non un effetto
-            print(f'NOTA: "{effetti.CATALOGO[effetti.chiave_di(e)]["nome"]}" non è tra gli effetti accesi, lo salto')
+        con_numeri = tipo == "fondo" and any(x.get("tipo") == "numeri" and x.get("da", 0) < e.get("a", 0) and e.get("da", 0) < x.get("a", 0)
+                                             for x in piano.get("elementi", []))   # il fondo dei passi di Energia va con loro
+        if tipo not in ("scena", "pannello") and not con_numeri and accesi is not None and effetti.chiave_di(e) not in accesi:   # le scene sono lo stile, non un effetto
+            print(f'NOTA: "{effetti.CATALOGO.get(effetti.chiave_di(e), {}).get("nome", effetti.chiave_di(e))}" non è tra gli effetti accesi, lo salto')
             continue
         if tipo == "gigante":
             r.gigante(e)

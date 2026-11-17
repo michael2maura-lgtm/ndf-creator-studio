@@ -135,6 +135,8 @@ CATALOGO = {
                 "descrizione": "La stanza si scurisce e dietro di te scorrono righe di parole enormi che cambiano sulla frase dopo."},
     "broll": {"nome": "B-roll", "gruppo": "Mostrare qualcosa", "per": "Una cosa che si può far vedere: soldi, ufficio, sveglia",
               "descrizione": "Per un attimo il video stacca su una clip o una foto vera a tutto schermo, poi torna su di te."},
+    "numeri": {"nome": "Passi numerati", "gruppo": "Elenchi", "per": "Un metodo, primo secondo terzo (modello Energia)",
+               "descrizione": "Ti stacca su un fondo nuovo e i passi entrano numerati, ognuno con il suo disegno."},
     "spunte": {"nome": "Spunte", "gruppo": "Elenchi", "per": "I punti di forza, i vantaggi, cosa trovi da noi",
                "descrizione": "Sul petto un quadratino del tuo colore con la spunta e sotto, grande, la cosa che dici."},
     "colpiti": {"nome": "Nomi colpiti", "gruppo": "Confronti", "per": "Senza questo, senza quello, cose da lasciare",
@@ -145,11 +147,11 @@ CATALOGO = {
 # Doppioni: restano nel motore (lo Stile NDF Grafica pronto li usa, sono il suo aspetto) ma la pagina non li mostra,
 # perché c'è la versione uguale al Creator Studio: passi -> checklist, contatore -> contachilometri / numero gigante,
 # targhette -> pillole, chat -> prompt, telefono -> telefono 3D.
-NASCOSTI = {"passi", "contatore", "targhette", "chat", "telefono", "broll"}
+NASCOSTI = {"passi", "contatore", "targhette", "chat", "telefono", "broll", "numeri"}
 
 # Pezzi di un modello, non effetti da scegliere: la pagina Effetti non li mostra e il motore li usa sempre quando
 # sono nello stile.json del modello (Michael, 17/11: il B-roll è il modello "Con immagini", non un effetto).
-DEL_MODELLO = {"broll"}
+DEL_MODELLO = {"broll", "numeri"}   # numeri: i passi di Energia, sempre con il loro "fondo"
 
 
 def chiave_di(elemento):
