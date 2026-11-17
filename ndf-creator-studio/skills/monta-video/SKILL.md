@@ -68,7 +68,9 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    `strumenti/grafica.py`, quando usare cosa nello `stile.md` dello stile, esempio approvato in `esempi/grafica.json` (Impact semplice, approvato da Michael: `esempi/impact-semplice.json`).
    Ogni 4-8 secondi una grafica, sempre nata da una frase detta in quel momento.
    Effetti nuovi (barra, scontrino, carrello, sondaggio, voto, podio, top, freccia, postit, citazione): formato in cima
-   a `strumenti/effetti_nuovi.py`. Usa solo gli effetti accesi nella pagina Effetti (scelte.json "effetti"): dove
+   a `strumenti/effetti_nuovi.py`; parole sparse, pallini, copertina di rivista, schede con le barre, cartellini
+   legati, parole giganti dietro, nomi colpiti (sparse, pallini, rivista, schede, cartellini, scritte, colpiti):
+   formato e quando usarli in cima a `strumenti/effetti_piu.py`. Usa solo gli effetti accesi nella pagina Effetti (scelte.json "effetti"): dove
    metterli lo decidi tu, sulla frase che li giustifica, con numeri e nomi veri detti nel video (mai inventati).
    Zoom: decidilo sempre tu, in ogni video, seguendo `regole/zoom.md` (l'utente non deve chiederlo).
    **Poche cose fatte bene**: una grafica alla volta, mai lampi, adesivi o pillole su ogni parola. Se un elemento non

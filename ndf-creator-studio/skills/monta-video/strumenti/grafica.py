@@ -49,7 +49,7 @@ piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
    {"tipo": "targhetta", "da": 2.0, "riga1": "Il metodo NDF", "riga2": "spiegato semplice"},   fissa in alto fino alla fine
    {"tipo": "barrate", "da": 6.8, "barra": 9.2, "a": 11.5, "icone": ["forbici", "pellicola", "timeline"]},  "senza..."
    {"tipo": "orbita", "da": 50.0, "a": 55.8},                     con ritaglio: copertine dei reel già montati
-   {"tipo": "zoom", "mosse": [[0.3, 2.4, 1.12, "lento"], [3.6, 3.9, 1.3, "scatto"], [4.9, 5.2, 1.0, "fuori"]]}],
+   {"tipo": "zoom", "mosse": [[0.3, 2.4, 1.18, "lento"], [3.6, 3.9, 1.45, "scatto"], [4.9, 5.2, 1.0, "fuori"]]}],
  "finale_da": 64.75, "finale_sopra": "TE LO INVIO IN DIRECT", "finale_testo": "COMMENTA", "finale_bottone": "INFO"}
 
  "transizioni": [14.6, 40.7],     cambi di argomento: la transizione dello stile (sfumatura, bande o niente)
@@ -73,6 +73,7 @@ import effetti
 import effetti_nuovi
 import effetti_sopra
 import effetti_chiaro
+import effetti_piu
 import sottotitoli
 import ritocchi
 import suoni_reel
@@ -530,7 +531,7 @@ class Reel:
         nome = f"adesivo-{n}.png"
         adesivo.save(os.path.join(self.assets, nome))
         w, h = adesivo.size
-        k = min(1.0, 1150 / h, 900 / w)                              # grande, ma lascia posto alle note
+        k = min(1.0, 900 / h, 760 / w)                               # al centro, con il fondo attorno e posto per le note
         w, h = w * k, h * k
         sx, sy = 540 - w / 2, 960 - h / 2 + 90
         pagina = e.get("pagina", "#2346B8")
@@ -539,6 +540,12 @@ class Reel:
         segni = (f'<div class="segni" id="a{len(self.corpo)}g" style="left:{tx - 90:.0f}px;top:{ty:.0f}px">'
                  '<i style="transform:rotate(-30deg)"></i><i style="transform:rotate(0deg);top:40px"></i>'
                  '<i style="transform:rotate(30deg);top:80px"></i></div>')
+        # freccia disegnata a mano: dalla prima nota scende e indica il fianco dell'adesivo
+        fx0, fy0 = min(sx + w + 40, 990), 400
+        fx1, fy1 = sx + w * 0.86, sy + h * 0.32
+        freccia = (f'<svg class="frc" id="a{len(self.corpo)}f" width="1080" height="1920"><path d="M{fx0:.0f} {fy0:.0f} C{fx0 + 50:.0f} {(fy0 + fy1) / 2:.0f} '
+                   f'{fx1 + 90:.0f} {fy1 - 40:.0f} {fx1:.0f} {fy1:.0f}" pathLength="1"/><path d="M{fx1 + 46:.0f} {fy1 - 10:.0f} L{fx1:.0f} {fy1:.0f} '
+                   f'L{fx1 + 30:.0f} {fy1 - 48:.0f}" pathLength="1"/></svg>') if e.get("note") else ""
         note = []
         for j, (testo, quando) in enumerate((e.get("note") or [])[:2]):
             ny = 300 if j == 0 else 1520
@@ -551,10 +558,13 @@ class Reel:
             self.suono_libreria("mixkit/matita.mp3", max(quando, t + 0.35), 0.35)
         self.corpo.append(f'<div class="pagina" id="a{n}" style="background-color:{pagina}"><div class="raggi"></div>'
                           f'<img class="adesivo" id="a{n}s" src="assets/{nome}" style="left:{sx:.0f}px;top:{sy:.0f}px;'
-                          f'width:{w:.0f}px;height:{h:.0f}px">{segni}'
+                          f'width:{w:.0f}px;height:{h:.0f}px">{segni}{freccia}'
                           + (f'<div class="timbro" id="a{n}t" style="color:{c["accento_luce"]};border-color:{c["accento_luce"]}">'
                              f'{html.escape(timbro.upper())}</div>' if timbro else "")
                           + f'{"".join(note)}</div>')
+        if freccia:
+            fa = max(e["note"][0][1], t + 0.35) + 0.45
+            self.tl.append(f'tl.fromTo("#a{n}f path",{{strokeDashoffset:1}},{{strokeDashoffset:0,duration:0.4,stagger:0.35,ease:"power1.inOut",immediateRender:false}},{fa:.3f});')
         self.tl.append(f'tl.fromTo("#a{n}g i",{{scaleX:0}},{{scaleX:1,duration:0.15,stagger:0.06,ease:"power2.out",immediateRender:false}},{t + 0.3:.3f});')
         if timbro:
             self.tl.append(f'tl.fromTo("#a{n}t",{{opacity:0,scale:2.2,rotation:-14}},{{opacity:1,scale:1,rotation:-8,duration:0.18,'
@@ -590,7 +600,7 @@ class Reel:
             else:
                 dur = 0.12 if tipo == "scatto" else 0.28
                 self.tl.append(f'tl.to("#cam",{{scale:{scala},duration:{dur},ease:"{"power4.out" if tipo == "scatto" else "expo.out"}"}},{arrivo - dur:.3f});'
-                               f'tl.fromTo("#bg",{{filter:"blur(7px)"}},{{filter:"blur(0px)",duration:{dur + 0.1:.2f},ease:"power2.out",immediateRender:false}},{arrivo - dur:.3f});')
+                               f'tl.fromTo("#bg",{{filter:"blur(14px)"}},{{filter:"blur(0px)",duration:{dur + 0.14:.2f},ease:"power2.out",immediateRender:false}},{arrivo - dur:.3f});')
                 if not self.stile.get("zoom_muto"):
                     self.suono("transizione", arrivo - dur, 0.3)
 
@@ -639,10 +649,13 @@ class Reel:
         self.camera.insert(0, f'<div class="pozza" id="lz{n}" style="background:radial-gradient(520px 620px at {x:.0f}px {y + 120:.0f}px,'
                               f'rgba(160,190,255,.30),rgba(120,150,230,.10) 55%,rgba(120,150,230,0) 78%)"></div>')
         m = len(self.corpo)
+        self.font_extra("InterTight.ttf")
         cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
-        posti = [max(cima - 260, 230), faccia["mento"] + 140, faccia["mento"] + 330]  # sopra la testa, poi sul petto
+        # parole grosse e spesse (Inter Tight 900): la prima sopra la testa, la seconda sul petto nel colore dello stile
+        dims = [min(250, int(1000 / (max(len(t), 3) * 0.56))) for t, _ in e.get("parole", [])[:3]]
+        posti = [max(cima - (dims[0] if dims else 200) - 30, 200), faccia["mento"] + 110, faccia["mento"] + 110 + (dims[1] if len(dims) > 1 else 200) + 20]
         parole = "".join(f'<div class="lparola" id="l{m}p{j}" style="top:{posti[j]:.0f}px;'
-                         f'{"color:" + c["accento_luce"] if j % 2 else ""};font-size:{min(170, int(980 / (max(len(t), 3) * 0.62)))}px">'
+                         f'{"color:" + c["accento"] if j % 2 else ""};font-size:{dims[j]}px">'
                          f'{html.escape(t.lower())}</div>' for j, (t, _) in enumerate(e.get("parole", [])[:3]))
         self.corpo.append(f'<div class="lbuio" id="l{m}"></div>{parole}')
         self.tl.append(f'tl.set("{sel}",{{opacity:1}},{da:.3f});'
@@ -680,9 +693,10 @@ class Reel:
         c = self.stile["colori"]
         da, quando, a = e["da"], e["quando"], e["a"]
         sel = self.ritaglio(da - 0.1, a + 0.1)
-        testo = e["parola"].upper()
-        largo = self.stile["font"]["titoli"].get("larghezza", 100) / 100   # un font allargato occupa di più
-        dim = min(320, int(940 / (max(len(testo), 3) * 0.88 * largo)))
+        # parola enorme e spessa in minuscolo (Inter Tight 900), nel colore dello stile, come una scritta sul muro
+        self.font_extra("InterTight.ttf")
+        testo = e["parola"].lower()
+        dim = min(340, int(1000 / (max(len(testo), 3) * 0.58)))
         cima = self.cima_testa(self.ultimo_ritaglio, quando - da + 0.1) \
             or faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95   # dove finisce la testa
         y = max(cima - dim * 0.55, 230)  # la testa copre la parte bassa della parola
@@ -991,7 +1005,7 @@ class Reel:
             for c, ch in enumerate(str(nu["valore"])):
                 if ch.isdigit():
                     passi = 20 + int(ch)
-                    T(f'tl.fromTo("#od{n}k{k}c{c}",{{y:0,filter:"blur(5px)"}},{{y:{-passi * 150},filter:"blur(0px)",duration:{0.9 + c * 0.12:.2f},ease:"power3.out",immediateRender:false}},{t:.3f});')
+                    T(f'tl.fromTo("#od{n}k{k}c{c}",{{y:0,filter:"blur(5px)"}},{{y:{-passi * 200},filter:"blur(0px)",duration:{0.9 + c * 0.12:.2f},ease:"power3.out",immediateRender:false}},{t:.3f});')
             if nu.get("sotto"):
                 T(f'tl.fromTo("#od{n}k{k}u",{{opacity:0}},{{opacity:1,duration:0.25,immediateRender:false}},{nu.get("sotto_da", t + 1.2):.3f});')
             if k > 0:   # quello prima si fa piccolo e va a sinistra
@@ -1596,7 +1610,7 @@ class Reel:
         n = len(self.camera)
         self.camera.append(f'<div class="ob" id="ob{n}">' + "".join(f'<img class="ob-c" src="assets/{c}">' for c in copertine) + '</div>')
         cx = (faccia["sinistra"] + faccia["destra"]) / 2
-        cy = faccia["mento"] + 120
+        cy = faccia["mento"] + 60   # anello inclinato attorno a testa e spalle: un lato sale verso la testa, l'altro scende al petto
         giri = e.get("giri", 1)
         self.tl.append(f'tl.set("{sel}",{{opacity:1}},{da:.3f});tl.set("{sel}",{{opacity:0}},{a:.3f});'
                        f'tl.set("#ob{n}",{{opacity:1}},{da:.3f});tl.set("#ob{n}",{{opacity:0}},{a:.3f});'
@@ -2267,7 +2281,8 @@ def colore_degli_effetti(pagina, acc):
     for giallo in ("#F4E06D", "#FFD84A"):
         pagina = pagina.replace(giallo, acc)
     pagina = pagina.replace("244,224,109", f"{r},{g},{b}")
-    if 0.2126 * r + 0.7152 * g + 0.0722 * b < 150:   # colore scuro: testo chiaro sopra
+    # colore scuro: testo chiaro sopra il colore. Il testo scuro su schede crema o bianche usa #151515 e resta scuro
+    if 0.2126 * r + 0.7152 * g + 0.0722 * b < 150:
         pagina = pagina.replace('color:"#141414"', 'color:"#FFFFFF"').replace("color:#141414", "color:#FFFFFF").replace("color:#3a3420", "color:#FFFFFF")
     return pagina
 
@@ -2430,6 +2445,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             effetti_sopra.TIPI[tipo](r, e, faccia)
         elif tipo in effetti_chiaro.TIPI:
             effetti_chiaro.TIPI[tipo](r, e, faccia)
+        elif tipo in effetti_piu.TIPI:
+            effetti_piu.TIPI[tipo](r, e, faccia)
         elif tipo in effetti_nuovi.TIPI:
             effetti_nuovi.TIPI[tipo](r, e, faccia)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude
@@ -2620,7 +2637,7 @@ html,body{{margin:0;background:{scuro}}}
  display:flex;align-items:center;justify-content:center}}
 .zona{{position:absolute;background:rgba(255,0,0,.35);z-index:50}}
 .rit{{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;opacity:0;z-index:3}}
-.pdietro{{position:absolute;left:0;right:0;text-align:center;{W};line-height:1;white-space:nowrap;opacity:0;z-index:2;
+.pdietro{{position:absolute;left:0;right:0;text-align:center;font-family:'Inter Tight';font-weight:900;letter-spacing:-0.05em;line-height:1;white-space:nowrap;opacity:0;z-index:2;
  transform-origin:50% 60%}}
 .buio{{position:absolute;inset:0;z-index:7;opacity:0;pointer-events:none;
  background:radial-gradient(900px 1100px at 540px 900px,rgba(2,4,10,0) 45%,rgba(2,4,10,.35) 78%,rgba(2,4,10,.6) 100%)}}
@@ -2629,8 +2646,8 @@ html,body{{margin:0;background:{scuro}}}
 .pozza{{position:absolute;inset:0;z-index:2;opacity:0;mix-blend-mode:screen}}
 .lbuio{{position:absolute;inset:0;z-index:7;opacity:0;pointer-events:none;
  background:radial-gradient(640px 860px at 540px 820px,rgba(0,0,0,0) 35%,rgba(0,0,8,.75) 100%)}}
-.lparola{{position:absolute;left:40px;right:40px;text-align:center;z-index:31;font-family:'{ft["famiglia"]}';font-weight:900;
- letter-spacing:-4px;line-height:1;color:#fff;opacity:0;text-shadow:0 10px 40px rgba(0,0,0,.5)}}
+.lparola{{position:absolute;left:30px;right:30px;text-align:center;z-index:31;font-family:'Inter Tight';font-weight:900;
+ letter-spacing:-0.045em;line-height:1;color:#fff;opacity:0;white-space:nowrap;text-shadow:0 10px 40px rgba(0,0,0,.5)}}
 @font-face{{font-family:'Caveat';src:url('assets/Caveat.ttf');font-weight:400 700}}
 .pagina{{position:absolute;inset:0;z-index:36;opacity:0;overflow:hidden}}
 .raggi{{position:absolute;left:-600px;top:-500px;width:2280px;height:2920px;
@@ -2641,6 +2658,8 @@ html,body{{margin:0;background:{scuro}}}
 .timbro{{position:absolute;left:90px;top:200px;font-family:'Archivo';font-weight:900;font-stretch:110%;font-size:54px;letter-spacing:2px;
  padding:6px 20px;border:6px solid;border-radius:12px;opacity:0;background:rgba(255,255,255,.06)}}
 .adesivo{{position:absolute;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}}
+.frc{{position:absolute;left:0;top:0;pointer-events:none}}.frc path{{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;
+ stroke-dasharray:1;stroke-dashoffset:1}}
 .nota{{position:absolute;left:90px;right:120px;text-align:center;font-family:'Caveat';font-weight:700;font-size:118px;line-height:1;
  color:#fff;opacity:0;text-shadow:0 3px 0 rgba(0,0,0,.25)}}
 @font-face{{font-family:'Indie Flower';src:url('assets/IndieFlower.ttf')}}
@@ -2667,7 +2686,7 @@ html,body{{margin:0;background:{scuro}}}
 .cm-in{{margin-left:auto;width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-weight:900;font-size:36px;
  display:flex;align-items:center;justify-content:center}}
 .cm-riga{{position:absolute;left:0;top:0;display:flex;align-items:center;gap:16px;opacity:0;transform-origin:0 50%}}
-.cm-bol{{position:relative;display:flex;align-items:baseline;gap:14px;padding:14px 34px 16px;border-radius:44px;background:#F4EFE6;color:#141414;
+.cm-bol{{position:relative;display:flex;align-items:baseline;gap:14px;padding:14px 34px 16px;border-radius:44px;background:#F4EFE6;color:#151515;
  box-shadow:0 10px 30px rgba(0,0,0,.3)}}
 .cm-bol small{{font-size:30px;color:#8C8780;font-weight:500}}
 .cm-bol b{{font-weight:800;font-size:56px;letter-spacing:-1.5px}}
@@ -2694,11 +2713,11 @@ html,body{{margin:0;background:{scuro}}}
 .fe-svg line{{stroke:rgba(255,255,255,.9);stroke-width:3}}
 .fe-svg .anello{{fill:none;stroke:#fff;stroke-width:4}}
 .fe-svg .punto{{fill:#F4E06D;stroke:#1a1a1a;stroke-width:3}}
-.et{{position:absolute;display:flex;align-items:center;gap:8px;height:96px;padding:0 30px 0 18px;border-radius:22px;background:#F6F1E7;color:#141414;
+.et{{position:absolute;display:flex;align-items:center;gap:8px;height:96px;padding:0 30px 0 18px;border-radius:22px;background:#F6F1E7;color:#151515;
  font-family:'Inter Tight';font-weight:800;font-size:50px;letter-spacing:-1.5px;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0}}
 .et-n{{font-family:'{fm["famiglia"]}';font-weight:500;font-size:24px;letter-spacing:0;background:#F4E06D;color:#3a3420;border-radius:10px;
  width:56px;height:56px;display:flex;align-items:center;justify-content:center;margin-right:12px}}
-.et-p{{opacity:0}}
+.et-p{{opacity:0;color:#151515}}
 .pc{{position:absolute;inset:0;z-index:36;opacity:0;background:#0E1A1A}}
 .pc-lab{{position:absolute;left:0;right:0;text-align:center;font-family:'Inter Tight';font-weight:800;font-size:26px;letter-spacing:0.5px;color:#EDE4D6}}
 .pc-tit{{position:absolute;left:60px;right:60px;text-align:center;font-family:'Instrument Serif';font-style:italic;font-size:100px;line-height:1;color:#EDE4D6}}
@@ -2708,7 +2727,7 @@ html,body{{margin:0;background:{scuro}}}
  letter-spacing:-2px;color:#EDE4D6}}
 .pc-passo.serif{{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-size:78px;letter-spacing:0}}
 .ck{{position:absolute;left:70px;right:70px;z-index:33;opacity:0;padding:30px 34px 26px;border-radius:34px;font-family:'Inter Tight';
- background:rgba(26,26,30,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:2px solid rgba(255,255,255,.12);
+ background:rgba(20,20,24,.9);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:2px solid rgba(255,255,255,.12);
  box-shadow:0 20px 60px rgba(0,0,0,.45)}}
 .ck-testa{{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}}
 .ck-lab{{display:flex;align-items:center;gap:14px;font-weight:600;font-size:24px;letter-spacing:5px;color:rgba(255,255,255,.62)}}
@@ -2730,15 +2749,15 @@ html,body{{margin:0;background:{scuro}}}
 .od{{position:absolute;right:0;top:0;opacity:0;transform-origin:100% 0;text-align:right}}
 .od-pann{{display:inline-flex;align-items:center;gap:10px;padding:14px;border-radius:26px;background:linear-gradient(#232831,#151920);
  box-shadow:0 18px 50px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08)}}
-.od-cella{{position:relative;width:112px;height:150px;border-radius:14px;overflow:hidden;
+.od-cella{{position:relative;width:150px;height:200px;border-radius:14px;overflow:hidden;
  background:linear-gradient(#2c323c 0%,#1a1e25 48%,#0f1217 52%,#20252d 100%);box-shadow:inset 0 2px 6px rgba(0,0,0,.6)}}
 .od-cella:after{{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(0,0,0,.55)}}
 .od-str{{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column}}
-.od-str b{{height:150px;line-height:150px;text-align:center;font-weight:800;font-size:118px;color:#F2EADB;letter-spacing:-3px}}
-.od-segno{{font-weight:800;font-size:118px;line-height:150px;color:#F4E06D;padding:0 4px}}
+.od-str b{{height:200px;line-height:200px;text-align:center;font-weight:800;font-size:160px;color:#F2EADB;letter-spacing:-3px}}
+.od-segno{{font-weight:800;font-size:160px;line-height:200px;color:#F4E06D;padding:0 4px}}
 .od-lab{{margin-top:12px;border-top:4px solid #F4E06D;padding-top:8px}}
-.od-lab span{{font-weight:800;font-size:38px;letter-spacing:1px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}}
-.od-sotto{{font-weight:800;font-size:24px;letter-spacing:2px;color:#fff;opacity:0;text-shadow:0 2px 10px rgba(0,0,0,.6)}}
+.od-lab span{{font-weight:800;font-size:46px;letter-spacing:1px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}}
+.od-sotto{{font-weight:800;font-size:30px;letter-spacing:2px;color:#fff;opacity:0;text-shadow:0 2px 10px rgba(0,0,0,.6)}}
 .pl{{position:absolute;left:40px;right:40px;display:flex;justify-content:center;gap:16px;z-index:32;opacity:0;font-family:'Inter Tight'}}
 .pl-p{{padding:12px 28px 14px;border-radius:40px;border:2.5px solid rgba(255,255,255,.78);background:rgba(0,0,0,.18);color:#fff;
  font-weight:600;font-size:36px;white-space:nowrap;opacity:0;text-shadow:0 2px 8px rgba(0,0,0,.4)}}
@@ -2764,7 +2783,7 @@ html,body{{margin:0;background:{scuro}}}
  font-style:normal;font-weight:900;font-size:40px}}
 .pop-ico svg{{width:46px;height:46px}}
 .pop-tx{{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}}
-.pop-tx b{{font-weight:800;font-size:34px;color:#141414}}
+.pop-tx b{{font-weight:800;font-size:34px;color:#151515}}
 .pop-tx span{{font-weight:500;font-size:29px;color:#333;line-height:1.2}}
 .pop em{{align-self:flex-start;font-style:normal;font-weight:600;font-size:26px;color:#8a8580}}
 .br{{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:44px;z-index:33;opacity:0}}
@@ -2794,7 +2813,7 @@ html,body{{margin:0;background:{scuro}}}
 .tf-sch{{position:relative;padding:20px;border-radius:22px;background:#202228;color:#fff;opacity:0}}
 .tf-sl{{font-size:16px;letter-spacing:3px;color:#F4E06D;font-weight:700;margin-bottom:10px}}
 .tf-st{{font-size:34px;font-weight:800;line-height:1.1;letter-spacing:-1px;margin-bottom:18px}}
-.tf-bot{{height:62px;border-radius:31px;background:#fff;color:#141414;font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center}}
+.tf-bot{{height:62px;border-radius:31px;background:#fff;color:#151515;font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center}}
 .tf-onda{{position:absolute;left:50%;bottom:30px;width:80px;height:80px;margin-left:-40px;border-radius:50%;border:3px solid #F4E06D;opacity:0}}
 .tf-scrivi{{position:absolute;left:30px;right:30px;bottom:34px;height:58px;border-radius:30px;background:#1f2126;color:rgba(255,255,255,.4);
  font-size:20px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 22px}}
@@ -2939,10 +2958,10 @@ function orbita(sel, cx, cy, da, a, giri) {{
     const entra = Math.min(o.t / 0.6, 1), esce = Math.min(Math.max((a - da - o.t) / 0.5, 0), 1), f = entra * esce;
     carte.forEach((c, i) => {{
       const ang = (i / carte.length) * Math.PI * 2 + (o.t / (a - da)) * Math.PI * 2 * giri;
-      const z = Math.cos(ang), x = cx + Math.sin(ang) * 470 * f, y = cy - 120 + z * 70 * f - Math.sin(ang) * 40;
-      const s = (0.62 + 0.28 * (z + 1) / 2) * (0.3 + 0.7 * f);
+      const z = Math.cos(ang), x = cx + Math.sin(ang) * 430 * f, y = cy - 120 + z * 120 * f - Math.sin(ang) * 210 * f;
+      const s = (0.55 + 0.4 * (z + 1) / 2) * (0.3 + 0.7 * f);
       c.style.transform = `translate(${{x - 150}}px, ${{y - 267}}px) scale(${{s}}) rotateY(${{Math.sin(ang) * -25}}deg)`;
-      c.style.zIndex = z > 0 ? 6 : 1; c.style.filter = `brightness(${{0.62 + 0.38 * (z + 1) / 2}})`; c.style.opacity = f;
+      c.style.zIndex = z > 0 ? 6 : 1; c.style.filter = `brightness(${{0.75 + 0.25 * (z + 1) / 2}})`; c.style.opacity = f;
     }});
   }};
   posa();

@@ -120,6 +120,21 @@ CATALOGO = {
                "descrizione": "In basso una scheda scura: il quadratino colorato con il numero, il titolo e una riga sotto."},
     "citazione": {"nome": "Citazione", "gruppo": "Parole forti", "per": "Una frase famosa, una frase di un cliente",
                   "descrizione": "Una scheda con le virgolette grandi e la frase in corsivo elegante."},
+    # aggiunti il 17/11/2026 (strumenti/effetti_piu.py)
+    "sparse": {"nome": "Parole sparse", "gruppo": "Parole forti", "per": "Il gancio: le prime parole del video",
+               "descrizione": "Le prime parole cadono una alla volta sul petto, di misure diverse, e quelle prima si sfocano."},
+    "pallini": {"nome": "Pallini che contano", "gruppo": "Elenchi", "per": "Ti dico 3 cose, 3 errori, 3 passi",
+                "descrizione": "Dici quante cose arrivano e sotto il mento compaiono i pallini: si riempiono mentre le dici."},
+    "rivista": {"nome": "Copertina di rivista", "gruppo": "Parole forti", "per": "Una frase forte, una notizia",
+                "descrizione": "Il video diventa una copertina: la testata enorme dietro la testa, un filo attorno e una riga in corsivo."},
+    "schede": {"nome": "Schede con le barre", "gruppo": "Confronti", "per": "Un confronto con dei numeri",
+               "descrizione": "Scendi in una finestra in basso e sopra una scheda bianca con le barre che corrono fino ai numeri."},
+    "cartellini": {"nome": "Cartellini legati", "gruppo": "Tu", "per": "Le cose che fai, i tuoi strumenti",
+                   "descrizione": "Cartellini scuri legati con un filo giallo alla tua testa o alla spalla: ti seguono quando ti muovi."},
+    "scritte": {"nome": "Parole giganti dietro", "gruppo": "Parole forti", "per": "Tutti ne parlano, un tema che torna",
+                "descrizione": "La stanza si scurisce e dietro di te scorrono righe di parole enormi che cambiano sulla frase dopo."},
+    "colpiti": {"nome": "Nomi colpiti", "gruppo": "Confronti", "per": "Senza questo, senza quello, cose da lasciare",
+                "descrizione": "Ogni nome sbatte su una targa sopra la testa; arriva il dopo e il prima viene barrato e vola via."},
 }
 
 
