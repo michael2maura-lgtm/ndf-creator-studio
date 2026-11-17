@@ -133,6 +133,10 @@ CATALOGO = {
                    "descrizione": "Cartellini scuri legati con un filo giallo alla tua testa o alla spalla: ti seguono quando ti muovi."},
     "scritte": {"nome": "Parole giganti dietro", "gruppo": "Parole forti", "per": "Tutti ne parlano, un tema che torna",
                 "descrizione": "La stanza si scurisce e dietro di te scorrono righe di parole enormi che cambiano sulla frase dopo."},
+    "broll": {"nome": "B-roll", "gruppo": "Mostrare qualcosa", "per": "Una cosa che si può far vedere: soldi, ufficio, sveglia",
+              "descrizione": "Per un attimo il video stacca su una clip o una foto vera a tutto schermo, poi torna su di te."},
+    "spunte": {"nome": "Spunte verdi", "gruppo": "Elenchi", "per": "I punti di forza, i vantaggi, cosa trovi da noi",
+               "descrizione": "Sul petto un quadratino verde con la spunta e sotto, grande, la cosa buona che dici."},
     "colpiti": {"nome": "Nomi colpiti", "gruppo": "Confronti", "per": "Senza questo, senza quello, cose da lasciare",
                 "descrizione": "Ogni nome sbatte su una targa sopra la testa; arriva il dopo e il prima viene barrato e vola via."},
 }

@@ -51,7 +51,8 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    `DATI/clip/`, "x" per la X rossa), `omino` (in_piedi, spallucce, braccia_su, scrivania; "chiaro", "croce",
    "numero"), `chat`, `telefono` ("storia" o "reel"), `schema`; sopra la persona `titoli`, `liste`, `parole_chiave`.
    Ogni scena nasce da una frase detta in quel momento, con le parole dette.
-   Clip vere: prima guarda quelle che ci sono in `DATI/clip/`. Se manca quella giusta, cercala sul web
+   Clip vere: con il modello "Con immagini" la prima volta chiedi al cliente le sue foto e i suoi video (lo dice
+   `stili/immagini/stile.md`); prima guarda quelle che ci sono in `DATI/clip/` e `DATI/immagini/`. Se manca quella giusta, cercala sul web
    ("pexels video <cosa, in inglese> vertical"), prendi un link pexels.com/video/...-<numero>/ e scaricala con
    `PY STUDIO/strumenti/clip.py <link> <nome>`; guarda il `.jpg` che crea e usala solo se mostra davvero quello che
    si dice. Dai alla clip il nome dell'oggetto quando c'è (soldi, porta, festa, sveglia, ufficio, fabbrica,
@@ -69,7 +70,7 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    Ogni 4-8 secondi una grafica, sempre nata da una frase detta in quel momento.
    Effetti nuovi (barra, scontrino, carrello, sondaggio, voto, podio, top, freccia, postit, citazione): formato in cima
    a `strumenti/effetti_nuovi.py`; parole sparse, pallini, copertina di rivista, schede con le barre, cartellini
-   legati, parole giganti dietro, nomi colpiti (sparse, pallini, rivista, schede, cartellini, scritte, colpiti):
+   legati, parole giganti dietro, nomi colpiti, B-roll a tutto schermo (sparse, pallini, rivista, schede, cartellini, scritte, colpiti, broll):
    formato e quando usarli in cima a `strumenti/effetti_piu.py`. Usa solo gli effetti accesi nella pagina Effetti (scelte.json "effetti"): dove
    metterli lo decidi tu, sulla frase che li giustifica, con numeri e nomi veri detti nel video (mai inventati).
    Zoom: decidilo sempre tu, in ogni video, seguendo `regole/zoom.md` (l'utente non deve chiederlo).

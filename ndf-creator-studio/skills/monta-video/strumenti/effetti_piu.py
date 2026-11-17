@@ -20,6 +20,15 @@ Tutti nel motore grafica, tempi del video TAGLIATO. Mentre ci sono, i sottotitol
  {"tipo": "scritte", "da", "a", "frasi": [["TUTTI NE PARLANO", t], ["CLAUDE MONTA I VIDEO", t]]}
      Muro di parole giganti: la stanza si scurisce, dietro di te righe di parole enormi che scorrono; sulla frase
      dopo cambiano (l'ultima nel colore dello stile). "Tutti dicono", "ovunque", un tema che torna.
+ {"tipo": "broll", "da", "a", "file": "soldi.mp4" (clip o foto in DATI/clip, DATI/immagini o nel lavoro),
+  "testo": "facoltativo, una riga in alto", "lampo": true}
+     B-roll: per 1-3 secondi il video stacca su una clip o una foto vera a tutto schermo (la foto si avvicina piano),
+     poi torna su di te. I sottotitoli continuano sopra. Solo quando la frase nomina una cosa che si può far vedere
+     (soldi, ufficio, sveglia, una persona al computer). Clip da Pexels con strumenti/clip.py, foto con lo stesso.
+     Al massimo uno ogni 6-8 secondi.
+ {"tipo": "spunte", "da", "a", "voci": [["Insegnanti preparati", t], ["Anni di esperienza", t]]}
+     Spunte: sul petto un quadratino verde con la spunta e sotto, grande e verde, la cosa buona detta; ogni voce prende
+     il posto della prima. Per i punti di forza, i vantaggi, "cosa trovi da noi" (2-4 voci).
  {"tipo": "colpiti", "da", "a", "voci": [["Programma uno", t, "riga piccola"], ...]}
      Nomi colpiti: ogni nome sbatte su una targa scura sopra la testa; quando arriva il dopo, il prima viene
      barrato in rosso e vola via. Per "senza questo, senza quello", strumenti o abitudini da lasciare (2-4).
@@ -91,6 +100,13 @@ def _css(r):
         ".px-tg small{display:block;font-family:'JetBrains Mono';font-weight:500;font-size:22px;color:#F4E06D;margin-top:6px}"
         ".px-tg i{position:absolute;left:18px;right:18px;top:44%;height:9px;border-radius:5px;background:#E5484D;transform:scaleX(0);"
         "transform-origin:0 50%}"
+        ".px-bt{position:absolute;left:60px;right:60px;top:260px;z-index:28;opacity:0;text-align:center;font-family:'Inter Tight';"
+        "font-weight:900;font-size:110px;line-height:1.02;letter-spacing:-.03em;color:#fff;text-shadow:0 6px 30px rgba(0,0,0,.6)}"
+        ".px-sp2{position:absolute;left:40px;right:40px;z-index:31;opacity:0;text-align:center;font-family:'Inter Tight'}"
+        ".px-sp2 i{display:inline-grid;place-items:center;width:84px;height:84px;border-radius:22px;background:#2BB24C;color:#fff;font-style:normal;"
+        "font-weight:900;font-size:56px;box-shadow:0 6px 20px rgba(0,0,0,.35)}"
+        ".px-sp2 b{position:absolute;left:0;right:0;top:100px;opacity:0;font-weight:900;font-size:86px;line-height:1;letter-spacing:-.03em;"
+        "color:#3BE36A;-webkit-text-stroke:3px rgba(0,40,10,.55);paint-order:stroke fill;text-shadow:0 6px 24px rgba(0,0,0,.55)}"
         "</style>")
 
 
@@ -318,5 +334,70 @@ def colpiti(r, e, faccia):
     r.nascondi.append((da, a))
 
 
+def broll(r, e, faccia):
+    """B-roll a tutto schermo: clip o foto vera al posto tuo, poi si torna su di te."""
+    import os
+    import shutil
+    _css(r)
+    n, da, a = len(r.corpo), e["da"], e["a"]
+    cart = os.path.dirname(r.reel)
+    dati = os.path.dirname(os.path.dirname(cart))
+    p = next((q for q in (e["file"], os.path.join(cart, e["file"]), os.path.join(dati, "clip", e["file"]),
+                          os.path.join(dati, "immagini", e["file"])) if os.path.isfile(q)), None)
+    if not p:
+        print(f'NOTA: non trovo {e["file"]} per il B-roll, lo salto')
+        return
+    dest = f"broll-{n}{os.path.splitext(p)[1].lower()}"
+    shutil.copy2(p, os.path.join(r.assets, dest))
+    finestra = e.get("finestra", r.stile.get("broll_finestra", False))
+    stile = "position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;z-index:27;opacity:0"
+    fondo = ""
+    if finestra:   # la clip in una finestra arrotondata, sopra un fondo sfumato scuro con la luce del colore dello stile
+        acc = r.stile["colori"]["accento"]
+        stile = ("position:absolute;left:44px;top:70px;width:992px;height:1700px;object-fit:cover;border-radius:84px;z-index:27;opacity:0;"
+                 "box-shadow:0 30px 80px rgba(0,0,0,.55)")
+        fondo = (f'<div id="pb{n}f" style="position:absolute;inset:0;z-index:26;opacity:0;background:'
+                 f'radial-gradient(ellipse 90% 45% at 30% 0%,{acc}cc 0%,rgba(0,0,0,0) 70%),'
+                 f'radial-gradient(ellipse 90% 50% at 90% 100%,#6D4BD8aa 0%,rgba(0,0,0,0) 70%),linear-gradient(170deg,#2A2160,#120E2A 55%,#1B1238)"></div>')
+    if dest.endswith((".mp4", ".mov", ".webm")):
+        dentro = (f'<video id="pb{n}" src="assets/{dest}" muted playsinline data-start="{da:.3f}" data-media-start="0" '
+                  f'data-duration="{a - da:.3f}" style="{stile}"></video>')
+    else:
+        dentro = f'<img id="pb{n}" src="assets/{dest}" style="{stile}">'
+    alto = 400 if r.stile.get("testo_fisso") else 260   # con il testo fisso in alto la scritta scende sotto di lui
+    testo = (f'<div class="px-bt" id="pb{n}t" style="top:{alto}px">{E(e["testo"])}</div>') if e.get("testo") else ""
+    r.corpo.append(fondo + dentro + testo)
+    r.tl.append(f'tl.set("#pb{n}",{{opacity:1}},{da:.3f});tl.set("#pb{n}",{{opacity:0}},{a:.3f});'
+                f'tl.fromTo("#pb{n}",{{scale:1.08}},{{scale:1,duration:{a - da:.3f},ease:"none",immediateRender:false}},{da:.3f});')
+    if fondo:
+        r.tl.append(f'tl.set("#pb{n}f",{{opacity:1}},{da:.3f});tl.set("#pb{n}f",{{opacity:0}},{a:.3f});')
+    if testo:
+        r.tl.append(f'tl.fromTo("#pb{n}t",{{opacity:0,y:20}},{{opacity:1,y:0,duration:.3,ease:"power3.out",immediateRender:false}},{da + 0.1:.3f});'
+                    f'tl.set("#pb{n}t",{{opacity:0}},{a:.3f});')
+    if e.get("lampo", not finestra):
+        r.flash(da, 0.5, "#FFFFFF")
+        r.flash(a, 0.35, "#FFFFFF")
+    r.suono("transizione", da, 0.25)
+
+
+def spunte(r, e, faccia):
+    """Spunte: sul petto un tondo verde con la spunta e sotto la frase in grassetto; ogni voce prende il posto della prima."""
+    _css(r)
+    n, da, a = len(r.corpo), e["da"], e["a"]
+    voci = e.get("voci", [])[:5]
+    y = min(faccia["mento"] + 40, 1240)
+    r.corpo.append(f'<div class="px-sp2" id="pq{n}" style="top:{y}px"><i>✓</i>'
+                   + "".join(f'<b id="pq{n}v{j}">{E(t)}</b>' for j, (t, _) in enumerate(voci)) + '</div>')
+    r.tl.append(f'tl.fromTo("#pq{n}",{{opacity:0}},{{opacity:1,duration:.15,immediateRender:false}},{voci[0][1] if voci else da:.3f});'
+                f'tl.fromTo("#pq{n} i",{{scale:0}},{{scale:1,duration:.3,ease:"back.out(3)",immediateRender:false}},{voci[0][1] if voci else da:.3f});')
+    for j, (_, t) in enumerate(voci):
+        fine = voci[j + 1][1] if j + 1 < len(voci) else a
+        r.tl.append(f'tl.fromTo("#pq{n}v{j}",{{opacity:0,y:24,scale:.9}},{{opacity:1,y:0,scale:1,duration:.25,ease:"back.out(2)",immediateRender:false}},{t:.3f});'
+                    f'tl.set("#pq{n}v{j}",{{opacity:0}},{fine:.3f});')
+        r.suono("pop", t, 0.3)
+    _via(r, f'"#pq{n}"', a, 0.2)
+    r.nascondi.append((voci[0][1] if voci else da, a))
+
+
 TIPI = {"sparse": sparse, "pallini": pallini, "rivista": rivista, "schede": schede, "cartellini": cartellini,
-        "scritte": scritte, "colpiti": colpiti}
+        "scritte": scritte, "colpiti": colpiti, "broll": broll, "spunte": spunte}
