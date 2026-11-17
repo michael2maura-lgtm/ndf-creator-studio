@@ -132,6 +132,29 @@ PANNELLO = {  # colori dello schermo diviso; uno stile li cambia con "pannello" 
 
 
 
+def pannello_dal_colore(acc):
+    """I colori dello schermo diviso ricavati da UN colore (quello del brand): schede, righe, griglia e bagliori nel
+    colore, il fondo quasi nero appena tinto, le parti chiare color carta appena tinte."""
+    r, g, b = (int(acc[i:i + 2], 16) for i in (1, 3, 5))
+
+    def mix(c2, t):   # t = quanto c2 (0 = il colore, 1 = c2)
+        return tuple(round(x + (y - x) * t) for x, y in zip((r, g, b), c2))
+
+    hx = lambda c: "#%02X%02X%02X" % c
+    rgb = lambda c: "%d,%d,%d" % c
+    nero, bianco = (11, 10, 12), (255, 255, 255)
+    chiaro, scuro, piu_scuro = mix(bianco, .35), mix(nero, .3), mix(nero, .55)
+    return {"acc": acc, "acc_rgb": rgb((r, g, b)), "viola_rgb": rgb(chiaro), "blu_rgb": rgb(scuro),
+            "fondo_alto": hx(mix(nero, .86)), "fondo": hx(mix(nero, .93)), "vetro_rgb": rgb(mix(nero, .84)),
+            "fondo_pieno": hx(mix(nero, .8)), "verde": acc, "verde_rgb": rgb((r, g, b)), "cta_rgb": rgb(mix(nero, .9)),
+            "chiaro1": "#F4F2EE", "chiaro2": "#ECE8E2", "chiaro3": hx(mix(bianco, .86)), "griglia_rgb": rgb((r, g, b)),
+            "testo_chiaro": hx(mix(nero, .9)),
+            "schede": [f"linear-gradient(160deg,{hx(chiaro)},{acc} 65%,{hx(scuro)})",
+                       f"linear-gradient(160deg,{hx(piu_scuro)},{hx(scuro)} 60%,{acc})",
+                       f"linear-gradient(160deg,{hx(mix(bianco, .65))},{hx(chiaro)} 70%,{acc})"],
+            "righe": [acc, hx(mix(nero, .15)), hx(scuro), hx(mix(bianco, .15)), hx(piu_scuro)]}
+
+
 CSS_APP = """
 @font-face{font-family:'Instrument Serif R';src:url('assets/InstrumentSerif-Regular.ttf')}
 @font-face{font-family:'Inter Tight';src:url('assets/InterTight.ttf');font-weight:100 900}
@@ -258,6 +281,8 @@ class Reel:
     def __init__(self, stile, cart_stile, reel, D):
         self.stile, self.cart_stile, self.reel, self.D = stile, cart_stile, reel, D
         self.P = dict(PANNELLO, **stile.get("pannello", {}))
+        if stile.get("pannello_dal_brand") and stile.get("accento_brand"):   # il pannello nel colore del brand scelto
+            self.P = dict(self.P, **pannello_dal_colore(stile["accento_brand"]))
         self.assets = os.path.join(reel, "assets")
         self.corpo, self.tl, self.audio, self.nascondi, self.transizioni = [], [], [], [], []
         self.camera = []  # cose dentro l'inquadratura (#cam), sopra il video: si muovono con zoom e cornici
@@ -1983,6 +2008,8 @@ class Reel:
         # la persona resta sempre sotto il pannello
         pieno = e.get("pieno") if self.stile.get("stacchi", True) else None
         cy = 560 if pieno else 470            # centro della grafica; a tutto schermo resta in alto, i sottotitoli sotto
+        if self.stile.get("testo_fisso"):   # il testo fisso sta in alto: la grafica scende per non toccarlo
+            cy += 40 if pieno else 90
         m = e["modulo"]
         dentro = getattr(self, "p_" + m["tipo"])(m, n, da, a, cy)
         sfondo = f'<div class="pan-fondo{" chiaro" if pieno == "chiaro" else ""}"></div>' if pieno else ""

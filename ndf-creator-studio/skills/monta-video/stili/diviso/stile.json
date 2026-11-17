@@ -1,7 +1,7 @@
 {
   "nome": "Stile Diviso",
   "motore": "grafica",
-  "descrizione": "Schermo diviso nei colori NDF: grafiche nel pannello in alto, tu sotto, sottotitoli su due righe con la parola chiave arancio.",
+  "descrizione": "Schermo diviso: in alto un pannello con una grafica per ogni frase (titoli, liste, icone, schede), tu sotto. Ogni tanto il pannello prende tutto lo schermo, poi torna su di te.",
   "colori": {
     "accento": "#E86530",
     "accento_luce": "#FF8A4C",
@@ -83,5 +83,7 @@
       "#D86A35",
       "#7A3414"
     ]
-  }
+  },
+  "modello": true,
+  "ordine": 5
 }

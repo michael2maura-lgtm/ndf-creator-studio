@@ -295,6 +295,7 @@ const MOSSE = {
     {da: 13.5, a: 14.95, tipo: "gigante", testo: "5 MINUTI", sopra: "adesso"},
   ]},
   chiaro: {sopra: false, titolo: {fam: "instrument-c", top: 175, petto: 1062, k: 133}, vuoti: [[0.86, 2.6], [15.02, 16.76]], su: [[5.25, 8.9, 1132], [12.05, 14.95, 1070]], mosse: []},   // su: i sottotitoli salgono sopra la scheda
+  diviso: {sopra: false, alto: 905, vuoti: [[0, 3.3], [12.05, 16.8]], mosse: []},   // titoli nel pannello = sottotitoli; i sottotitoli in fondo al pannello
   immagini: {sopra: false, vuoti: [[5.6, 9.1], [15.0, 15.8]], mosse: []},   // i sottotitoli continuano sopra le clip; via su spunte e schermata
   pulito: {sopra: false, transizioni: [9.1], zoom: [[5.18, 1.08], [9.09, 1], [11.98, 1.1], [12.68, 1], [14.19, 1.1], [14.9, 1]], mosse: []},
 };
@@ -352,7 +353,8 @@ function aTempo() {
     const i = vivoPezzi.findIndex(p => p.da <= t && t < p.a);
     const box = $("#sott");
     if (i !== vivoQuale) { vivoQuale = i; box.innerHTML = i >= 0 ? vivoPezzi[i].html : "";
-      if (MOSSE[S.stile] && MOSSE[S.stile].sopra && !mioVideo) box.querySelectorAll(".st").forEach(x => x.style.top = (S.testo_fisso ? 440 : 360) + "px"); }
+      const mm = MOSSE[S.stile];   // "alto": i sottotitoli del modello stanno lì (Diviso: in fondo al pannello)
+      if (mm && (mm.sopra || mm.alto) && !mioVideo) box.querySelectorAll(".st").forEach(x => x.style.top = (mm.alto || (S.testo_fisso ? 440 : 360)) + "px"); }
     const su = !mioVideo && MOSSE[S.stile] && (MOSSE[S.stile].su || []).find(([a, b]) => a <= t && t < b);
     box.querySelectorAll(".st").forEach(x => {   // come nel reel: sopra la scheda per il suo tempo, poi tornano giù
       if (x.dataset.top0 === undefined) x.dataset.top0 = x.style.top;

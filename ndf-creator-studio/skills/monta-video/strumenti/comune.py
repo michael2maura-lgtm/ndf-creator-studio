@@ -105,6 +105,8 @@ def con_le_scelte(nome_stile, stile):
         luce = "#" + "".join(f"{min(255, round(v + (255 - v) * 0.3)):02X}" for v in rgb)
         nuovo["colori"] = dict(stile.get("colori", {}), accento=acc, accento_luce=luce)
         nuovo["pannello"] = dict(stile.get("pannello", {}), acc=acc, acc_rgb=",".join(map(str, rgb)))
+        if "pannello" in stile and acc.upper() != str(stile["pannello"].get("acc", "")).upper():
+            nuovo["pannello_dal_brand"] = True   # brand diverso dai colori fatti a mano: tutto il pannello nel colore
         nuovo["accento_brand"] = acc   # grafica.py: anche il giallo di evidenza degli effetti diventa il colore del brand
     return nuovo
 
