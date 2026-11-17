@@ -109,6 +109,8 @@ Stili in `DATI/stili/` (quelli dell'utente) e `STUDIO/stili/` (quelli pronti). L
 ## La pagina "Scegli il tuo look"
 L'utente dice "scegli il look", "apri la pagina", "voglio cambiare suoni / musica", o non sa che stile usare:
 lancia `PY STUDIO/strumenti/scegli.py` in sottofondo e di' in una riga che si è aperta nel browser.
+L'utente dice "non vedo l'icona sul desktop" o "rifai l'icona": `PY STUDIO/strumenti/icona.py` e di' dove l'ha messa
+(la riga ICONA); se ancora non la vede, la pagina si apre comunque con "apri la pagina".
 Icona sulla scrivania "NDF Creator Studio" (doppio clic, si apre la pagina dall'ultima versione): la crea l'installazione.
 Se manca `~/.studio-video/apri_pagina.py`, o l'utente chiede l'icona, lancia `PY STUDIO/strumenti/icona.py` in silenzio.
 Tre strade: stile pronto, replica un reel (l'utente ti manda il link in chat: lo studi con l'abilità `crea-stile`

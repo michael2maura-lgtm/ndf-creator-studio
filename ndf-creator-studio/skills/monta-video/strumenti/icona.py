@@ -58,6 +58,15 @@ def icona_mac(app):
 
 def scrivania():
     casa = os.path.expanduser("~")
+    if platform.system() == "Windows":   # la scrivania vera (spesso dentro OneDrive): la chiediamo a Windows
+        try:
+            r = subprocess.run(["powershell", "-NoProfile", "-Command", "[Environment]::GetFolderPath('Desktop')"],
+                               capture_output=True, text=True, timeout=20)
+            p = r.stdout.strip()
+            if p and os.path.isdir(p):
+                return p
+        except Exception:
+            pass
     for p in (os.path.join(casa, "Desktop"), os.path.join(casa, "OneDrive", "Desktop"), os.path.join(casa, "Scrivania")):
         if os.path.isdir(p):
             return p
