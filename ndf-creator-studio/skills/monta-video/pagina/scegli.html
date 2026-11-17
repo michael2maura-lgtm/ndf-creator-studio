@@ -76,6 +76,15 @@ h1 i{font-family:"Instrument Serif",serif;font-style:italic;text-transform:none;
 .carta.si{box-shadow:0 0 0 3px var(--acc),0 14px 30px -12px rgba(232,101,48,.6)}
 .carta.si::after{background:var(--acc);border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,255,255,.9) inset}
 .carta.senza .n{padding-top:14px}
+.carta .mini.rep{display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#3a2418,#16110e 75%);color:var(--acc);font-size:64px}
+.carta.rep::after{display:none}
+.replica{margin-top:14px;padding:18px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.replica .passi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:10px 0 14px}
+.replica .p{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45}
+.replica .p i{flex:none;width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;font-style:normal;font-weight:800;display:grid;place-items:center}
+.replica .frase{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.replica code{padding:10px 14px;border-radius:10px;background:#0e0c0b;color:#fff;font-size:15px}
+.replica .copia{border:0;border-radius:10px;padding:10px 18px;background:var(--acc);color:#fff;font-weight:700;font-size:14px;cursor:pointer}
 .carta.senza::after,.font::after{border-color:rgba(26,14,6,.3);background:transparent}
 .pill{position:absolute;top:10px;left:10px;background:var(--nero);color:var(--cr);font-family:"Space Mono",monospace;font-size:9px;letter-spacing:.1em;padding:4px 7px;border-radius:5px;z-index:2}
 .pill.c{background:var(--acc);color:var(--ink)}
@@ -188,7 +197,7 @@ let D, R, S = {modello:null, stile:null, colore:null, accento:"#E86530", sottoti
             titoli:{font:null, grandezza:100, grassetto:null, corsivo:false, maiuscolo:null, ombra:null},
             sott:{font:null, font_k:null, maiuscolo:null, grassetto:null, corsivo:false, ombra:null, testo:null, evidenza:null, riquadro:null},
             fisso:{testo:null, sfondo:null}};
-let aperto = 1, mioVideo = null;
+let aperto = 1, mioVideo = null, replicaAperta = false;
 
 const stileDi = k => D.stili.find(s => s.chiave === k);
 const miei = () => D.stili.filter(s => s.mio);
@@ -412,7 +421,14 @@ function disegna() {
    passo(1, "Il modello", st ? st.nome.replace(/^Stile /, "") : "Da scegliere", `<p class="spieg">Come viene montato il video. Il look che scegli sotto vale per tutti i modelli.</p>
      <div class="carte">${modelli().map(m => `<button class="carta ${m.anteprima ? "" : "senza"} ${S.stile === m.chiave ? "si" : ""}" data-mio="${m.chiave}">
        ${m.anteprima ? `<img class="mini" src="/file/anteprima-${m.chiave}-jpg" alt="">` : ""}
-       <div class="n">${esc(m.nome.replace(/^Stile /, ""))}</div><div class="d">${esc(m.descrizione)}</div></button>`).join("")}</div>
+       <div class="n">${esc(m.nome.replace(/^Stile /, ""))}</div><div class="d">${esc(m.descrizione)}</div></button>`).join("")}
+       <button class="carta rep" data-replica="1"><div class="mini rep">↻</div><div class="n">Replica un reel</div><div class="d">Hai visto un reel che ti piace? Mandamelo: ne faccio il tuo stile.</div></button></div>
+     ${replicaAperta ? `<div class="replica"><b>Mandami il reel in chat</b>
+       <div class="passi"><div class="p"><i>1</i><span><b>Copia il link</b> del reel che ti piace (o salva il video sul computer).</span></div>
+       <div class="p"><i>2</i><span><b>Incollalo a Claude</b> in chat, dopo la frase qui sotto.</span></div>
+       <div class="p"><i>3</i><span><b>Lo guardo e lo rifaccio</b> sui tuoi video. Quando riapri questa pagina lo trovi qui sotto, tra i tuoi stili.</span></div></div>
+       <div class="frase"><code>Replica questo reel:</code><button class="copia" data-copia="Replica questo reel: ">Copia la frase</button></div>
+       <p class="spieg" style="margin:10px 0 0">Copio come è montato (scritte, colori, movimenti, ritmo), mai le immagini, la musica o le parole di chi l'ha fatto.</p></div>` : ""}
      ${miei().length ? `<label class="l">I tuoi stili</label><div class="carte">${miei().map(m => `<button class="carta ${S.stile === m.chiave ? "si" : ""}" data-mio="${m.chiave}">
        ${m.anteprima ? `<img class="mini" src="/file/anteprima-${m.chiave}-jpg" alt="">` : `<div class="mini"></div>`}<span class="pill c">TUO</span>
        <div class="n">${esc(m.nome.replace(/^Stile /, ""))}</div><div class="d">${esc(m.descrizione || "Creato da te")}</div></button>`).join("")}</div>` : ""}`),
@@ -478,6 +494,8 @@ document.addEventListener("click", e => {
     const sm = S.stile && stileDi(S.stile); if (sm && sm.telefono && (prima === 3) !== (aperto === 3)) base();   // entra o esce dal passo 3: cambia il video
     return; }
   if (t.dataset.set) { metti(t.dataset.set, JSON.parse(t.dataset.v)); disegna(); base(); return; }
+  if (t.dataset.replica) { replicaAperta = !replicaAperta; disegna(); return; }
+  if (t.dataset.copia) { navigator.clipboard.writeText(t.dataset.copia).then(() => avviso("Frase copiata: incollala in chat con il link"), () => avviso("Scrivi in chat: Replica questo reel")); return; }
   if (t.dataset.mio) { S.stile = S.stile === t.dataset.mio ? null : t.dataset.mio; S.modello = S.stile ? (stileDi(S.stile).mio ? "mio" : S.stile) : null; const s = stileDi(S.stile); if (s && s.di_serie && s.di_serie.sottotitoli) S.sottotitoli = s.di_serie.sottotitoli;   // i sottotitoli del modello: poi si cambiano al passo 4
     disegna(); base(); return; }   // come nella pagina di riferimento: il modello si disegna in diretta sul video, e ogni scelta cambia lì sopra
   if ("look" in t.dataset) { S.colore = t.dataset.look || null; disegna(); if (S.colore) telefono(`/file/look-${S.colore}`, "img", "Il look del video", false); else base(); return; }
