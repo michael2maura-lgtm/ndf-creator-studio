@@ -9,21 +9,28 @@ riprese sbagliate e pause tolte, sottotitoli in italiano, titoli, scene, suoni e
   L'app si scarica da claude.com/download.
 - **Almeno 10 GB liberi** e internet per la prima installazione.
 
-## Installazione (una volta sola)
-1. Apri l'app Claude e vai in **Impostazioni → Plugin**.
-2. Clicca **Aggiungi**, scegli di aggiungere un marketplace e incolla:
-   ```
-   michael2maura-lgtm/ndf-creator-studio
-   ```
-   Poi clicca **+** accanto a **NDF Creator Studio** per installarlo.
-   (Se usi Claude Code dal terminale: `/plugin marketplace add michael2maura-lgtm/ndf-creator-studio`
-   e poi `/plugin install ndf-creator-studio@ndf-creator-studio`.)
-3. Apri una nuova sessione nella scheda **Code** e scrivi: **installa lo studio**.
-   Claude ti chiede il permesso una volta e installa tutto da solo (10-20 minuti la prima volta).
-   - Su **Mac**, se compare la richiesta di installare gli "strumenti per sviluppatori", clicca Installa.
-   - Su **Windows**, se compare la richiesta di Windows (Controllo account o firewall), clicca Sì / Consenti.
-4. Claude ti fa qualche domanda per creare **il tuo stile** (colori, caratteri, la tua chiamata all'azione) e ti
-   mostra un'anteprima. Si fa una volta sola.
+## Installazione (una volta sola, 3 passi)
+
+**Passo 0, solo se hai Windows:** scarica **Git** da [git-scm.com](https://git-scm.com/download/win) (solo da
+questo sito), aprilo e premi sempre **Avanti** fino a **Installa**. Poi chiudi e riapri l'app Claude.
+Sul Mac non serve.
+
+**Passo 1.** Apri l'app Claude, clicca in alto su **Code** e incolla questo messaggio:
+
+```
+Installa per me lo studio video "NDF Creator Studio". Si trova su GitHub: michael2maura-lgtm/ndf-creator-studio. Aggiungi questo marketplace e installa il plugin ndf-creator-studio. Quando hai finito, dimmi di chiudere e riaprire l'app.
+```
+
+Quando Claude chiede il permesso, clicca **Consenti**.
+
+**Passo 2.** Chiudi e riapri l'app Claude. Apri una nuova sessione in **Code** e scrivi: **installa lo studio**.
+Claude installa tutto da solo (10-20 minuti la prima volta): a ogni richiesta rispondi sì.
+- Su **Mac**, se compare la richiesta di installare gli "strumenti per sviluppatori", clicca Installa.
+- Su **Windows**, se compare la richiesta di Windows (Controllo account o firewall), clicca Sì / Consenti.
+
+**Passo 3.** Sulla scrivania trovi l'icona **NDF Creator Studio**: doppio clic e si apre la pagina dove scegli il
+tuo stile (modello, colore, sottotitoli) e premi **Salva**. Non vedi l'icona? Scrivi a Claude **apri la pagina**
+(o **rifai l'icona sul desktop**).
 
 ## Il tuo primo reel
 1. Metti il video nella cartella **Documenti\\NDFCreatorStudio** (si crea da sola durante l'installazione).
@@ -44,9 +51,9 @@ riprese sbagliate e pause tolte, sottotitoli in italiano, titoli, scene, suoni e
 - **Una frase è stata tagliata male**: dillo con il minuto, per esempio "a 0:05 manca 'e lo rifaccio'".
 
 ## Aggiornamenti
-Quando esce una versione nuova (stili nuovi, effetti, correzioni), Claude te lo dice da solo all'inizio di un
-montaggio. Per aggiornare: Impostazioni → Plugin → NDF Creator Studio → Aggiorna (o `/plugin update ndf-creator-studio`). Il tuo stile e i tuoi video
-restano dove sono.
+Quando esce una versione nuova (modelli nuovi, effetti, correzioni), Claude te lo dice da solo all'inizio di un
+montaggio. Per aggiornare subito scrivi a Claude: **aggiorna lo studio**, poi chiudi e riapri l'app.
+Il tuo stile e i tuoi video restano dove sono.
 
 ---
 NDF Creator Studio · Michael Maura, Networker del Futuro. Font inclusi con licenza SIL Open Font License.
