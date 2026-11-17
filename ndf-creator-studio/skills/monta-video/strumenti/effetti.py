@@ -137,6 +137,8 @@ CATALOGO = {
               "descrizione": "Per un attimo il video stacca su una clip o una foto vera a tutto schermo, poi torna su di te."},
     "numeri": {"nome": "Passi numerati", "gruppo": "Elenchi", "per": "Un metodo, primo secondo terzo (modello Energia)",
                "descrizione": "Ti stacca su un fondo nuovo e i passi entrano numerati, ognuno con il suo disegno."},
+    "frase": {"nome": "Frase a tutto schermo", "gruppo": "Parole forti", "per": "La frase più importante, una domanda, il gancio",
+              "descrizione": "Lo schermo stacca sul tuo colore e la frase si compone parola per parola: piccole, grandi e in corsivo."},
     "spunte": {"nome": "Spunte", "gruppo": "Elenchi", "per": "I punti di forza, i vantaggi, cosa trovi da noi",
                "descrizione": "Sul petto un quadratino del tuo colore con la spunta e sotto, grande, la cosa che dici."},
     "colpiti": {"nome": "Nomi colpiti", "gruppo": "Confronti", "per": "Senza questo, senza quello, cose da lasciare",

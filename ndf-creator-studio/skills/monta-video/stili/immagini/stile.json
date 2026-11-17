@@ -32,11 +32,12 @@
   "click": "suoni/click.mp3",
   "sfumatura": "suoni/sfumatura.mp3"
  },
- "descrizione": "Tu al centro e, mentre racconti, il video stacca sulle immagini di quello che dici: clip vere in una finestra arrotondata, una domanda a tutto schermo, le spunte nel tuo colore sui punti di forza.",
+ "descrizione": "Tu al centro e, mentre racconti, il video stacca: un po' sulle immagini di quello che dici, un po' su una frase che si compone a tutto schermo. Spunte nel tuo colore sui punti di forza.",
  "sottotitoli_nome": "b-parola",
  "effetti": [
   "zoom",
   "broll",
+  "frase",
   "schermata",
   "spunte"
  ],

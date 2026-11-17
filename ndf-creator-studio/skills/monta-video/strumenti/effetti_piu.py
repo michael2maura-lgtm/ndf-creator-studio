@@ -29,6 +29,11 @@ Tutti nel motore grafica, tempi del video TAGLIATO. Mentre ci sono, i sottotitol
  {"tipo": "spunte", "da", "a", "voci": [["Insegnanti preparati", t], ["Anni di esperienza", t]]}
      Spunte: sul petto un quadratino con la spunta (colore del brand) e sotto, grande e bianca, la cosa detta; ogni voce prende
      il posto della prima. Per i punti di forza, i vantaggi, "cosa trovi da noi" (2-4 voci).
+ {"tipo": "frase", "da", "a", "parole": [["e il tuo", t, "piccola"], ["collega", t, "grande"], ["straordinari", t, "corsivo"]],
+  "fondo": "scuro" | "colore"}
+     Frase a tutto schermo (testo animato): lo schermo stacca su un fondo pieno (il colore del brand scurito, o pieno
+     con "colore") e le parole si compongono una alla volta, piccole, grandi in grassetto o grandi in corsivo.
+     Sulla frase più importante (gancio, domanda, frase finale), 1-2 volte in un video, 1,5-3 s, parole dette.
  {"tipo": "colpiti", "da", "a", "voci": [["Programma uno", t, "riga piccola"], ...]}
      Nomi colpiti: ogni nome sbatte su una targa scura sopra la testa; quando arriva il dopo, il prima viene
      barrato in rosso e vola via. Per "senza questo, senza quello", strumenti o abitudini da lasciare (2-4).
@@ -107,6 +112,10 @@ def _css(r):
         "font-weight:900;font-size:56px;box-shadow:0 6px 20px rgba(0,0,0,.35)}"
         ".px-sp2 b{position:absolute;left:0;right:0;top:100px;opacity:0;font-weight:900;font-size:86px;line-height:1;letter-spacing:-.03em;"
         "color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.7),0 0 4px rgba(0,0,0,.4)}"
+        "@font-face{font-family:'Instrument Serif';src:url('assets/InstrumentSerif-Italic.ttf');font-style:italic}"
+        ".px-fr{position:absolute;inset:0;z-index:30;opacity:0;display:flex;align-items:center;justify-content:center}"
+        ".px-fr-in{width:960px;text-align:center;color:#fff;transform-origin:50% 50%}"
+        ".px-fr-r{line-height:.98;opacity:0;white-space:nowrap;text-shadow:0 6px 30px rgba(0,0,0,.35)}"
         "</style>")
 
 
@@ -399,5 +408,37 @@ def spunte(r, e, faccia):
     r.nascondi.append((voci[0][1] if voci else da, a))
 
 
+def frase(r, e, faccia):
+    """Frase a tutto schermo (testo animato): lo schermo stacca su un fondo pieno e le parole si compongono una alla
+    volta, ognuna con la sua misura: piccola, grande in grassetto o grande in corsivo. Poi si torna sulla persona."""
+    _css(r)
+    r.font_extra("InstrumentSerif-Italic.ttf")
+    n, da, a = len(r.corpo), e["da"], e["a"]
+    acc = r.stile["colori"]["accento"]
+    rr, gg, bb = (int(acc[i:i + 2], 16) for i in (1, 3, 5))
+    scuro = "#%02X%02X%02X" % tuple(round(x * .22 + 8) for x in (rr, gg, bb))
+    medio = "#%02X%02X%02X" % tuple(round(x * .45 + 10) for x in (rr, gg, bb))
+    fondo = (acc if e.get("fondo") == "colore" else
+             f"radial-gradient(ellipse 80% 55% at 50% 45%,{medio} 0%,{scuro} 70%,#070708 100%)")
+    righe = []
+    for j, p in enumerate(e.get("parole", [])[:6]):
+        testo, t = p[0], p[1]
+        peso = p[2] if len(p) > 2 else ("grande" if j % 3 == 1 else "corsivo" if j % 3 == 2 else "piccola")
+        lung = max(len(testo), 3)
+        if peso == "grande":
+            stile = f"font-family:'Inter Tight';font-weight:900;letter-spacing:-.04em;font-size:{min(190, int(1500 / lung))}px"
+        elif peso == "corsivo":
+            stile = f"font-family:'Instrument Serif';font-style:italic;font-weight:400;font-size:{min(180, int(1700 / lung))}px;color:{'#fff' if e.get('fondo') == 'colore' else r.stile['colori'].get('accento_luce', acc)}"
+        else:
+            stile = f"font-family:'Inter Tight';font-weight:600;font-size:{min(64, int(900 / lung))}px;opacity:.9"
+        righe.append(f'<div class="px-fr-r" id="pf{n}w{j}" style="{stile}">{E(testo)}</div>')
+        r.tl.append(f'tl.fromTo("#pf{n}w{j}",{{opacity:0,y:26,scale:.92,filter:"blur(14px)"}},{{opacity:1,y:0,scale:1,filter:"blur(0px)",duration:.32,ease:"power3.out",immediateRender:false}},{max(t, da):.3f});')
+    r.corpo.append(f'<div class="px-fr" id="pf{n}" style="background:{fondo}"><div class="px-fr-in">{"".join(righe)}</div></div>')
+    r.tl.append(f'tl.set("#pf{n}",{{opacity:1}},{da:.3f});tl.set("#pf{n}",{{opacity:0}},{a:.3f});'
+                f'tl.fromTo("#pf{n} .px-fr-in",{{scale:1}},{{scale:1.05,duration:{a - da:.3f},ease:"none",immediateRender:false}},{da:.3f});')
+    r.suono("transizione", da, 0.25)
+    r.nascondi.append((da, a))
+
+
 TIPI = {"sparse": sparse, "pallini": pallini, "rivista": rivista, "schede": schede, "cartellini": cartellini,
-        "scritte": scritte, "colpiti": colpiti, "broll": broll, "spunte": spunte}
+        "scritte": scritte, "colpiti": colpiti, "broll": broll, "spunte": spunte, "frase": frase}

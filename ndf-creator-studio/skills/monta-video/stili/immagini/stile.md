@@ -14,6 +14,9 @@ mai le immagini, la voce o le parole. Motore: strumenti/grafica.py, grafiche in 
   In tutto il B-roll copre circa un terzo del video; mai nei primi 1,5 s (il gancio è la persona) né sulla chiusura.
   Ogni clip: GUARDA il .jpg che crea clip.py e usala solo se mostra davvero quello che si dice. Niente clip giusta,
   niente stacco.
+- Frase a tutto schermo ("frase", Michael 17/11: "un po' B-roll un po' scritte"): sulle frasi che non si possono far
+  vedere con una clip (un'idea, una domanda, la frase finale), la frase si compone sul fondo pieno: parole piccole,
+  grandi e in corsivo, come dette. Si alterna al B-roll: mai due frasi di fila, 2-3 in un minuto, 1,5-3 s.
 - Domanda a tutto schermo ("schermata", colore del brand): sulla domanda che apre un pezzo nuovo ("ti chiedi
   perché?"), 1-2 volte in un minuto, 1-1,5 s, parole dette.
 - Spunte ("spunte", nel colore del brand): sui punti di forza detti uno dopo l'altro (2-4 voci, le parole dette).
