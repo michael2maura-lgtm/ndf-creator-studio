@@ -143,17 +143,75 @@ CATALOGO = {
                "descrizione": "Sul petto un quadratino del tuo colore con la spunta e sotto, grande, la cosa che dici."},
     "colpiti": {"nome": "Nomi colpiti", "gruppo": "Confronti", "per": "Senza questo, senza quello, cose da lasciare",
                 "descrizione": "Ogni nome sbatte su una targa sopra la testa; arriva il dopo e il prima viene barrato e vola via."},
+    "dentro": {"nome": "Sfondo che si apre", "gruppo": "Tu", "per": "Cambia tutto, un altro mondo, un prima e dopo",
+               "descrizione": "Con un lampo la stanza dietro di te diventa un fondo di luci sfocate; tu resti davanti con un filo bianco attorno."},
+    "sfocato": {"nome": "Sfondo sfocato con scritta", "gruppo": "Parole forti", "per": "La parola chiave di una frase",
+                "descrizione": "Sul petto si accendono luci tonde, tutto va fuori fuoco e compare la parola grande in corsivo elegante."},
+    "raggi": {"nome": "Luce dietro la testa", "gruppo": "Parole forti", "per": "Un'idea importante, una rivelazione",
+              "descrizione": "Dietro di te si aprono raggi di luce calda che girano piano e sul petto compare la frase in corsivo dorato."},
+    "collage": {"nome": "Collage di carta", "gruppo": "Parole forti", "per": "Un gancio forte, una volta per video",
+                "descrizione": "Lo sfondo diventa un collage di carta strappata, tu un adesivo, e la frase si compone con lettere di giornale."},
+    "reel": {"nome": "Il video in un reel", "gruppo": "Messaggi e app", "per": "Pubblichi, il tuo reel, i tuoi contenuti",
+             "descrizione": "L'inquadratura diventa piccola dentro un reel di Instagram con il tuo nome, il tasto Segui e il cuore."},
+    "cancella": {"nome": "Scritta che si cancella", "gruppo": "Parole forti", "per": "Quello che lasci andare, il prima",
+                 "descrizione": "Sopra la testa una frase in corsivo si scrive lettera per lettera, poi una passata di luce la cancella."},
+    "lettere": {"nome": "Lettere che cadono", "gruppo": "Parole forti", "per": "La parola chiave all'inizio del video",
+                "descrizione": "Le lettere della parola cadono dall'alto una alla volta e rimbalzano, sotto si scrive una riga in corsivo."},
+    "ventaglio": {"nome": "Carte a ventaglio", "gruppo": "Elenchi", "per": "Un elenco di cose, anche con le foto",
+                  "descrizione": "Davanti al petto si apre una mano di carte, una per ogni cosa che dici, e alla fine si richiude."},
+    "polaroid": {"nome": "Polaroid", "gruppo": "Mostrare qualcosa", "per": "Un ricordo, un racconto, un prima e dopo",
+                 "descrizione": "Le foto in cornice bianca cadono una alla volta attorno a te, con la didascalia scritta a mano."},
+    "vocale": {"nome": "Messaggio vocale", "gruppo": "Messaggi e app", "per": "Un vocale, un messaggio, ti scrivo",
+               "descrizione": "Sul petto un messaggio vocale: il tasto parte, l'onda si colora mentre suona e il tempo scorre."},
+    "colora": {"nome": "Scritta che si colora", "gruppo": "Parole forti", "per": "La parte bella, la parola che piace",
+               "descrizione": "Sopra la testa una frase in corsivo compare chiara e poi si accende lettera per lettera nei tuoi colori."},
+    "carosello": {"nome": "Carosello", "gruppo": "Mostrare qualcosa", "per": "I lavori, gli esempi, un elenco da mostrare",
+                  "descrizione": "Davanti al petto una fila di carte scorre e quella di cui parli va al centro, più grande."},
+    "tasti": {"nome": "Tasti che piovono", "gruppo": "Chiusura", "per": "Una parola da commentare, un codice",
+              "descrizione": "Dall'alto cadono tasti di una tastiera: quelli della parola rimbalzano e si mettono in fila sul petto."},
+    "fumetto": {"nome": "Fumetto", "gruppo": "Tu", "per": "Una frase detta da altri, un pensiero, una battuta",
+                "descrizione": "Una nuvoletta bianca accanto alla testa, con la punta verso la bocca: le parole entrano una alla volta."},
+    "cartello": {"nome": "Cartello", "gruppo": "Parole forti", "per": "La conclusione, la frase da ricordare",
+                 "descrizione": "La frase che chiude il ragionamento in un cartello scuro un po' storto, in maiuscolo, con l'etichetta sopra."},
+    "elenco": {"nome": "Elenco che si accende", "gruppo": "Elenchi", "per": "I punti del video, l'indice",
+               "descrizione": "Ti sposti un po' di lato e accanto compare l'elenco numerato: la voce di cui parli si accende."},
+    "scalata": {"nome": "Le cose dal basso", "gruppo": "Elenchi", "per": "Le 5 o 10 cose, dal fondo fino alla prima",
+                "descrizione": "Ti sposti di lato e accanto sale la scala dei numeri, dall'ultimo in fondo fino all'1 con la corona."},
+    "mosaico": {"nome": "Muro di reel", "gruppo": "Tu", "per": "Centinaia di reel, tutti i tuoi contenuti",
+                "descrizione": "Dietro di te si accende un muro di riquadri con i fotogrammi del video, dal centro verso i bordi."},
+    "capitolo": {"nome": "Capitolo", "gruppo": "Elenchi", "per": "I reel a punti: uno per punto",
+                 "descrizione": "Un numero grande che sale in alto con l'etichetta del punto accanto."},
+    "nastro": {"nome": "Nastro che scorre", "gruppo": "Parole forti", "per": "La parola chiave, il tema del discorso",
+               "descrizione": "Un nastro inclinato attraversa lo schermo con la parola che scorre; anche due, incrociati."},
+    "immagini": {"nome": "Le immagini dietro di me", "gruppo": "Mostrare qualcosa", "per": "Un articolo, le statistiche, i tuoi reel",
+                 "descrizione": "Diventi un adesivo con il bordo bianco e dietro di te cambiano le schermate: articolo, statistiche, i tuoi reel."},
+    "scorri": {"nome": "Lista che scorre", "gruppo": "Elenchi", "per": "I risultati dei clienti, con nomi e foto veri",
+               "descrizione": "Sopra il video scorre veloce la lista dei tuoi clienti: foto, nome, cosa hanno ottenuto e la spunta."},
+    "messaggio": {"nome": "Messaggio in arrivo", "gruppo": "Messaggi e app", "per": "Leggere il messaggio di una cliente",
+                  "descrizione": "Sul petto arriva un messaggio diretto con il nome, poi sul fumetto compare il cuore."},
+    "fondale": {"nome": "Apertura tipografica", "gruppo": "Parole forti", "per": "Le parole del gancio, in apertura",
+                "descrizione": "Dietro di te scende un fondale nei tuoi colori e le parole del gancio compaiono enormi."},
+    "intervista": {"nome": "Apertura con l'intervista", "gruppo": "Testimonianza", "per": "Le prime parole della cliente (modello Testimonianza)",
+                   "descrizione": "Due finestre con la videochiamata, una sopra l'altra, e in mezzo il risultato."},
+    "carta": {"nome": "Scheda Prima e Dopo", "gruppo": "Testimonianza", "per": "Com'era prima e com'è adesso (modello Testimonianza)",
+              "descrizione": "Una carta del tuo colore con la foto della persona e le voci che escono quando le dici."},
+    "prove": {"nome": "Prove dietro di te", "gruppo": "Testimonianza", "per": "Il profilo, i messaggi, i risultati (modello Testimonianza)",
+              "descrizione": "Lo sfondo diventa lo screenshot della cliente che scorre; tu resti davanti."},
+    "prova": {"nome": "Prova sul telefono", "gruppo": "Testimonianza", "per": "Un video pubblicato, un messaggio (modello Testimonianza)",
+              "descrizione": "Un telefono sale dal basso e mostra la prova."},
+    "miste": {"nome": "Parole miste", "gruppo": "Testimonianza", "per": "Il dubbio, la frase forte (modello Testimonianza)",
+              "descrizione": "Parole sopra la testa: grassetto, corsivo elegante e dorato, una alla volta."},
 }
 
 
 # Doppioni: restano nel motore (lo Stile NDF Grafica pronto li usa, sono il suo aspetto) ma la pagina non li mostra,
 # perché c'è la versione uguale al Creator Studio: passi -> checklist, contatore -> contachilometri / numero gigante,
 # targhette -> pillole, chat -> prompt, telefono -> telefono 3D.
-NASCOSTI = {"passi", "contatore", "targhette", "chat", "telefono", "broll", "numeri"}
+NASCOSTI = {"passi", "contatore", "targhette", "chat", "telefono", "broll", "numeri", "intervista", "carta", "prove", "prova", "miste"}
 
 # Pezzi di un modello, non effetti da scegliere: la pagina Effetti non li mostra e il motore li usa sempre quando
 # sono nello stile.json del modello (Michael, 17/11: il B-roll è il modello "Con immagini", non un effetto).
-DEL_MODELLO = {"broll", "numeri"}   # numeri: i passi di Energia, sempre con il loro "fondo"
+DEL_MODELLO = {"broll", "numeri", "intervista", "carta", "prove", "prova", "miste"}   # numeri: i passi di Energia, sempre con il loro "fondo"
 
 
 def chiave_di(elemento):

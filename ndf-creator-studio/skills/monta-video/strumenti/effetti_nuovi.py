@@ -143,12 +143,13 @@ def top(r, e, faccia):
     voci = e.get("voci", [])
     tot = len(voci)
     righe = "".join(f'<div class="nx-tv" id="nt{n}v{j}"><b>{tot - j}</b><span>{E(t)}</span></div>' for j, (t, _) in enumerate(voci))
-    r.corpo.append(f'<div class="nx-card nx-top" id="nt{n}"><div class="nx-tit">{E(e.get("titolo", f"Top {tot}"))}</div>{righe}</div>')
-    _entra(r, f"#nt{n}", da, a, 0)
+    r.corpo.append(f'<div class="nx-card nx-top" id="nt{n}" style="top:{max(_petto(faccia) - 60, 700)}px"><div class="nx-tit">{E(e.get("titolo", f"Top {tot}"))}</div>{righe}</div>')
+    _entra(r, f"#nt{n}", da, a)
     for j, (_, t) in enumerate(voci):
         r.tl.append(f'tl.set("#nt{n}v{j}",{{className:"nx-tv acceso"}},{t:.3f});'
                     f'tl.fromTo("#nt{n}v{j}",{{x:-14}},{{x:0,duration:.25,immediateRender:false}},{t:.3f});')
         r.suono("pop", t, 0.22)
+    r.nascondi.append((da, a))
 
 
 def freccia(r, e, faccia):
@@ -233,9 +234,9 @@ CSS = """
 .nx-gr{width:100%;border-radius:18px 18px 0 0;background:#F7F1E6;color:#1C1A17;font-family:'Inter Tight';font-weight:900;font-size:90px;
  display:flex;justify-content:center;padding-top:14px;transform-origin:50% 100%;transform:scaleY(0);box-shadow:0 18px 40px rgba(0,0,0,.35)}
 .nx-gr.uno{background:var(--acc);color:#fff}
-.nx-top{left:50px;right:auto;width:320px;top:250px;padding:22px 22px}
-.nx-tv{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:28px;font-weight:700;color:rgba(28,26,23,.35)}
-.nx-tv b{width:56px;height:56px;border-radius:14px;background:rgba(28,26,23,.1);display:flex;align-items:center;justify-content:center;font-weight:900}
+.nx-top{left:170px;right:170px;padding:28px 36px}
+.nx-tv{display:flex;align-items:center;gap:22px;padding:10px 0;font-size:44px;font-weight:800;color:rgba(28,26,23,.3)}
+.nx-tv b{width:76px;height:76px;flex:none;border-radius:18px;font-size:40px;background:rgba(28,26,23,.1);display:flex;align-items:center;justify-content:center;font-weight:900}
 .nx-tv.acceso{color:#1C1A17}.nx-tv.acceso b{background:var(--acc);color:#fff}
 .nx-freccia{position:absolute;width:420px;opacity:0;z-index:40}
 .nx-mano{font-family:'Caveat';font-weight:700;font-size:66px;color:#fff;text-shadow:0 3px 12px rgba(0,0,0,.55);line-height:1}

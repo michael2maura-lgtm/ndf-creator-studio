@@ -83,6 +83,14 @@ CATALOGO = {
         "css": ".st{font-family:%f-jakarta%;font-weight:600;font-size:48px;line-height:1.2;color:#fff;"
                "text-shadow:0 2px 10px rgba(0,0,0,.8)}.st .k{color:#fff}",
     },
+    "testimonianza": {   # modello Testimonianza: piccoli e puliti, la parola appena detta in crema dorato
+        "nome": "Parola che si accende", "per": "Testimonianze, racconti, video curati",
+        "descrizione": "Le parole arrivano una alla volta, piccole e bianche; quella che stai dicendo si colora.",
+        "modo": "accumula", "parole": 4, "lettere": 22, "ultima_on": True, "font": ["jakarta"],
+        "entra": ('{opacity:0,y:6}', '{opacity:1,y:0,duration:0.18,ease:"power2.out"}'),
+        "css": ".st{font-family:%f-jakarta%;font-weight:600;font-size:54px;line-height:1.2;letter-spacing:-.5px;color:#fff;"
+               "text-shadow:0 2px 10px rgba(0,0,0,.6)}.st .w[data-on=\"1\"]{color:#F3D9A4}",
+    },
     "b-semplici": {
         "nome": "Semplici", "per": "Tutti i giorni, va bene sempre", "base": True,
         "descrizione": "Una riga piccola e leggibile, la parola importante nel tuo colore.",
@@ -392,6 +400,10 @@ def parti(nome, parole, chiave, y, nascondi, colori, ritocco=None):
             for j, w in enumerate(g):
                 if modo == "accumula":
                     tl.append(f'tl.set("#u{i}w{j}",{{opacity:1}},{w["da"]:.3f});tl.fromTo("#u{i}w{j}",{da_v},{a_v},{w["da"]:.3f});')
+                    if s.get("ultima_on"):   # solo la parola che stai dicendo è accesa
+                        tl.append(f'tl.set("#u{i}w{j}",{{attr:{{"data-on":"1"}}}},{w["da"]:.3f});')
+                        if j + 1 < len(g):
+                            tl.append(f'tl.set("#u{i}w{j}",{{attr:{{"data-on":"0"}}}},{g[j + 1]["da"]:.3f});')
                 else:
                     tl.append(f'tl.set("#u{i}w{j}",{{opacity:1}},{w["da"]:.3f});'
                               f'scriviLettere("#u{i}w{j}",{w["da"]:.3f},{max(w["a"] - w["da"], 0.12):.3f});')

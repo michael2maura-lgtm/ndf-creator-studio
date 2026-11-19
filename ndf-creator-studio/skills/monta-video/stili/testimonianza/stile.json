@@ -1,0 +1,54 @@
+{
+ "nome": "Stile Testimonianza",
+ "motore": "grafica",
+ "colori": {
+  "accento": "#EFA94A",
+  "accento_luce": "#F3D9A4",
+  "testo": "#F9F7F4",
+  "scuro": "#0F3D3E",
+  "banda": "#0F3D3E",
+  "fondo_carta": "#0F3D3E"
+ },
+ "font": {
+  "titoli": {
+   "file": "font/InstrumentSerif-Italic.ttf",
+   "famiglia": "Instrument Serif",
+   "peso": 400,
+   "larghezza": 100
+  },
+  "mono": {
+   "file": "font/JetBrainsMono.ttf",
+   "famiglia": "JetBrains Mono"
+  }
+ },
+ "finale": false,
+ "suoni": {
+  "transizione": "suoni/transizione.mp3",
+  "impatto": "suoni/impatto.mp3",
+  "glitch": "suoni/glitch.mp3",
+  "pop": "suoni/pop.mp3",
+  "tastiera": "suoni/tastiera.mp3",
+  "ding": "suoni/ding.mp3",
+  "livello": "suoni/livello.mp3",
+  "click": "suoni/click.mp3",
+  "sfumatura": "suoni/sfumatura.mp3"
+ },
+ "descrizione": "Per raccontare il risultato di un cliente: si apre con la sua voce dalla videochiamata, poi la scheda Prima e la scheda Dopo, le prove dietro di te e sul telefono. Ti servono la videochiamata, una sua foto e uno screenshot.",
+ "sottotitoli_nome": "testimonianza",
+ "effetti": [
+  "zoom",
+  "intervista",
+  "carta",
+  "prove",
+  "prova",
+  "miste",
+  "freccia"
+ ],
+ "transizione": "sfumatura",
+ "mirino": false,
+ "zoom_tagli_da": 2,
+ "modello": true,
+ "ordine": 7,
+ "luce": "oro",
+ "nascosto": true
+}

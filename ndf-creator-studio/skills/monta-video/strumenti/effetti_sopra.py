@@ -55,7 +55,7 @@ def _css(r):
         ".es-velo{position:absolute;left:0;right:0;top:0;height:1150px;z-index:29;opacity:0;"
         "background:linear-gradient(rgba(10,10,14,.88) 0%,rgba(10,10,14,.75) 60%,rgba(10,10,14,0) 100%)}"
         f".es-p{{position:absolute;left:60px;right:60px;text-align:center;z-index:31;{fam};line-height:1.05}}"
-        ".es-p div{font-size:84px;opacity:0;text-transform:lowercase}"
+        ".es-p div{font-size:84px;opacity:0;text-transform:lowercase;text-shadow:0 4px 22px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.6)}"
         ".es-p .es-t{margin-top:16px}"
         ".es-s{position:absolute;inset:0;z-index:40;opacity:0;display:flex;flex-direction:column;align-items:center;justify-content:center}"
         f".es-s b{{{fam};white-space:nowrap;color:#fff;line-height:1;letter-spacing:-6px;text-transform:uppercase}}"
@@ -147,11 +147,16 @@ def pila(r, e, faccia):
     da = voci[0][1] - 0.1
     a = e["a"]
     righe = []
+    y0 = max(getattr(r, "y_sub", 300) - 40, 330 if r.stile.get("testo_fisso") else 260)
+    targa = c1
+    if hasattr(r, "si_confonde"):   # un colore che sparisce sul vestito (arancio su felpa rossa) diventa crema
+        c1 = "#FFE9C7" if r.si_confonde(c1, da, y0, 300) else c1
+        c2 = "#FFE9C7" if r.si_confonde(c2, da, y0, 300) else c2
     for j, (testo, _) in enumerate(voci):
         col = "#fff" if j % 2 == 0 else (c1 if j % 4 == 1 else c2)
         righe.append(f'<div id="ep{n}v{j}" style="color:{col}">{E(testo)}</div>')
     if e.get("finale"):
-        righe.append(f'<div class="es-t" id="ep{n}f"><span style="background:{c1};font-size:{_misura(e["finale"][0], 860, 74, r)}px">{E(e["finale"][0])}</span></div>')
+        righe.append(f'<div class="es-t" id="ep{n}f"><span style="background:{targa};font-size:{_misura(e["finale"][0], 860, 74, r)}px">{E(e["finale"][0])}</span></div>')
     su_fondo = any(x <= da < z for x, z in getattr(r, "su_fondo", []))   # sul fondo nuovo il velo scuro non serve
     r.corpo.append(f'<div class="es-velo" id="ep{n}velo"{' style="display:none"' if su_fondo else ''}></div><div class="es-p" id="ep{n}" style="top:{max(getattr(r, "y_sub", 300) - 40, 330 if r.stile.get("testo_fisso") else 260)}px">{"".join(righe)}</div>')
     r.tl.append(f'tl.to("#ep{n}velo",{{opacity:1,duration:.25}},{da:.3f});')

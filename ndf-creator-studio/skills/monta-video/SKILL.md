@@ -71,7 +71,15 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    Effetti nuovi (barra, scontrino, carrello, sondaggio, voto, podio, top, freccia, postit, citazione): formato in cima
    a `strumenti/effetti_nuovi.py`; parole sparse, pallini, copertina di rivista, schede con le barre, cartellini
    legati, parole giganti dietro, nomi colpiti, B-roll a tutto schermo (sparse, pallini, rivista, schede, cartellini, scritte, colpiti, broll):
-   formato e quando usarli in cima a `strumenti/effetti_piu.py`. Usa solo gli effetti accesi nella pagina Effetti (scelte.json "effetti"): dove
+   formato e quando usarli in cima a `strumenti/effetti_piu.py`; sfondo che si apre, sfondo sfocato con scritta, luce
+   dietro la testa, collage di carta, il video in un reel (dentro, sfocato, raggi, collage, reel): in cima a
+   `strumenti/effetti_scena.py`; scritta che si cancella, lettere che cadono, carte a ventaglio, polaroid, messaggio
+   vocale (cancella, lettere, ventaglio, polaroid, vocale): in cima a `strumenti/effetti_carte.py`; scritta che si
+   colora, carosello, tasti che piovono, fumetto, cartello (colora, carosello, tasti, fumetto, cartello): in cima a
+   `strumenti/effetti_parole.py`; elenco che si accende, le cose dal basso, muro di reel, capitolo, nastro che scorre
+   (elenco, scalata, mosaico, capitolo, nastro): in cima a `strumenti/effetti_liste.py`; le immagini dietro di me,
+   lista che scorre, messaggio in arrivo, apertura tipografica (immagini, scorri, messaggio, fondale): in cima a
+   `strumenti/effetti_sfondi.py`. Usa solo gli effetti accesi nella pagina Effetti (scelte.json "effetti"): dove
    metterli lo decidi tu, sulla frase che li giustifica, con numeri e nomi veri detti nel video (mai inventati).
    Zoom: decidilo sempre tu, in ogni video, seguendo `regole/zoom.md` (l'utente non deve chiederlo).
    **Poche cose fatte bene**: una grafica alla volta, mai lampi, adesivi o pillole su ogni parola. Se un elemento non

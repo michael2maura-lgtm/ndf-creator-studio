@@ -71,9 +71,15 @@ import subprocess
 
 import effetti
 import effetti_nuovi
+import effetti_scena
+import effetti_carte
+import effetti_parole
+import effetti_liste
+import effetti_sfondi
 import effetti_sopra
 import effetti_chiaro
 import effetti_piu
+import effetti_testimonianza
 import sottotitoli
 import ritocchi
 import suoni_reel
@@ -506,6 +512,23 @@ class Reel:
                            f'data-start="{da:.3f}" data-media-start="0" data-duration="{a - da:.3f}"></video>')
         return f"#r{n}"
 
+    def si_confonde(self, colore, t, y, alto=160):
+        """True se il colore (#RRGGBB) si confonde con il video in quella fascia (y, alto) al secondo t: per esempio
+        una scritta rossa sopra una felpa rossa. Allora l'effetto usa il bianco al posto del colore."""
+        try:
+            r = subprocess.run([FFMPEG, "-v", "error", "-ss", f"{max(t, 0):.2f}", "-i", os.path.join(self.assets, "tagliato.mp4"),
+                                "-frames:v", "1", "-vf", f"crop=760:{alto}:160:{max(0, min(int(y), 1920 - alto))},scale=1:1",
+                                "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True)
+            v = list(r.stdout[:3])
+            c = [int(colore.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)]
+        except Exception:
+            return False
+        if len(v) < 3:
+            return False
+        lum = lambda p: 0.299 * p[0] + 0.587 * p[1] + 0.114 * p[2]
+        tinta = sum(abs(p - q) for p, q in zip(v, c))
+        return tinta < 170 and abs(lum(v) - lum(c)) < 70
+
     def cima_testa(self, video, t):
         """La cima vera della testa (y in pixel) dal ritaglio trasparente al secondo t: più precisa di occhi e mento,
         che con capelli alti o barba lunga sbagliano anche di 150 px. None se non si legge."""
@@ -625,7 +648,7 @@ class Reel:
             else:
                 dur = 0.12 if tipo == "scatto" else 0.28
                 self.tl.append(f'tl.to("#cam",{{scale:{scala},duration:{dur},ease:"{"power4.out" if tipo == "scatto" else "expo.out"}"}},{arrivo - dur:.3f});'
-                               f'tl.fromTo("#bg",{{filter:"blur(14px)"}},{{filter:"blur(0px)",duration:{dur + 0.14:.2f},ease:"power2.out",immediateRender:false}},{arrivo - dur:.3f});')
+                               f'tl.fromTo("#bg",{{filter:"blur({8 if tipo == "scatto" else 4}px)"}},{{filter:"blur(0px)",duration:{dur + 0.08:.2f},ease:"power2.out",immediateRender:false}},{arrivo - dur:.3f});')
                 if not self.stile.get("zoom_muto"):
                     self.suono("transizione", arrivo - dur, 0.3)
 
@@ -892,6 +915,14 @@ class Reel:
         x = max(faccia["sinistra"] + 60 - larg - 10, 30) if sinistra else min(faccia["destra"] - 60 + 10, 1080 - larg - 30)
         cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
         y = cima + 10
+        if posto < 420:   # girato da vicino: di lato non c'è posto (usciva dal bordo), l'insegna va sopra la testa, su una riga
+            vera = self.cima_testa(self.ultimo_ritaglio, (a - da) / 2) or cima   # la cima vera dei capelli
+            righe = [testo]
+            lungo = max(len(testo), 3)
+            dim = max(min(130, int(940 / (lungo * 0.46 + 0.6))), 64)
+            larg = lungo * dim * 0.46 + dim * 0.6
+            x = (1080 - larg) / 2
+            y = max(vera - dim * 1.25, 200)
         def insegna(classe, stile=""):
             r2 = (f'<br><span class="ne-r2">{html.escape(righe[1])}<i class="ne-sott"></i></span>' if len(righe) > 1 else "")
             return f'<div class="{classe}"{stile}>{html.escape(righe[0])}{r2}</div>'
@@ -1065,7 +1096,16 @@ class Reel:
             x = max(30, min(cx - 470, 260)) if lato < 0 else min(1050 - 230, max(cx + 240, 600))
             x += (j // 2) * 30 * lato
             y = faccia["occhi"] - 120 + quota * 420
-            fondo = self.P["schede"][j % len(self.P["schede"])]
+            # la foto del post è un fotogramma vero del video (momenti diversi), come i tuoi reel nella griglia
+            foto = f"caduta-{n}-{j}.jpg"
+            if not os.path.exists(os.path.join(self.assets, foto)):
+                tot = durata(os.path.join(self.assets, "tagliato.mp4"))
+                t_f = tot * (0.12 + 0.76 * j / max(quanti - 1, 1))
+                subprocess.run([FFMPEG, "-v", "error", "-y", "-ss", f"{t_f:.2f}", "-i", os.path.join(self.assets, "tagliato.mp4"),
+                                "-frames:v", "1", "-vf", "crop=1080:1350:0:200,scale=300:375", "-q:v", "4",
+                                os.path.join(self.assets, foto)], capture_output=True)
+            fondo = (f"url(assets/{foto}) center/cover" if os.path.exists(os.path.join(self.assets, foto))
+                     else self.P["schede"][j % len(self.P["schede"])])
             pezzi.append(f'<div class="cd-p" id="cd{n}p{j}" style="left:{x:.0f}px;top:{y:.0f}px;--g:{gira}deg">'
                          f'<div class="cd-t"><i></i><b></b></div><div class="cd-f" style="background:{fondo}"></div>'
                          f'<div class="cd-b"><i></i><i></i><i></i></div></div>')
@@ -1090,6 +1130,9 @@ class Reel:
         col = e.get("colore", "#E1262D")
         dim = 190 if len(testo) <= 3 else 150 if len(testo) <= 6 else 118 if len(testo) <= 9 else 92
         y = min(faccia["mento"] + 150, 1250)
+        chiaro = self.si_confonde(col, da, y, dim + 60)   # timbro rosso su vestito rosso: inchiostro bianco, senza "multiply"
+        if chiaro:
+            col = "#FFFFFF"
         gira = e.get("gira", -11)
         if not os.path.exists(os.path.join(self.assets, "timbro-ruvido.png")):
             # inchiostro consumato: macchie chiare a caso, sempre le stesse (seme fisso), usate come maschera
@@ -1099,7 +1142,8 @@ class Reel:
             v = (v - v.min()) / (v.max() - v.min())
             Image.fromarray(np.where(v > 0.30, 255, 0).astype(np.uint8)).resize((720, 360)).save(os.path.join(self.assets, "timbro-ruvido.png"))
         self.corpo.append(f'<div class="tb" id="tb{n}" style="top:{y}px;--g:{gira}deg"><div class="tb-in" id="tb{n}i" '
-                          f'style="color:{col};border-color:{col};font-size:{dim}px">{html.escape(testo)}</div></div>')
+                          f'style="color:{col};border-color:{col};font-size:{dim}px'
+                          f'{";mix-blend-mode:normal;filter:drop-shadow(0 4px 14px rgba(0,0,0,.55))" if chiaro else ""}">{html.escape(testo)}</div></div>')
         self.tl.append(f'tl.fromTo("#tb{n}i",{{opacity:0,scale:2.4}},{{opacity:0.92,scale:1,duration:0.13,ease:"power4.in",immediateRender:false}},{da - 0.13:.3f});'
                        f'tl.fromTo("#tb{n}i",{{scale:1}},{{scale:1.035,duration:0.06,yoyo:true,repeat:1,ease:"power1.out",immediateRender:false}},{da:.3f});'
                        f'tl.to("#tb{n}i",{{opacity:0,duration:0.2}},{a - 0.2:.3f});')
@@ -1325,6 +1369,9 @@ class Reel:
                               f'{punti}</svg><span class="gf-et" id="gf{n}e" style="left:{xs[piega]:.0f}px;top:{ytop + 25}px">{et}</span></div>')
         tl = [f'tl.set("{sel}",{{opacity:1}},{da:.3f});tl.set("{sel}",{{opacity:0}},{a:.3f});',
               f'tl.fromTo("#gf{n}",{{opacity:0}},{{opacity:1,duration:0.35}},{da:.3f});',
+              # la stanza si abbassa un po': su un muro chiaro il grafico prima si vedeva appena
+              f'tl.fromTo("#bg",{{filter:"brightness(1)"}},{{filter:"brightness(0.58) saturate(0.8)",duration:0.35,immediateRender:false}},{da:.3f});'
+              f'tl.to("#bg",{{filter:"brightness(1) saturate(1)",duration:0.3}},{a - 0.3:.3f});tl.set("#bg",{{filter:"none"}},{a:.3f});',
               f'tl.to("#gf{n}a",{{strokeDashoffset:0,duration:{max(quando - da - 0.4, 0.4):.2f},ease:"none"}},{da + 0.3:.3f});',
               f'tl.to("#gf{n}b",{{strokeDashoffset:0,duration:0.6,ease:"power2.in"}},{quando:.3f});',
               f'tl.to("#gf{n}lu",{{opacity:1,duration:0.4}},{quando + 0.3:.3f});',
@@ -1773,14 +1820,18 @@ class Reel:
         if e.get("risultato"):
             t_r = e["risultato"][0]
             T(f'tl.fromTo("#{q}z",{{opacity:0,scale:0.5,rotate:8}},{{opacity:1,scale:1,rotate:2,duration:0.4,ease:"back.out(1.8)",immediateRender:false}},{t_r:.3f});'
-              f'tl.to("#{q}z",{{opacity:0,scale:0.9,duration:0.25}},{esce - 0.1:.3f});')
+              f'tl.to("#{q}z",{{opacity:0,scale:0.9,duration:0.25}},{max(esce - 0.1, t_r + 0.55):.3f});')   # sempre dopo che è entrata: prima restava a schermo per sempre
             self.suono("ding", t_r, 0.3)
 
     def sfumatura(self, t, dur=1.3):
         """Transizione "sfumatura di luce": una luce calda arancio cresce sull'immagine, diventa bianca piena sul
         cambio (t) e poi si ritira lasciando un velo caldo che svanisce. Sotto il bianco l'immagine si sfoca appena."""
         n = len(self.corpo)
-        self.corpo.append(f'<div class="sfu" id="sf{n}"><i class="sfu-calda" id="sf{n}c"></i><i class="sfu-bianca" id="sf{n}b"></i></div>')
+        oro = self.stile.get("luce") == "oro"   # modello Testimonianza: luce dorata, il pieno è giallo chiaro e non bianco
+        calda = (' style="background:radial-gradient(ellipse 75% 65% at 30% 70%,#FFF27A 0%,#FFD84A 40%,rgba(255,200,60,.4) 72%,'
+                 'rgba(255,200,60,.2) 100%),radial-gradient(ellipse 55% 50% at 80% 25%,#FFFBD8 0%,rgba(255,230,120,0) 70%)"') if oro else ""
+        bianca = ' style="background:#FFF6B8"' if oro else ""
+        self.corpo.append(f'<div class="sfu" id="sf{n}"><i class="sfu-calda" id="sf{n}c"{calda}></i><i class="sfu-bianca" id="sf{n}b"{bianca}></i></div>')
         su, giu = dur * 0.4, dur * 0.6
         self.tl.append(f'tl.set("#sf{n}",{{opacity:1}},{t - su:.3f});'
                        f'tl.fromTo("#sf{n}c",{{opacity:0,scale:0.6}},{{opacity:1,scale:1.15,duration:{su:.3f},ease:"power1.in",immediateRender:false}},{t - su:.3f});'
@@ -2478,8 +2529,20 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             effetti_chiaro.TIPI[tipo](r, e, faccia)
         elif tipo in effetti_piu.TIPI:
             effetti_piu.TIPI[tipo](r, e, faccia)
+        elif tipo in effetti_testimonianza.TIPI:
+            effetti_testimonianza.TIPI[tipo](r, e, faccia)
         elif tipo in effetti_nuovi.TIPI:
             effetti_nuovi.TIPI[tipo](r, e, faccia)
+        elif tipo in effetti_scena.TIPI:
+            effetti_scena.TIPI[tipo](r, e, faccia)
+        elif tipo in effetti_carte.TIPI:
+            effetti_carte.TIPI[tipo](r, e, faccia)
+        elif tipo in effetti_parole.TIPI:
+            effetti_parole.TIPI[tipo](r, e, faccia)
+        elif tipo in effetti_liste.TIPI:
+            effetti_liste.TIPI[tipo](r, e, faccia)
+        elif tipo in effetti_sfondi.TIPI:
+            effetti_sfondi.TIPI[tipo](r, e, faccia)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude
         r.transizione(t)
     # il commento fa da chiusura: senza "finale_da" nel piano, niente finale scuro sopra
@@ -2580,9 +2643,9 @@ html,body{{margin:0;background:{scuro}}}
 .rec-tel b{{position:absolute;inset:7px;border-radius:50%;background:#FF3B30}}
 .rec-lab{{position:absolute;left:330px;top:560px;{M};font-size:24px;color:#fff;background:rgba(0,0,0,.55);padding:6px 14px;border-radius:10px;z-index:32;opacity:0}}
 .cd{{position:absolute;inset:0;z-index:31;opacity:0;pointer-events:none}}
-.cd-p{{position:absolute;width:220px;background:#fff;border-radius:18px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.45);transform:rotate(var(--g))}}
+.cd-p{{position:absolute;width:250px;background:#fff;border-radius:18px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.45);transform:rotate(var(--g))}}
 .cd-t{{display:flex;align-items:center;gap:8px;margin-bottom:8px}}.cd-t i{{width:26px;height:26px;border-radius:50%;background:#ddd}}
-.cd-t b{{height:9px;width:90px;border-radius:5px;background:#ddd}}.cd-f{{height:210px;border-radius:10px}}
+.cd-t b{{height:9px;width:90px;border-radius:5px;background:#ddd}}.cd-f{{height:300px;border-radius:10px}}
 .cd-b{{display:flex;gap:10px;margin-top:9px}}.cd-b i{{width:22px;height:22px;border-radius:50%;border:3px solid #222}}
 .tb{{position:absolute;left:0;right:0;display:flex;justify-content:center;z-index:31;pointer-events:none;transform:rotate(var(--g))}}
 .tb-in{{opacity:0;font-family:"Inter Tight";font-weight:900;letter-spacing:6px;line-height:1;padding:22px 40px 18px;border:12px solid;
@@ -2626,10 +2689,10 @@ html,body{{margin:0;background:{scuro}}}
 .pd-t1{{right:calc(1080px - var(--x) + 22px);background:rgba(30,30,30,.85);color:#fff}}
 .pd-t2{{left:calc(var(--x) + 22px);background:#F6E46A;color:#222}}
 .gf{{position:absolute;inset:0;opacity:0;z-index:2;pointer-events:none}}.gf svg{{position:absolute;inset:0}}
-.gf-gr line{{stroke:rgba(255,255,255,.16);stroke-width:2}}
+.gf-gr line{{stroke:rgba(255,255,255,.24);stroke-width:2}}
 .gf-le text{{fill:#fff;font:700 40px "Inter Tight";text-anchor:middle;letter-spacing:2px}}
-.gf-a{{fill:none;stroke:#fff;stroke-width:6;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}}
-.gf-b{{fill:none;stroke:#F6E46A;stroke-width:9;stroke-linejoin:round;filter:drop-shadow(0 0 14px #F6E46A)}}
+.gf-a{{fill:none;stroke:#fff;stroke-width:9;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}}
+.gf-b{{fill:none;stroke:#F6E46A;stroke-width:13;stroke-linejoin:round;filter:drop-shadow(0 0 14px #F6E46A)}}
 .gf-d{{stroke:#F6E46A;stroke-width:3;stroke-dasharray:8 8}}
 .gf-pb{{fill:#fff;stroke:#111;stroke-width:3;opacity:0}}.gf-pg{{fill:#F6E46A;stroke:#fff;stroke-width:3;opacity:0;filter:drop-shadow(0 0 10px #F6E46A)}}
 .gf-et{{position:absolute;transform:translateX(-50%);background:#F6E46A;color:#111;font:800 44px "Inter Tight";padding:10px 26px;border-radius:40px;
@@ -2789,9 +2852,9 @@ html,body{{margin:0;background:{scuro}}}
 .od-lab{{margin-top:12px;border-top:4px solid #F4E06D;padding-top:8px}}
 .od-lab span{{font-weight:800;font-size:46px;letter-spacing:1px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}}
 .od-sotto{{font-weight:800;font-size:30px;letter-spacing:2px;color:#fff;opacity:0;text-shadow:0 2px 10px rgba(0,0,0,.6)}}
-.pl{{position:absolute;left:40px;right:40px;display:flex;justify-content:center;gap:16px;z-index:32;opacity:0;font-family:'Inter Tight'}}
-.pl-p{{padding:12px 28px 14px;border-radius:40px;border:2.5px solid rgba(255,255,255,.78);background:rgba(0,0,0,.18);color:#fff;
- font-weight:600;font-size:36px;white-space:nowrap;opacity:0;text-shadow:0 2px 8px rgba(0,0,0,.4)}}
+.pl{{position:absolute;left:40px;right:40px;display:flex;flex-wrap:wrap;justify-content:center;gap:16px;z-index:32;opacity:0;font-family:'Inter Tight'}}
+.pl-p{{padding:14px 34px 16px;border-radius:44px;border:3px solid rgba(255,255,255,.85);background:rgba(0,0,0,.38);color:#fff;
+ font-weight:700;font-size:44px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);white-space:nowrap;opacity:0;text-shadow:0 2px 8px rgba(0,0,0,.4)}}
 .pr2{{position:absolute;left:100px;right:100px;z-index:33;opacity:0;font-family:'Inter Tight';padding:40px 40px 34px;border-radius:30px;
  border:2.5px solid rgba(255,255,255,.55);background:rgba(10,10,12,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}}
 .pr2-lab{{position:absolute;left:50%;top:-24px;transform:translateX(-50%);padding:0 22px;font-weight:500;font-size:32px;color:#fff;
