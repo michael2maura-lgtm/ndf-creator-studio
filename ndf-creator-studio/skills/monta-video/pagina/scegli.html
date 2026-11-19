@@ -527,8 +527,17 @@ function stringi() { document.querySelectorAll(".passo.aperto .font .prova").for
 document.fonts.addEventListener("loadingdone", stringi);
 
 $("#carica").onclick = () => $("#file").click();
-$("#file").onchange = e => { const f = e.target.files[0]; if (!f) return; mioVideo = URL.createObjectURL(f); $("#torna").hidden = false; base(); };
-$("#torna").onclick = () => { mioVideo = null; $("#torna").hidden = true; base(); };
+// il video del cliente resta salvato nel browser: passando a Effetti o Brand e tornando qui lo ritrova
+function archivio(fare) {
+  return new Promise(ok => { try { const q = indexedDB.open("ndf-studio", 1);
+    q.onupgradeneeded = () => q.result.createObjectStore("video");
+    q.onsuccess = () => { try { const t = q.result.transaction("video", "readwrite"); fare(t.objectStore("video"), ok); } catch (e) { ok(null); } };
+    q.onerror = () => ok(null); } catch (e) { ok(null); } }); }
+const salvaMio = f => archivio((st, ok) => { st.put(f, "mio"); ok(); });
+const leggiMio = () => archivio((st, ok) => { const r = st.get("mio"); r.onsuccess = () => ok(r.result || null); r.onerror = () => ok(null); });
+const togliMio = () => archivio((st, ok) => { st.delete("mio"); ok(); });
+$("#file").onchange = e => { const f = e.target.files[0]; if (!f) return; mioVideo = URL.createObjectURL(f); $("#torna").hidden = false; base(); salvaMio(f); };
+$("#torna").onclick = () => { mioVideo = null; $("#torna").hidden = true; base(); togliMio(); };
 
 function corpo() {
   return {stile:S.stile, modello:S.modello, colore:S.colore, sottotitoli:S.sottotitoli, velocita:S.velocita, musica:S.musica, suoni:{},
@@ -576,6 +585,7 @@ fetch("/dati").then(r => r.json()).then(d => {
   if (d.parola_brand) S.parola = d.parola_brand;
   if (d.scelte) prendi(d.scelte);
   disegnaSlot(); disegna(); base();
+  leggiMio().then(f => { if (f && !mioVideo) { mioVideo = URL.createObjectURL(f); $("#torna").hidden = false; base(); } });
 }).catch(e => { console.error("avvio", e); avviso("La pagina non si è caricata: chiudila e riaprila"); });
 </script>
 </body></html>
