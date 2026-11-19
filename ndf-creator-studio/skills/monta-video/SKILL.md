@@ -23,7 +23,8 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
   `uv run --python 3.12 --no-project STUDIO/strumenti/installa.py` (uv è in `~/.local/bin` se non lo trova).
   Se una riga dice MANCA, rilancialo una volta; se resta, di' in una riga cosa manca.
 - `PY STUDIO/strumenti/aggiornamenti.py`: se dice che c'è una versione nuova, dillo in una riga e chiedi se
-  aggiornare (`/plugin update ndf-creator-studio`, poi riaprire Claude Code).
+  aggiornare. Con un sì aggiorni tu, fuori dalla sandbox: `claude plugin marketplace update ndf-creator-studio`,
+  poi `claude plugin update ndf-creator-studio@ndf-creator-studio`; poi di' di chiudere e riaprire Claude Code.
 - Manca il colore in `DATI/profilo.json` (brand mai fatto): niente domande in chat. Apri la pagina su `/brand`
   (`PY STUDIO/strumenti/scegli.py`), di' "Ti ho aperto la pagina: rispondi lì e premi Salva", aspetta `BRAND SALVATO`
   e poi `SCELTE SALVATE`, poi monta. L'intervista `crea-stile` si fa solo se l'utente la chiede.
