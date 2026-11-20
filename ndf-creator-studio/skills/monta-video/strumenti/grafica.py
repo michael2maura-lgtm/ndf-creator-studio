@@ -138,6 +138,54 @@ PANNELLO = {  # colori dello schermo diviso; uno stile li cambia con "pannello" 
 
 
 
+
+# effetti che non ondeggiano: a tutto schermo, legati al muro o alla persona, o che si muovono già da soli
+SENZA_RESPIRO = {"scena", "pannello", "zoom", "bianconero", "luce", "dietro", "schermo", "prima_dopo", "percorso", "gigante",
+                 "cornice", "telefono", "telefono3d", "orbita", "muro", "grafico", "app", "pallini", "cartellini", "rivista",
+                 "scorri", "immagini", "fondale", "mosaico", "carosello", "dentro", "sfocato", "raggi", "collage", "reel",
+                 "fondo", "numeri", "nastro", "adesivo",
+                 "barra", "scontrino", "carrello", "sondaggio", "voto", "top", "citazione"}   # queste ondeggiano già da sole
+JS_RESPIRO = """document.querySelectorAll('.resp').forEach(w => {
+  const da = +w.dataset.da, a = +w.dataset.a, R = w.getBoundingClientRect(), k = R.width / 1080 || 1;
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, z = 0, pieno = false;
+  // tutti i pezzi dentro, non solo i primi: spesso il primo è un contenitore vuoto e i pezzi veri stanno sotto
+  for (const c of w.querySelectorAll('*')) {
+    const st = getComputedStyle(c), q = c.getBoundingClientRect(), zz = parseInt(st.zIndex) || 0;
+    z = Math.max(z, zz);
+    if (c.closest('svg') && c.tagName.toLowerCase() !== 'svg') continue;
+    const L = (q.left - R.left) / k, T = (q.top - R.top) / k, W = q.width / k, H = q.height / k;
+    if (W >= 1000 && H >= 1700) { pieno = true; continue; }
+    if (W < 2 || H < 2) continue;
+    x0 = Math.min(x0, L); y0 = Math.min(y0, T); x1 = Math.max(x1, L + W); y1 = Math.max(y1, T + H);
+  }
+  w.style.zIndex = Math.max(z, 1);   // il contenitore sta alto quanto il pezzo più alto: niente finisce dietro la persona
+  const T = a - 0.3 - (da + 0.45);   // il tempo in cui resta fermo sullo schermo: lo riempie tutto, con giri interi
+  if (pieno || x1 < x0 || T < 0.8) return;
+  const volte = Math.max(1, Math.round(T / 2.6)), giro = T / (2 * volte);
+  tl.set(w, {transformOrigin: ((x0 + x1) / 2) + "px " + ((y0 + y1) / 2) + "px"}, 0);
+  tl.fromTo(w, {x: 0, y: 0, rotation: 0}, {keyframes: [
+    {x: 12, y: -8, rotation: 1.4, duration: giro / 2, ease: "sine.inOut"},
+    {x: -12, y: 6, rotation: -1.4, duration: giro, ease: "sine.inOut"},
+    {x: 0, y: 0, rotation: 0, duration: giro / 2, ease: "sine.inOut"}], repeat: volte - 1, immediateRender: false}, da + 0.45);
+});"""
+
+def _primo_tempo(voci):
+    """Il primo secondo dentro le voci di un effetto senza "da" (pillole, tessere, pila, etichette)."""
+    tempi = []
+    def cerca(x):
+        if isinstance(x, (int, float)) and not isinstance(x, bool):
+            tempi.append(float(x))
+        elif isinstance(x, (list, tuple)):
+            for y in x:
+                cerca(y)
+        elif isinstance(x, dict):
+            for k in ("quando", "da", "t"):
+                if k in x:
+                    cerca(x[k])
+    cerca(voci or [])
+    return min(tempi) if tempi else None
+
+
 def pannello_dal_colore(acc):
     """I colori dello schermo diviso ricavati da UN colore (quello del brand): schede, righe, griglia e bagliori nel
     colore, il fondo quasi nero appena tinto, le parti chiare color carta appena tinte."""
@@ -2475,6 +2523,7 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
     zoom_sui_tagli(r, cart, piano, stile, faccia, riq)
     for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][-1] if x.get("voci") else 0):
         tipo = e["tipo"]
+        prima = len(r.corpo)
         con_numeri = tipo == "fondo" and any(x.get("tipo") == "numeri" and x.get("da", 0) < e.get("a", 0) and e.get("da", 0) < x.get("a", 0)
                                              for x in piano.get("elementi", []))   # il fondo dei passi di Energia va con loro
         if tipo not in ("scena", "pannello") and not con_numeri and accesi is not None and effetti.chiave_di(e) not in accesi:   # le scene sono lo stile, non un effetto
@@ -2581,6 +2630,14 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
             effetti_liste.TIPI[tipo](r, e, faccia)
         elif tipo in effetti_sfondi.TIPI:
             effetti_sfondi.TIPI[tipo](r, e, faccia)
+        # mentre l'effetto resta sullo schermo non sta mai fermo: lo avvolge un contenitore che ondeggia piano
+        # (gli effetti a tutto schermo e quelli che si muovono già per conto loro restano come sono)
+        inizio = e.get("da") if isinstance(e.get("da"), (int, float)) else _primo_tempo(e.get("voci"))
+        if (tipo not in SENZA_RESPIRO and len(r.corpo) > prima and inizio is not None
+                and isinstance(e.get("a"), (int, float)) and e["a"] - inizio >= 1.6):
+            r.corpo[prima] = f'<div class="resp" data-da="{inizio:.3f}" data-a="{e["a"]:.3f}">' + r.corpo[prima]
+            r.corpo[-1] += "</div>"
+    r.tl.append(JS_RESPIRO)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude
         r.transizione(t)
     # il commento fa da chiusura: senza "finale_da" nel piano, niente finale scuro sopra
@@ -2769,6 +2826,7 @@ html,body{{margin:0;background:{scuro}}}
  display:flex;align-items:center;justify-content:center}}
 .zona{{position:absolute;background:rgba(255,0,0,.35);z-index:50}}
 .rit{{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;opacity:0;z-index:3}}
+.resp{{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none}}
 .pdietro{{position:absolute;left:0;right:0;text-align:center;font-family:'Inter Tight';font-weight:900;letter-spacing:-0.05em;line-height:1;white-space:nowrap;opacity:0;z-index:2;
  transform-origin:50% 60%}}
 .buio{{position:absolute;inset:0;z-index:7;opacity:0;pointer-events:none;

@@ -536,8 +536,10 @@ function archivio(fare) {
 const salvaMio = f => archivio((st, ok) => { st.put(f, "mio"); ok(); });
 const leggiMio = () => archivio((st, ok) => { const r = st.get("mio"); r.onsuccess = () => ok(r.result || null); r.onerror = () => ok(null); });
 const togliMio = () => archivio((st, ok) => { st.delete("mio"); ok(); });
-$("#file").onchange = e => { const f = e.target.files[0]; if (!f) return; mioVideo = URL.createObjectURL(f); $("#torna").hidden = false; base(); salvaMio(f); };
-$("#torna").onclick = () => { mioVideo = null; $("#torna").hidden = true; base(); togliMio(); };
+// il video caricato va anche nella cartella dello studio: poi basta scrivere "montami il video" a Claude
+const mandaVideo = f => fetch("/video", {method: "POST", headers: {"X-Nome": encodeURIComponent(f.name)}, body: f}).catch(() => {});
+$("#file").onchange = e => { const f = e.target.files[0]; if (!f) return; mioVideo = URL.createObjectURL(f); $("#torna").hidden = false; base(); salvaMio(f); mandaVideo(f); };
+$("#torna").onclick = () => { mioVideo = null; $("#torna").hidden = true; base(); togliMio(); fetch("/video-togli", {method: "POST"}).catch(() => {}); };
 
 function corpo() {
   return {stile:S.stile, modello:S.modello, colore:S.colore, sottotitoli:S.sottotitoli, velocita:S.velocita, musica:S.musica, suoni:{},

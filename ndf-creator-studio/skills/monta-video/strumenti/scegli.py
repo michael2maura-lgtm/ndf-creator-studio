@@ -342,6 +342,55 @@ def salva_brand(corpo):
     return pr
 
 
+
+VIDEO_PAGINA = os.path.join(DATI, "video-pagina")          # la copia del video caricato nella pagina
+VIDEO_SCELTO = os.path.join(DATI, "video-pagina.json")     # {"file", "nome", "quando"}: lo legge monta-video
+ESTENSIONI = (".mp4", ".mov", ".m4v", ".webm")
+
+
+def salva_video(h):
+    """Copia nella cartella dello studio il video che l'utente ha caricato nella pagina (a pezzi, anche se è grande)."""
+    import urllib.parse
+    n = int(h.headers.get("Content-Length") or 0)
+    if n <= 0 or n > 8_000_000_000:
+        return 400, b"{}"
+    nome = urllib.parse.unquote(h.headers.get("X-Nome") or "video.mp4")[:120]
+    est = os.path.splitext(nome)[1].lower()
+    est = est if est in ESTENSIONI else ".mp4"
+    os.makedirs(VIDEO_PAGINA, exist_ok=True)
+    dest = os.path.join(VIDEO_PAGINA, "video" + est)
+    tmp = dest + ".parte"
+    resto = n
+    with open(tmp, "wb") as out:
+        while resto > 0:
+            pezzo = h.rfile.read(min(resto, 1 << 20))
+            if not pezzo:
+                break
+            out.write(pezzo)
+            resto -= len(pezzo)
+    if resto > 0:
+        os.remove(tmp)
+        return 400, b"{}"
+    for e in ESTENSIONI:   # una copia sola: quella di prima (anche con un'altra estensione) se ne va
+        vecchio = os.path.join(VIDEO_PAGINA, "video" + e)
+        if vecchio != dest and os.path.exists(vecchio):
+            os.remove(vecchio)
+    os.replace(tmp, dest)
+    scrivi(VIDEO_SCELTO, {"file": dest, "nome": nome, "quando": datetime.datetime.now().isoformat(timespec="seconds")})
+    print(f"VIDEO CARICATO {nome}", flush=True)
+    return 200, b"{}"
+
+
+def togli_video():
+    """L'utente è tornato all'esempio: niente più video della pagina."""
+    if os.path.exists(VIDEO_SCELTO):
+        os.remove(VIDEO_SCELTO)
+    for e in ESTENSIONI:
+        p = os.path.join(VIDEO_PAGINA, "video" + e)
+        if os.path.exists(p):
+            os.remove(p)
+
+
 class Pagina(BaseHTTPRequestHandler):
     dati, file, ultimo_ping = None, {}, None
 
@@ -387,6 +436,11 @@ class Pagina(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self._nostro():
             return self._manda(403, b"{}")
+        if self.path == "/video":   # il video caricato nella pagina: "montami il video" monta questo, senza riallegarlo
+            return self._manda(*salva_video(self))
+        if self.path == "/video-togli":
+            togli_video()
+            return self._manda(200, b"{}")
         corpo = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
         if self.path == "/ping":
             Pagina.ultimo_ping = time.time()

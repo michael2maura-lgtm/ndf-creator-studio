@@ -29,6 +29,19 @@ def _font(r):
 def _entra(r, sel, da, a, dy=60):
     r.tl.append(f'tl.fromTo("{sel}",{{opacity:0,y:{dy},scale:.96}},{{opacity:1,y:0,scale:1,duration:.4,ease:"back.out(1.5)",immediateRender:false}},{da:.3f});'
                 f'tl.to("{sel}",{{opacity:0,y:{dy // 2},duration:.25,ease:"power2.in"}},{a - 0.25:.3f});')
+    _ondeggia(r, sel, da + 0.4, a - 0.25)
+
+
+def _ondeggia(r, sel, da, a, ampio=2.6):
+    """Mentre la scheda resta sullo schermo non sta mai ferma: ondeggia piano di lato e si inclina appena."""
+    T = a - da
+    if T < 0.8:
+        return
+    volte = max(1, round(T / 2.6))   # giri interi che riempiono tutto il tempo in cui la scheda resta
+    giro = T / (2 * volte)
+    r.tl.append(f'tl.fromTo("{sel}",{{x:0,rotation:0}},{{keyframes:[{{x:{7 * ampio:.1f},y:{-4 * ampio:.1f},rotation:{0.9 * ampio:.2f},duration:{giro / 2:.2f},ease:"sine.inOut"}},'
+                f'{{x:{-7 * ampio:.1f},y:{3 * ampio:.1f},rotation:{-0.9 * ampio:.2f},duration:{giro:.2f},ease:"sine.inOut"}},{{x:0,y:0,rotation:0,duration:{giro / 2:.2f},ease:"sine.inOut"}}],'
+                f'repeat:{volte - 1},immediateRender:false}},{da:.3f});')
 
 
 def _petto(faccia):
@@ -75,6 +88,9 @@ def carrello(r, e, faccia):
                    f'<div class="nx-prezzo">{E(e.get("prezzo", ""))}</div><div class="nx-bot" id="nc{n}b"><span id="nc{n}s">Aggiungi al carrello</span></div>'
                    f'<i class="nx-badge" id="nc{n}n">1</i><i class="nx-dito" id="nc{n}d"></i></div>')
     _entra(r, f"#nc{n}", da, a)
+    pulsa = int((t - 0.45 - (da + 0.5)) / 0.7)
+    if pulsa > 0:   # il bottone respira, come se chiedesse di essere toccato
+        r.tl.append(f'tl.to("#nc{n}b",{{scale:1.045,duration:.35,ease:"sine.inOut",yoyo:true,repeat:{pulsa * 2 - 1}}},{da + 0.5:.3f});')
     r.tl.append(f'tl.fromTo("#nc{n}d",{{opacity:0,x:60,y:60}},{{opacity:1,x:0,y:0,duration:.35,immediateRender:false}},{t - 0.4:.3f});'
                 f'tl.to("#nc{n}b",{{scale:.94,duration:.08}},{t:.3f});tl.to("#nc{n}b",{{scale:1,duration:.12}},{t + 0.08:.3f});'
                 f'tl.set("#nc{n}s",{{textContent:"Aggiunto ✓"}},{t + 0.05:.3f});tl.set("#nc{n}b",{{className:"nx-bot fatto"}},{t + 0.05:.3f});'
@@ -113,6 +129,10 @@ def voto(r, e, faccia):
         t = q + j * 0.18
         r.tl.append(f'tl.fromTo("#nv{n}s{j}",{{scale:.5}},{{scale:1,color:"var(--acc)",duration:.3,ease:"back.out(3)",immediateRender:false}},{t:.3f});')
         r.suono("pop", t, 0.18)
+    fine = q + k * 0.18 + 0.35
+    giri = int((a - 0.3 - fine) / 0.9)
+    if giri > 0:   # le stelle accese brillano una dopo l'altra finché la scheda resta
+        r.tl.append(f'tl.to([{",".join(f"""'#nv{n}s{j}'""" for j in range(k))}],{{scale:1.14,duration:.45,ease:"sine.inOut",yoyo:true,repeat:{giri * 2 - 1},stagger:{{each:.09}}}},{fine:.3f});')
     r.nascondi.append((da, a))
 
 

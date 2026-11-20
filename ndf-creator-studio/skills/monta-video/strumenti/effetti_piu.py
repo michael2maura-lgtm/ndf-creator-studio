@@ -159,6 +159,9 @@ def pallini(r, e, faccia):
                     f'tl.fromTo("#pd{n}d{j}",{{scale:1.35}},{{scale:1,duration:.3,ease:"back.out(3)",immediateRender:false}},{t:.3f});')
         r.suono("pop", t, 0.25)
     r.suono("pop", da, 0.25)
+    giri = int((a - 0.3 - (da + 0.5)) / 1.4)
+    if giri > 0:   # la fila dei pallini galleggia piano, non resta inchiodata
+        r.tl.append(f'tl.to("#pd{n}",{{y:-26,scale:1.06,duration:.7,ease:"sine.inOut",yoyo:true,repeat:{giri * 2 - 1}}},{da + 0.5:.3f});')
     _via(r, f'"#pd{n} .px-dot"', a)
 
 
@@ -274,6 +277,11 @@ def cartellini(r, e, faccia):
                         f'tl.to("#pc{n}o{j}",{{attr:{{cx:{qx:.0f},cy:{qy:.0f}}},duration:{dur:.2f},ease:"sine.inOut"}},{prima:.3f});')
             prima = c["t"]
         r.suono("pop", t, 0.3)
+    for j, v in enumerate(voci):   # i cartellini ondeggiano appesi al filo, ognuno con il suo passo
+        t = v.get("quando", da + j * 0.8) + 0.35
+        giri = int((a - 0.3 - t) / 1.6)
+        if giri > 0:
+            r.tl.append(f'tl.to("#pc{n}k{j}",{{rotation:{(-4, 3.5, -3)[j % 3]},y:-14,duration:.8,ease:"sine.inOut",yoyo:true,repeat:{giri * 2 - 1}}},{t:.3f});')
     r.corpo.append(f'<svg class="px-fili" id="pc{n}" width="1080" height="1920">{"".join(linee)}</svg>{"".join(carte)}')
     tutti = [f'"#pc{n}k{j}"' for j in range(len(voci))] + [f'"#pc{n}l{j}"' for j in range(len(voci))] + [f'"#pc{n}o{j}"' for j in range(len(voci))]
     _via(r, "[" + ",".join(tutti) + "]", a)

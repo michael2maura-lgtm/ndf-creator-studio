@@ -1,6 +1,6 @@
 ---
 name: monta-video
-description: Monta un reel parlato in verticale (taglio, sottotitoli italiani parola per parola, titoli, scene, suoni e musica nello stile salvato, volume per Instagram) partendo dal girato grezzo. Usala quando l'utente dice "monta questo video", "monta il reel", "edita questo video", "installa lo studio", o indica un girato da trasformare in reel.
+description: Monta un reel parlato in verticale (taglio, sottotitoli italiani parola per parola, titoli, scene, suoni e musica nello stile salvato, volume per Instagram) partendo dal girato grezzo. Usala quando l'utente dice "monta questo video", "montami il video", "monta il reel", "edita questo video", "installa lo studio", o indica un girato da trasformare in reel.
 ---
 
 # Monta video
@@ -28,6 +28,16 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
 - Manca il colore in `DATI/profilo.json` (brand mai fatto): niente domande in chat. Apri la pagina su `/brand`
   (`PY STUDIO/strumenti/scegli.py`), di' "Ti ho aperto la pagina: rispondi lì e premi Salva", aspetta `BRAND SALVATO`
   e poi `SCELTE SALVATE`, poi monta. L'intervista `crea-stile` si fa solo se l'utente la chiede.
+- L'utente non dice quale video ("montami il video", senza file): non chiedere MAI il percorso del file e non chiedere
+  i nomi in anticipo. Prima guarda `DATI/video-pagina.json`: se c'è, è il video che l'utente ha caricato nella pagina
+  "Scegli il tuo look" (campo "file"): monta quello e di' in una riga "Monto il video che hai caricato nella pagina". Si usa una volta sola: a montaggio
+  fatto rinomina il file in `video-pagina-usato.json`, così la volta dopo non rimonti lo stesso video.
+  Se manca, cercalo tu: i video (mp4, mov, m4v) degli ultimi 3 giorni in Download, Scrivania, Filmati/Video
+  e nella cartella del Rullino o di AirDrop, dal più nuovo (su Windows Download, Desktop, Video). Uno solo: montalo e
+  di' in una riga quale hai preso ("Monto il video di oggi alle 10:42, quello da 1 minuto"). Più di uno: una domanda
+  sola, con al massimo 3 video per nome, ora e durata ("Quale monto?"). Nessuno: "Trascina il video qui in chat e lo
+  monto". I nomi detti nel video non si chiedono: si usano se l'utente li ha scritti, e una parola dubbia si chiede
+  dopo la trascrizione, una alla volta.
 
 ## I passaggi, sempre in quest'ordine
 1. `PY STUDIO/strumenti/prepara.py "<video>" NOME --nomi "<nomi detti nel video>"`
@@ -150,7 +160,10 @@ Colore del girato: `strumenti/colore.py` (6 look, la pelle resta naturale). Quel
 Effetti (motion graphics del motore grafica): catalogo in `strumenti/effetti.py`. Ogni
 stile ha i suoi pochi effetti accesi (stile.json "effetti"); nella pagina l'utente accende quelli che gli piacciono
 (scelte.json "effetti"). Nel piano usa SOLO gli effetti accesi, e solo dove c'entrano con la frase detta (lo stile.md
-dice quando): grafica.py salta gli altri con una NOTA. L'utente non sceglie niente reel per reel. Le scelte le usa `costruisci.py` da solo: tu nel piano
+dice quando): grafica.py salta gli altri con una NOTA. Gli effetti che l'utente ha acceso nella pagina vincono sempre
+sullo stile: anche se lo stile.md dice "niente grafiche" (Pulito, Luce), se scelte.json "effetti" ne ha di accesi li
+metti nel reel, pochi (uno ogni 6-10 secondi) e sulle frasi giuste. Se nessuno c'entra con quello che dice, nel
+riepilogo finale di' in una riga quali hai saltato e perché: l'utente deve sapere che li hai visti. L'utente non sceglie niente reel per reel. Le scelte le usa `costruisci.py` da solo: tu nel piano
 scrivi lo stile scelto e basta. Tasto Segui ("segui"): solo su una frase che invita a seguire, e solo se c'è
 `DATI/profilo.json` ({"nome": nome Instagram, "sotto": riga sotto, "foto": "profilo.jpg"} con la foto in DATI); se manca,
 chiedi una volta il link del profilo Instagram, prendi foto e nome dalla pagina pubblica e salvali lì. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio) più la sua copertina

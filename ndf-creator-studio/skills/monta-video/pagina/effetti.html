@@ -86,10 +86,13 @@ document.addEventListener("mouseout", e => { const c = e.target.closest(".carta"
 document.addEventListener("click", e => {
   const c = e.target.closest(".carta"); if (!c) return;
   const k = c.dataset.eff; if (accesi.has(k)) accesi.delete(k); else accesi.add(k);
-  c.classList.toggle("si", accesi.has(k)); gira(c, true); riass();
+  c.classList.toggle("si", accesi.has(k)); gira(c, true); riass(); salvaDaSolo();
 });
-$("#tutti").onclick = () => { D.effetti.forEach(e => accesi.add(e.chiave)); disegna(); };
-$("#nessuno").onclick = () => { accesi.clear(); disegna(); };
+// ogni scelta si salva da sola dopo un attimo: chi dimentica "Salva gli effetti" non perde niente
+let tSalva = null;
+const salvaDaSolo = () => { clearTimeout(tSalva); tSalva = setTimeout(() => fetch("/salva-effetti", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({effetti:[...accesi]})}).catch(() => {}), 600); };
+$("#tutti").onclick = () => { D.effetti.forEach(e => accesi.add(e.chiave)); disegna(); salvaDaSolo(); };
+$("#nessuno").onclick = () => { accesi.clear(); disegna(); salvaDaSolo(); };
 $("#salva").onclick = async () => {
   const r = await fetch("/salva-effetti", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({effetti:[...accesi]})});
   avviso(r.ok ? "Salvati. Lo studio userà solo questi, dove servono." : "Non sono riuscito a salvare");
