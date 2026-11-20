@@ -25,6 +25,49 @@ except (OSError, ValueError):
     _P = {}
 
 
+def tieni_sul_mac(attesa=240):
+    """Mac con Documenti su iCloud: quando il disco si riempie, il Mac toglie dal computer i file meno usati e lascia
+    solo un segnaposto ("dataless"). Lo studio, leggendoli, resterebbe fermo ad aspettare (pagina che non si apre,
+    montaggio bloccato). Qui li riprendiamo tutti prima di cominciare: un controllo di un decimo di secondo.
+    Stampa ICLOUD ... solo se c'era qualcosa da fare; DISCO PIENO se lo spazio libero è sotto 8 GB."""
+    if sys.platform != "darwin" or not os.path.isdir(DATI) or os.environ.get("NDF_STUDIO_ICLOUD_FATTO"):
+        return
+    os.environ["NDF_STUDIO_ICLOUD_FATTO"] = "1"   # una volta sola per comando (anche per i pezzi che lancia)
+    try:
+        libero = shutil.disk_usage(DATI).free / 1e9
+        if libero < 8:
+            print(f"DISCO PIENO: liberi {libero:.0f} GB. Con il disco pieno il Mac sposta su iCloud i file dello studio "
+                  "e i video ci mettono di più: conviene liberare spazio.", file=sys.stderr, flush=True)
+
+        def nel_cloud():
+            r = subprocess.run(["find", DATI, "-flags", "+dataless"], capture_output=True, text=True, timeout=60)
+            return [p for p in r.stdout.splitlines() if p and os.path.isfile(p)]
+
+        fuori = nel_cloud()
+        if not fuori:
+            return
+        print(f"ICLOUD riprendo sul Mac {len(fuori)} file dello studio che erano solo su iCloud...", file=sys.stderr, flush=True)
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(8) as pool:
+            list(pool.map(lambda p: subprocess.run(["brctl", "download", p], capture_output=True, timeout=30), fuori))
+        import time
+        fine = time.time() + attesa
+        while fuori and time.time() < fine:
+            time.sleep(3)
+            fuori = nel_cloud()
+        if fuori:
+            print(f"ICLOUD BLOCCATO: {len(fuori)} file dello studio sono ancora solo su iCloud (internet lento o disco "
+                  "pieno). Nel Finder: Documenti, clic destro su NDFCreatorStudio, \"Mantieni scaricato\".",
+                  file=sys.stderr, flush=True)
+        else:
+            print("ICLOUD OK: tutti i file dello studio sono di nuovo sul Mac.", file=sys.stderr, flush=True)
+    except Exception:
+        pass   # il controllo non deve mai fermare lo studio
+
+
+tieni_sul_mac()
+
+
 def _primo(*candidati, ripiego):
     return next((p for p in candidati if p and os.path.exists(p)), ripiego)
 

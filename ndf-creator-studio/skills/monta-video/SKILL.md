@@ -25,6 +25,12 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
 - `PY STUDIO/strumenti/aggiornamenti.py`: se dice che c'è una versione nuova, dillo in una riga e chiedi se
   aggiornare. Con un sì aggiorni tu, fuori dalla sandbox: `claude plugin marketplace update ndf-creator-studio`,
   poi `claude plugin update ndf-creator-studio@ndf-creator-studio`; poi di' di chiudere e riaprire Claude Code.
+  Su Mac lo stesso comando (e ogni strumento) riprende da iCloud i file dello studio che il Mac ha spostato lì col
+  disco pieno; può metterci un paio di minuti: lancialo con un tempo lungo, mai interromperlo. Righe che stampa:
+  `ICLOUD OK` → niente da dire; `ICLOUD BLOCCATO` → di' in parole semplici di aprire il Finder, Documenti, clic
+  destro su NDFCreatorStudio, "Mantieni scaricato", e controlla internet; `DISCO PIENO` → dillo in una riga
+  (con il disco pieno i video vanno più lenti e il Mac sposta i file su iCloud). Una pagina o un montaggio che resta
+  fermo senza motivo: rilancia `aggiornamenti.py` prima di tutto.
 - Manca il colore in `DATI/profilo.json` (brand mai fatto): niente domande in chat. Apri la pagina su `/brand`
   (`PY STUDIO/strumenti/scegli.py`), di' "Ti ho aperto la pagina: rispondi lì e premi Salva", aspetta `BRAND SALVATO`
   e poi `SCELTE SALVATE`, poi monta. L'intervista `crea-stile` si fa solo se l'utente la chiede.

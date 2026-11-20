@@ -18,6 +18,12 @@ def numeri(v):
 
 
 def main():
+    try:
+        import sys
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import comune  # noqa: F401  (all'avvio riprende dal cloud i file dello studio, se il Mac li ha spostati su iCloud)
+    except Exception:
+        pass
     mia = json.load(open(os.path.join(PLUGIN, ".claude-plugin", "plugin.json")))["version"]
     if not os.path.isdir(os.path.join(NEGOZIO, ".git")):
         return
