@@ -12,8 +12,10 @@ riferimento (mai copiato il codice). Motore grafica, tempi del video TAGLIATO. M
  {"tipo": "scorri", "da", "a", "voci": [["Giulia", "ho venduto il corso"], ["Marta", "iscritta al Club"]]}
      Lista che scorre: il video si scurisce un po' e sopra arriva una lista di PERSONE (poche: salgono una alla volta
      e restano; tante: scorrono veloci): l'iniziale colorata, il nome, quello che hanno ottenuto e la spunta, come una
-     chat. È una prova sociale: solo persone vere (clienti, studenti) con il loro nome, mai cose astratte ("programmi",
-     "stress") e mai nomi o facce inventati. Se il video nomina clienti ma non hai i nomi, chiedili. Una foto al posto
+     chat. È una prova sociale e la sua forza è la QUANTITÀ: una marea di risultati che scorre veloce su tutto lo
+     schermo. Chiedi al cliente 12-20 risultati veri (nome + cosa hanno ottenuto); con meno di 8 è meglio "elenco".
+     Solo persone vere (clienti, studenti) con il loro nome, mai cose astratte ("programmi", "stress") e mai nomi o
+     facce inventati. Se il video nomina clienti ma non hai i nomi, chiedili. Una foto al posto
      dell'iniziale ([nome, riga, "foto.jpg"]) solo se il cliente dà la foto vera di quella persona.
  {"tipo": "messaggio", "da", "a", "nome": "Sara", "testo": "Grazie! Ho venduto il corso", "cuore": t}
      Messaggio in arrivo: sul petto arriva un messaggio diretto con il nome e il tondo dell'iniziale; poi sul fumetto
@@ -233,7 +235,8 @@ def scorri(r, e, faccia):
                      f'<span class="no">{E(nome)}</span><span class="ri">{E(riga)}</span>{ok}</div>')
     alto = tot * 122
     T = r.tl.append
-    r.corpo.append(f'<div class="es-velo" id="eu{n}v" style="background:rgba(20,14,10,.45)"></div>')
+    velo = ".45" if alto <= 1000 else ".6"   # la marea copre tutto: il video resta dietro, più scuro
+    r.corpo.append(f'<div class="es-velo" id="eu{n}v" style="background:rgba(20,14,10,{velo})"></div>')
     T(f'tl.fromTo("#eu{n}v",{{opacity:0}},{{opacity:1,duration:.25,immediateRender:false}},{da:.3f});'
       f'tl.to("#eu{n}v",{{opacity:0,duration:.25}},{a - 0.25:.3f});')
     if alto <= 1000:
@@ -247,10 +250,11 @@ def scorri(r, e, faccia):
             r.suono_libreria("hyperframes/click-soft.mp3", da + 0.15 + i * passo, 0.2)
         T(f'tl.to("#eu{n}",{{opacity:0,y:-60,duration:.3,ease:"power2.in"}},{a - 0.3:.3f});')
     else:
-        # tante persone: la lista scorre veloce dal basso verso l'alto, una volta
-        r.corpo.append(f'<div class="es-lista" id="eu{n}" style="top:1920px">{"".join(righe)}</div>')
-        T(f'tl.fromTo("#eu{n}",{{y:0}},{{y:{-(alto + 1920 - 300)},duration:{a - da:.2f},ease:"none",immediateRender:false}},{da:.3f});'
-          f'tl.set("#eu{n}",{{opacity:0}},{a:.3f});')
+        # tante persone: una marea che riempie lo schermo e scorre veloce verso l'alto, una volta
+        r.corpo.append(f'<div class="es-lista" id="eu{n}" style="top:260px;opacity:0">{"".join(righe)}</div>')
+        T(f'tl.fromTo("#eu{n}",{{opacity:0,y:700}},{{opacity:1,y:0,duration:.35,ease:"power3.out",immediateRender:false}},{da:.3f});'
+          f'tl.to("#eu{n}",{{y:{-(alto - 1300)},duration:{max(a - da - 0.65, 0.5):.2f},ease:"none"}},{da + 0.35:.3f});'
+          f'tl.to("#eu{n}",{{opacity:0,duration:.3}},{a - 0.3:.3f});')
         for k in range(int((a - da) / 0.35)):
             r.suono_libreria("hyperframes/click-soft.mp3", da + 0.3 + k * 0.35, 0.12)
     r.suono_libreria("hyperframes/whoosh-short.mp3", da, 0.25)

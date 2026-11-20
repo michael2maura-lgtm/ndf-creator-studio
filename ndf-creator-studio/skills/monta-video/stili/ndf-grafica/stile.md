@@ -20,6 +20,8 @@ Motore: strumenti/grafica.py (il formato del piano è in cima a quel file).
   - la chiusura ("commenta", "scrivimi") o una battuta -> adesivo, con 1-2 note di parole dette
   - un momento serio, una frase da far pesare -> luce (2-3 parole dette)
   - si parla di un video, un sito, un'app che l'utente ha dato -> schermo dietro di te (senza il file non si usa)
+  - un racconto di qualcosa da far vedere (un evento, un luogo, un prima e dopo) -> schermo con più sfondi che cambiano
+    sulle parole, uno ogni 1-2 s, per 10-20 s; se l'utente ha dei commenti veri o li detta, "commenti" sopra (mai inventati)
   - zoom sul viso: uno lento nei primi secondi, uno di scatto sulle parole forti dove non c'è un'altra grafica
   - "commenta INFO" nella chiusura -> commento (la parola detta, la risposta con quello che si manda); al posto del finale
   - un numero che conta davvero, detto da solo -> numero gigante (con contatore acceso, uno dei due, non entrambi)

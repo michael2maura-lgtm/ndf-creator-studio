@@ -655,33 +655,71 @@ class Reel:
     def schermo(self, e, faccia):
         """Schermo dietro di te: diventi piccolo in basso e dietro di te, a tutto schermo, c'è la cosa di cui parli
         (un video o una foto). e = {"da", "a", "file": video o foto (in DATI/clip, DATI/immagini o del lavoro),
-        "lato": "destra" | "sinistra" | "centro"}."""
+        "lato": "destra" | "sinistra" | "centro"}.
+        Più sfondi che cambiano seguendo le parole (ogni 1-2 s, come si fa nei reel di racconto):
+        "file": [["sfilata.mp4", 9.75], ["foto.jpg", 11.2], ...] (il secondo è quando entra; il primo entra a "da").
+        Commenti della gente che compaiono sopra: "commenti": [["Testo del commento", secondo, y facoltativa], ...]
+        (y = altezza in px, di serie 330: spostali dove lo sfondo non ha scritte importanti; uno alla volta,
+        resta fino al commento dopo, al massimo 3,5 s; testi scritti dall'utente o presi dai suoi commenti veri)."""
         da, a = e["da"], e["a"]
         cart = os.path.dirname(self.reel)
-        p = next((q for q in (e["file"], os.path.join(cart, e["file"]), os.path.join(DATI, "clip", e["file"]),
-                              os.path.join(DATI, "immagini", e["file"])) if os.path.isfile(q)), None)
-        if not p:
-            print(f'NOTA: non trovo {e["file"]} per lo schermo, lo salto')
+        voci = e["file"] if isinstance(e["file"], list) else [[e["file"], da]]
+        trovati = []
+        for nome, t in voci:
+            p = next((q for q in (nome, os.path.join(cart, nome), os.path.join(DATI, "clip", nome),
+                                  os.path.join(DATI, "immagini", nome)) if os.path.isfile(q)), None)
+            if p:
+                trovati.append((p, max(float(t), da)))
+            else:
+                print(f'NOTA: non trovo {nome} per lo schermo, lo salto')
+        if not trovati:
             return
-        n = len(self.camera)
-        dest = f"schermo-{n}{os.path.splitext(p)[1]}"
-        shutil.copy2(p, os.path.join(self.assets, dest))
-        if p.lower().endswith((".mp4", ".mov", ".webm")):
-            dentro = (f'<video id="sc{n}" class="schermo" src="assets/{dest}" muted playsinline data-start="{da:.3f}" '
-                      f'data-media-start="0" data-duration="{a - da:.3f}"></video>')
-        else:
-            dentro = f'<img id="sc{n}" class="schermo" src="assets/{dest}">'
-        self.camera.insert(0, dentro)
+        trovati.sort(key=lambda v: v[1])
+        trovati[0] = (trovati[0][0], da)
+        n0 = len(self.camera)
+        ids = []
+        for j, (p, t) in enumerate(trovati):
+            fine = trovati[j + 1][1] if j + 1 < len(trovati) else a
+            i = f"sc{n0}x{j}"
+            dest = f"schermo-{n0}-{j}{os.path.splitext(p)[1]}"
+            shutil.copy2(p, os.path.join(self.assets, dest))
+            if p.lower().endswith((".mp4", ".mov", ".webm")):
+                dentro = (f'<video id="{i}" class="schermo" src="assets/{dest}" muted playsinline data-start="{t:.3f}" '
+                          f'data-media-start="0" data-duration="{fine - t:.3f}"></video>')
+            else:
+                dentro = f'<img id="{i}" class="schermo" src="assets/{dest}">'
+            self.camera.insert(0, dentro)
+            ids.append((i, t, fine))
         sel = self.ritaglio(da - 0.1, a + 0.1)
         taglio = min(faccia["mento"] + 380, 1919)  # la persona finisce con un taglio dritto, appoggiata al bordo
         x = {"sinistra": 300, "centro": 540}.get(e.get("lato"), 780)
         k = 0.56
         self.tl.append(f'tl.set("{sel}",{{opacity:1,clipPath:"inset(0 0 {1920 - taglio:.0f}px 0)",transformOrigin:"540px {taglio:.0f}px"}},{da:.3f});'
                        f'tl.to("{sel}",{{scale:{k},x:{x - 540},y:{1920 - taglio},duration:0.45,ease:"power3.inOut"}},{da:.3f});'
-                       f'tl.fromTo("#sc{n}",{{opacity:0,scale:1.08}},{{opacity:1,scale:1,duration:0.45,ease:"power2.out",immediateRender:false}},{da:.3f});'
                        f'tl.to("{sel}",{{scale:1,x:0,y:0,duration:0.4,ease:"power3.inOut"}},{a - 0.4:.3f});'
-                       f'tl.to("#sc{n}",{{opacity:0,duration:0.4}},{a - 0.4:.3f});'
                        f'tl.set("{sel}",{{opacity:0}},{a:.3f});')
+        for j, (i, t, fine) in enumerate(ids):
+            if j == 0:  # il primo sfondo entra morbido insieme a te che rimpicciolisci
+                self.tl.append(f'tl.fromTo("#{i}",{{opacity:0,scale:1.08}},{{opacity:1,scale:1,duration:0.45,ease:"power2.out",immediateRender:false}},{t:.3f});')
+            else:       # gli altri arrivano di taglio, con una piccola spinta
+                self.tl.append(f'tl.fromTo("#{i}",{{opacity:1,scale:1.06}},{{opacity:1,scale:1,duration:0.5,ease:"power2.out",immediateRender:false}},{t:.3f});')
+                self.suono_libreria("hyperframes/whoosh-short.mp3", t - 0.1, 0.15)
+            if j + 1 < len(ids):
+                self.tl.append(f'tl.set("#{i}",{{opacity:0}},{fine + 0.04:.3f});')
+            else:
+                self.tl.append(f'tl.to("#{i}",{{opacity:0,duration:0.4}},{a - 0.4:.3f});')
+        com = sorted(([str(c[0]), float(c[1]), int(c[2]) if len(c) > 2 else 330] for c in e.get("commenti", [])
+                      if da <= float(c[1]) < a - 0.5), key=lambda c: c[1])
+        if com:
+            self.font_extra("InterTight.ttf")
+            m = len(self.corpo)
+            for j, (testo, t, y) in enumerate(com):
+                fine = min(com[j + 1][1] if j + 1 < len(com) else a - 0.4, t + 3.5, a - 0.4)
+                g = (-1.5, 1.2, -0.8, 1.6)[j % 4]
+                self.corpo.append(f'<div class="sc-com" id="sco{m}x{j}" style="top:{min(max(y, 250), 1300)}px;transform:rotate({g}deg)">{html.escape(testo)}</div>')
+                self.tl.append(f'tl.fromTo("#sco{m}x{j}",{{opacity:0,scale:0.85,y:30}},{{opacity:1,scale:1,y:0,duration:0.3,ease:"back.out(1.7)",immediateRender:false}},{t:.3f});'
+                               f'tl.to("#sco{m}x{j}",{{opacity:0,y:-20,duration:0.2,ease:"power2.in"}},{fine - 0.2:.3f});')
+                self.suono("pop", t, 0.25)
         self.suono("transizione", da, 0.35)
         self.suono("transizione", a - 0.4, 0.3)
         self.nascondi.append((da, a))
@@ -744,10 +782,10 @@ class Reel:
         # parola enorme e spessa in minuscolo (Inter Tight 900), nel colore dello stile, come una scritta sul muro
         self.font_extra("InterTight.ttf")
         testo = e["parola"].lower()
-        dim = min(340, int(1000 / (max(len(testo), 3) * 0.58)))
+        dim = min(340, int(930 / (max(len(testo), 3) * 0.58)))
         cima = self.cima_testa(self.ultimo_ritaglio, quando - da + 0.1) \
             or faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95   # dove finisce la testa
-        y = max(cima - dim * 0.55, 230)  # la testa copre la parte bassa della parola
+        y = max(cima - dim * 0.45, 230)  # la testa copre più di metà della parola: si vede che è dietro
         n = len(self.camera)
         self.camera.insert(0, f'<div class="pdietro" id="p{n}" style="top:{y:.0f}px;font-size:{dim}px;color:{c["accento"]};'
                               f'text-shadow:0 0 50px {c["accento_luce"]}99">{html.escape(testo)}</div>')
@@ -1093,7 +1131,7 @@ class Reel:
         posti = [(-1, 0.0, -14), (1, 0.15, 11), (-1, 0.55, 8), (1, 0.7, -9), (-1, 1.1, -5), (1, 1.25, 13)][:quanti]
         pezzi = []
         for j, (lato, quota, gira) in enumerate(posti):
-            x = max(30, min(cx - 470, 260)) if lato < 0 else min(1050 - 230, max(cx + 240, 600))
+            x = max(30, min(cx - 470, 260)) if lato < 0 else min(1050 - 290, max(cx + 240, 600))
             x += (j // 2) * 30 * lato
             y = faccia["occhi"] - 120 + quota * 420
             # la foto del post è un fotogramma vero del video (momenti diversi), come i tuoi reel nella griglia
@@ -2643,7 +2681,7 @@ html,body{{margin:0;background:{scuro}}}
 .rec-tel b{{position:absolute;inset:7px;border-radius:50%;background:#FF3B30}}
 .rec-lab{{position:absolute;left:330px;top:560px;{M};font-size:24px;color:#fff;background:rgba(0,0,0,.55);padding:6px 14px;border-radius:10px;z-index:32;opacity:0}}
 .cd{{position:absolute;inset:0;z-index:31;opacity:0;pointer-events:none}}
-.cd-p{{position:absolute;width:250px;background:#fff;border-radius:18px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.45);transform:rotate(var(--g))}}
+.cd-p{{position:absolute;width:300px;background:#fff;border-radius:18px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.45);transform:rotate(var(--g))}}
 .cd-t{{display:flex;align-items:center;gap:8px;margin-bottom:8px}}.cd-t i{{width:26px;height:26px;border-radius:50%;background:#ddd}}
 .cd-t b{{height:9px;width:90px;border-radius:5px;background:#ddd}}.cd-f{{height:300px;border-radius:10px}}
 .cd-b{{display:flex;gap:10px;margin-top:9px}}.cd-b i{{width:22px;height:22px;border-radius:50%;border:3px solid #222}}
@@ -2737,6 +2775,7 @@ html,body{{margin:0;background:{scuro}}}
  background:radial-gradient(900px 1100px at 540px 900px,rgba(2,4,10,0) 45%,rgba(2,4,10,.35) 78%,rgba(2,4,10,.6) 100%)}}
 .lampo{{position:absolute;inset:0;z-index:60;opacity:0;pointer-events:none}}
 .schermo{{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;opacity:0;z-index:2}}
+.sc-com{{position:absolute;left:90px;right:90px;top:330px;padding:26px 32px;border-radius:22px;background:rgba(18,18,22,.78);color:#fff;font:600 34px/1.32 'Inter Tight',sans-serif;box-shadow:0 14px 40px rgba(0,0,0,.35);opacity:0;z-index:30}}
 .pozza{{position:absolute;inset:0;z-index:2;opacity:0;mix-blend-mode:screen}}
 .lbuio{{position:absolute;inset:0;z-index:7;opacity:0;pointer-events:none;
  background:radial-gradient(640px 860px at 540px 820px,rgba(0,0,0,0) 35%,rgba(0,0,8,.75) 100%)}}
@@ -2768,16 +2807,16 @@ html,body{{margin:0;background:{scuro}}}
 @font-face{{font-family:'Inter Tight';src:url('assets/InterTight.ttf');font-weight:100 900}}
 @font-face{{font-family:'Instrument Serif';src:url('assets/InstrumentSerif-Italic.ttf');font-style:italic}}
 .cm{{position:absolute;left:90px;right:90px;z-index:33;opacity:0;font-family:'Inter Tight'}}
-.cm-campo{{position:relative;display:flex;align-items:center;gap:20px;height:100px;padding:0 16px;border-radius:50px;
+.cm-campo{{position:relative;display:flex;align-items:center;gap:22px;height:120px;padding:0 18px;border-radius:60px;
  background:rgba(22,22,24,.8);border:3px solid rgba(255,255,255,.12);box-shadow:0 10px 30px rgba(0,0,0,.35)}}
-.cm-av{{position:relative;width:66px;height:66px;border-radius:50%;background:#C9CBD0;flex:none;overflow:hidden;object-fit:cover}}
+.cm-av{{position:relative;width:80px;height:80px;border-radius:50%;background:#C9CBD0;flex:none;overflow:hidden;object-fit:cover}}
 .cm-av i{{position:absolute;left:50%;top:13px;width:24px;height:24px;margin-left:-12px;border-radius:50%;background:#F4F5F7;
  box-shadow:0 30px 0 10px #F4F5F7}}
 .cm-av.piccolo{{width:54px;height:54px;border:3px solid rgba(255,255,255,.85)}}
-.cm-ph{{color:rgba(255,255,255,.45);font-weight:500;font-size:34px}}
-.cm-tx{{color:#fff;font-weight:800;font-size:50px;letter-spacing:-1px}}
-.cm-car{{width:4px;height:52px;background:#F4E06D;margin-left:-14px}}
-.cm-in{{margin-left:auto;width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-weight:900;font-size:36px;
+.cm-ph{{color:rgba(255,255,255,.45);font-weight:500;font-size:40px}}
+.cm-tx{{color:#fff;font-weight:800;font-size:60px;letter-spacing:-1px}}
+.cm-car{{width:5px;height:62px;background:#F4E06D;margin-left:-14px}}
+.cm-in{{margin-left:auto;width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-weight:900;font-size:36px;
  display:flex;align-items:center;justify-content:center}}
 .cm-riga{{position:absolute;left:0;top:0;display:flex;align-items:center;gap:16px;opacity:0;transform-origin:0 50%}}
 .cm-bol{{position:relative;display:flex;align-items:baseline;gap:14px;padding:14px 34px 16px;border-radius:44px;background:#F4EFE6;color:#151515;
@@ -2786,9 +2825,9 @@ html,body{{margin:0;background:{scuro}}}
 .cm-bol b{{font-weight:800;font-size:56px;letter-spacing:-1.5px}}
 .cm-cuore{{position:absolute;right:-18px;top:-20px;width:50px;height:50px;border-radius:50%;background:#fff;color:#EE4E6E;font-style:normal;
  font-size:30px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.25)}}
-.cm-filo{{position:absolute;left:31px;top:78px;width:40px;height:64px;border-left:3px solid rgba(255,255,255,.6);border-bottom:3px solid rgba(255,255,255,.6);
+.cm-filo{{position:absolute;left:38px;top:94px;width:40px;height:64px;border-left:3px solid rgba(255,255,255,.6);border-bottom:3px solid rgba(255,255,255,.6);
  border-bottom-left-radius:16px;opacity:0;transform-origin:0 0}}
-.cm-r{{top:116px;left:74px}}
+.cm-r{{top:140px;left:88px}}
 .cm-scura{{display:flex;align-items:center;gap:18px;min-height:64px;padding:10px 12px 10px 26px;border-radius:36px;background:rgba(22,22,24,.86);color:#fff}}
 .cm-attesa{{display:block;width:200px;height:34px;border-radius:18px;background:rgba(255,255,255,.22);margin-right:14px}}
 .cm-rt{{display:none;font-weight:600;font-size:34px}}
@@ -2881,11 +2920,11 @@ html,body{{margin:0;background:{scuro}}}
 .pop-tx span{{font-weight:500;font-size:29px;color:#333;line-height:1.2}}
 .pop em{{align-self:flex-start;font-style:normal;font-weight:600;font-size:26px;color:#8a8580}}
 .br{{position:absolute;left:0;right:0;display:flex;justify-content:center;gap:44px;z-index:33;opacity:0}}
-.br-i{{position:relative;width:170px;height:170px}}
+.br-i{{position:relative;width:210px;height:210px}}
 .br-p{{position:absolute;inset:0;border-radius:36px;display:flex;align-items:center;justify-content:center;
  box-shadow:0 10px 26px rgba(0,0,0,.35)}}
 .br-p svg{{width:100px;height:100px}}
-.br-x{{position:absolute;left:-30px;top:-30px;width:230px;height:230px;overflow:visible}}
+.br-x{{position:absolute;left:-36px;top:-36px;width:282px;height:282px;overflow:visible}}
 .br-x path{{fill:none;stroke-width:9;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;opacity:.92}}
 .tf-scena{{position:absolute;width:400px;height:820px;z-index:31;perspective:1600px}}
 .tf{{position:absolute;inset:0;border-radius:64px;background:#0B0B0D;padding:16px;opacity:0;font-family:'Inter Tight';

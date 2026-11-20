@@ -199,35 +199,35 @@ CSS = """
 @font-face{font-family:'Inter Tight';src:url('assets/InterTight.ttf');font-weight:100 900}
 @font-face{font-family:'Caveat';src:url('assets/Caveat.ttf');font-weight:400 700}
 @font-face{font-family:'Instrument Serif Italic';src:url('assets/InstrumentSerif-Italic.ttf')}
-.nx-card{position:absolute;left:150px;right:190px;background:#F7F1E6;color:#1C1A17;border-radius:26px;padding:30px 34px;
+.nx-card{position:absolute;left:100px;right:130px;background:#F7F1E6;color:#1C1A17;border-radius:28px;padding:36px 40px;
  box-shadow:0 18px 50px rgba(0,0,0,.35);font-family:'Inter Tight';opacity:0;z-index:40}
-.nx-tit{font-family:'Instrument Serif Italic';font-size:46px;line-height:1;margin-bottom:18px;color:#3a2a20}
+.nx-tit{font-family:'Instrument Serif Italic';font-size:56px;line-height:1;margin-bottom:18px;color:#3a2a20}
 .nx-riga{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
-.nx-et{font-weight:700;font-size:36px}
-.nx-pc{font-weight:900;font-size:64px;color:var(--acc)}
+.nx-et{font-weight:700;font-size:42px}
+.nx-pc{font-weight:900;font-size:76px;color:var(--acc)}
 .nx-fondo{height:28px;border-radius:14px;background:rgba(28,26,23,.12);overflow:hidden}
 .nx-fondo i{display:block;height:100%;background:var(--acc);border-radius:14px;transform-origin:0 50%;transform:scaleX(0)}
-.nx-scontrino{left:210px;right:250px;border-radius:10px 10px 26px 26px;font-family:'Inter Tight'}
-.nx-sr,.nx-st{display:flex;justify-content:space-between;font-size:34px;padding:8px 0;opacity:0}
+.nx-scontrino{left:150px;right:180px;border-radius:10px 10px 26px 26px;font-family:'Inter Tight'}
+.nx-sr,.nx-st{display:flex;justify-content:space-between;font-size:42px;padding:9px 0;opacity:0}
 .nx-sr span{color:#4a3d33}.nx-sr b{font-weight:800}
 .nx-taglio{border-top:4px dashed rgba(28,26,23,.3);margin:14px 0 8px}
-.nx-st{font-weight:900;font-size:46px}.nx-st b{color:var(--acc)}
-.nx-prod{font-weight:800;font-size:44px}
-.nx-prezzo{font-weight:900;font-size:70px;color:var(--acc);margin:4px 0 22px}
-.nx-bot{height:96px;border-radius:48px;background:#1C1A17;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:34px}
+.nx-st{font-weight:900;font-size:56px}.nx-st b{color:var(--acc)}
+.nx-prod{font-weight:800;font-size:52px}
+.nx-prezzo{font-weight:900;font-size:86px;color:var(--acc);margin:4px 0 22px}
+.nx-bot{height:110px;border-radius:55px;background:#1C1A17;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:40px}
 .nx-bot.fatto{background:var(--acc)}
 .nx-badge{position:absolute;top:-18px;right:-18px;width:60px;height:60px;border-radius:50%;background:var(--acc);color:#fff;font-style:normal;
  font-weight:900;font-size:32px;display:flex;align-items:center;justify-content:center;transform:scale(0);box-shadow:0 6px 16px rgba(0,0,0,.3)}
 .nx-dito{position:absolute;right:80px;bottom:-30px;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.85);
  box-shadow:0 0 0 6px rgba(255,255,255,.35);opacity:0}
-.nx-dom{font-weight:800;font-size:42px;text-align:center;margin-bottom:22px}
-.nx-op{position:relative;height:84px;border-radius:42px;background:rgba(28,26,23,.08);margin-top:14px;overflow:hidden;display:flex;align-items:center;padding:0 30px}
+.nx-dom{font-weight:800;font-size:50px;text-align:center;margin-bottom:22px}
+.nx-op{position:relative;height:96px;border-radius:48px;background:rgba(28,26,23,.08);margin-top:14px;overflow:hidden;display:flex;align-items:center;padding:0 30px}
 .nx-op i{position:absolute;inset:0;background:var(--acc);opacity:.85;transform-origin:0 50%;transform:scaleX(0)}
-.nx-op span,.nx-op b{position:relative;font-weight:800;font-size:34px}
+.nx-op span,.nx-op b{position:relative;font-weight:800;font-size:40px}
 .nx-op b{margin-left:auto;opacity:0}
 .nx-voto{text-align:center}
 .nx-stelle{display:flex;justify-content:center;gap:10px}
-.nx-stella{font-style:normal;font-size:96px;line-height:1;color:rgba(28,26,23,.18)}
+.nx-stella{font-style:normal;font-size:116px;line-height:1;color:rgba(28,26,23,.18)}
 .nx-podio{position:absolute;left:150px;right:190px;display:flex;align-items:flex-end;justify-content:center;gap:16px;opacity:0;z-index:40}
 .nx-pd{display:flex;flex-direction:column;align-items:center;width:210px}
 .nx-pn{font-family:'Inter Tight';font-weight:800;font-size:34px;color:#fff;text-align:center;text-shadow:0 3px 10px rgba(0,0,0,.6);margin-bottom:10px;opacity:0}

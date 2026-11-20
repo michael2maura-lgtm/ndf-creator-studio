@@ -252,13 +252,13 @@ def icona(r, e, faccia):
     c1, c2 = _colori(r)
     su_fondo = any(x <= da < z for x, z in getattr(r, "su_fondo", []))
     y = 640 if su_fondo else int(max(faccia["occhi"] - 120, 430))
-    x = 70 if e.get("lato") == "sinistra" else 770
+    x = 50 if e.get("lato") == "sinistra" else 740
     if e.get("emoji"):   # la riserva: qualsiasi cosa si dica c'è un'emoji; salta fuori, rimbalza e oscilla piano
         nome = _emoji_png(r, e["emoji"])
         if not nome:
             print(f'NOTA: non riesco a disegnare l\'emoji {e["emoji"]} su questo computer, la salto')
             return
-        r.corpo.append(f'<img id="ei{n}" src="assets/{nome}" style="position:absolute;left:{x}px;top:{y}px;width:230px;height:230px;'
+        r.corpo.append(f'<img id="ei{n}" src="assets/{nome}" style="position:absolute;left:{x}px;top:{y}px;width:290px;height:290px;'
                        f'z-index:32;opacity:0;object-fit:contain;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))">')
         r.tl.append(f'tl.fromTo("#ei{n}",{{opacity:0,scale:.2,rotation:-30,y:60}},{{opacity:1,scale:1,rotation:0,y:0,duration:.45,ease:"back.out(2.6)",immediateRender:false}},{da:.3f});'
                     f'tl.to("#ei{n}",{{rotation:8,duration:.35,repeat:{max(int((a - da - 0.6) / 0.35), 1)},yoyo:true,ease:"sine.inOut"}},{da + 0.45:.3f});'
@@ -300,7 +300,7 @@ def icona(r, e, faccia):
                f'<path id="ei{n}a" d="M58 104l28 28 58-62" {_TRATTO} stroke-width="20" stroke-dasharray="140" stroke-dashoffset="140"/>')
         mov = f'tl.to("#ei{n}a",{{strokeDashoffset:0,duration:.3,ease:"power2.out"}},{da + 0.15:.3f});'
         suono = ("ding", 0.25)
-    r.corpo.append(f'<svg id="ei{n}" viewBox="0 0 200 200" width="230" height="230" style="position:absolute;left:{x}px;top:{y}px;z-index:32;opacity:0;{ombra}">{svg}</svg>')
+    r.corpo.append(f'<svg id="ei{n}" viewBox="0 0 200 200" width="290" height="290" style="position:absolute;left:{x}px;top:{y}px;z-index:32;opacity:0;{ombra}">{svg}</svg>')
     r.tl.append(f'tl.fromTo("#ei{n}",{{opacity:0,scale:.3,rotation:-25}},{{opacity:1,scale:1,rotation:0,duration:.35,ease:"back.out(2.2)",immediateRender:false}},{da:.3f});'
                 + mov + f'tl.to("#ei{n}",{{opacity:0,scale:.6,duration:.2}},{a - 0.2:.3f});')
     r.suono("pop", da, 0.2)
