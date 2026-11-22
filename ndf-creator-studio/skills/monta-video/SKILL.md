@@ -1,6 +1,6 @@
 ---
 name: monta-video
-description: Monta un reel parlato in verticale (taglio, sottotitoli italiani parola per parola, titoli, scene, suoni e musica nello stile salvato, volume per Instagram) partendo dal girato grezzo. Usala quando l'utente dice "monta questo video", "montami il video", "monta il reel", "edita questo video", "installa lo studio", o indica un girato da trasformare in reel.
+description: Monta un reel parlato in verticale (taglio, sottotitoli italiani parola per parola, titoli, scene, suoni e musica nello stile salvato, volume per Instagram) partendo dal girato grezzo. Usala quando l'utente dice "monta questo video", "montami il video", "monta il reel", "edita questo video", "installa lo studio", "facciamo il mio brand", "cambia i miei colori", o indica un girato da trasformare in reel.
 ---
 
 # Monta video
@@ -31,9 +31,8 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
   destro su NDFCreatorStudio, "Mantieni scaricato", e controlla internet; `DISCO PIENO` → dillo in una riga
   (con il disco pieno i video vanno più lenti e il Mac sposta i file su iCloud). Una pagina o un montaggio che resta
   fermo senza motivo: rilancia `aggiornamenti.py` prima di tutto.
-- Manca il colore in `DATI/profilo.json` (brand mai fatto): niente domande in chat. Apri la pagina su `/brand`
-  (`PY STUDIO/strumenti/scegli.py`), di' "Ti ho aperto la pagina: rispondi lì e premi Salva", aspetta `BRAND SALVATO`
-  e poi `SCELTE SALVATE`, poi monta. L'intervista `crea-stile` si fa solo se l'utente la chiede.
+- Manca il colore in `DATI/profilo.json` (brand mai fatto): prima di montare fai il brand in chat (sezione "Il brand",
+  qui sotto), poi monta. L'intervista `crea-stile` si fa solo se l'utente la chiede.
 - L'utente non dice quale video ("montami il video", senza file): non chiedere MAI il percorso del file e non chiedere
   i nomi in anticipo. Prima guarda `DATI/video-pagina.json`: se c'è, è il video che l'utente ha caricato nella pagina
   "Scegli il tuo look" (campo "file"): monta quello e di' in una riga "Monto il video che hai caricato nella pagina". Si usa una volta sola: a montaggio
@@ -152,7 +151,9 @@ di ogni reel (valgono finché non le cambia):
   "PER RICEVERE <ricevi>" (motore grafica: `finale_testo`, `finale_bottone`, `finale_sopra`; altri: `finale_testo`
   "COMMENTA <PAROLA>", `finale_sotto` "per ricevere <ricevi>"). **segui**: il tasto Segui del profilo. **clicca**:
   "CLICCA QUI SOTTO" con la freccia (scopri di più). **niente** (o nessuna scelta): nessun finale, il reel chiude
-  sull'ultima frase. Se l'utente lo dice in chat per un video, vale quello.
+  sull'ultima frase. Se l'utente lo dice in chat per un video, vale quello. La parola da commentare cambia a ogni
+  video: se nel video la dice ("commentate GUIDA"), usa quella; se no quella della pagina; se manca anche lì e il
+  finale è "commenta", chiedila una volta in chat. Mai una parola fissa per tutti i video.
 - `durata`: secondi massimi. Se il tagliato è più lungo, proponi all'utente le frasi da togliere prima di tagliarle.
 - `punti`: [{"quando": parole dette, "effetto": chiave, "testo": scritta}] = in quel punto esattamente quell'effetto
   (trova le parole in `parole.json`); se il testo è vuoto usa le parole dette. È un obbligo, non spostarlo.
@@ -185,16 +186,34 @@ Pagina Stile (come si sceglie il look): modello, look del video, font dei titoli
 maiuscolo, ombra), sottotitoli (stile, font del testo, font delle parole in evidenza, lettere, colori), chiusura e
 durata, testo fisso in alto, note. Finiscono in scelte.json ("titoli", "sott", "testo_fisso", "fisso") e le applica
 `strumenti/ritocchi.py` da solo, in qualsiasi stile: tu nel piano non scrivi niente. Il colore del brand non è nella
-pagina: sta in `DATI/profilo.json` ("colore": "#RRGGBB"), chiesto una volta all'inizio. Gli effetti hanno la loro
+pagina: sta in `DATI/profilo.json` ("colore": "#RRGGBB"), fatto in chat all'inizio ("Il brand"). Gli effetti hanno la loro
 pagina (scheda Effetti): il cliente accende quelli che gli piacciono, dove metterli lo decidi tu.
 
-Il brand (le domande iniziali, una volta sola): la scheda **Brand** della pagina (`/brand`, file `pagina/brand.html`). La
-prima volta la apri tu su `/brand`; senza colore la pagina Stile mostra in alto l'invito ad andarci. Il cliente carica il logo (la pagina propone i colori presi da lì), sceglie UN
-colore, scrive nome Instagram, riga sotto, foto profilo, parola da commentare e parole speciali. Finisce in
-`DATI/profilo.json` ("colore", "nome", "sotto", "foto", "logo", "parola", "parole"); quando scrive `BRAND SALVATO` dillo in
-una riga. Da lì in poi non si chiede più: il colore lo prende `comune.con_le_scelte` in ogni stile, le parole speciali
-entrano da sole in `prepara.py` e `parole.py` (tu aggiungi con --nomi solo i nomi di QUEL video), la parola da commentare
-è già scritta nella pagina Stile. "Cambia i miei colori", "cambia il mio logo": apri la pagina su `/brand`.
+## Il brand (in chat, una volta sola)
+Si fa in chat, mai con una pagina. Parte da solo la prima volta (manca il colore in `DATI/profilo.json`) o quando
+l'utente dice "facciamo il mio brand", "cambia i miei colori", "cambia il mio logo". Strumento: `PY STUDIO/strumenti/brand.py`.
+1. Una domanda sola: "Hai già il tuo brand? Allegalo qui, oppure mandami il logo e il link della tua landing o del tuo
+   Instagram. Se non hai niente, ti faccio io qualche domanda." Quello che arriva vale tutto:
+   - un brand già fatto (anche con Claude, un PDF, un file, delle immagini): lo leggi e prendi colori, font, tono, frasi;
+   - il logo: `brand.py colori LOGO` dà i colori vivi più presenti;
+   - la landing o il sito: leggi la pagina (testi, colori, font usati) e prendi tono, frasi sue e colori;
+   - Instagram: dalla pagina pubblica nome, riga sotto il nome e foto profilo.
+2. Chiedi SOLO quello che manca, una domanda per messaggio e al massimo tre: di solito il tono ("come parli ai tuoi
+   clienti?") e le frasi che non vuoi dire mai. Mai chiedere codici di colore o nomi di font, né la parola da commentare
+   (cambia a ogni video: vedi `chiusura`).
+3. Scegli tu: UN colore che accende titoli e parole importanti (quello più acceso del brand, non lo scuro); il font
+   dei titoli e quello del testo tra quelli dello studio (`brand.py font`), il più simile a quelli del brand (un font
+   che lo studio non ha: `prendi_font.py`, se no il più simile).
+4. Scrivi `DATI/brand.md`, la scheda del brand in parole semplici: chi è e cosa fa, a chi parla, tono di voce, frasi
+   sue da usare, frasi e parole mai, colori con il loro uso, font,
+   cosa evitare nelle grafiche, da dove l'hai preso. Poi `brand.py salva` con un json (colore, nome, sotto,
+   parole speciali, logo, foto, font_titoli, font_testo): scrive `DATI/profilo.json` e i font in `scelte.json`.
+5. `brand.py prova` fa `DATI/brand-prova.jpg` (titolo, sottotitolo, scheda Segui e bottone con il suo brand): mostralo
+   e chiedi "Ti piace così?". Se cambia qualcosa, lo correggi a parole e rifai la prova. Poi in una riga: "Fatto, da
+   ora ogni video esce con il tuo brand."
+Da lì in poi non si chiede più: il colore lo prende `comune.con_le_scelte` in ogni stile, le parole speciali entrano da
+sole in `prepara.py` e `parole.py` (tu aggiungi con --nomi solo i nomi di QUEL video). Ogni volta che scrivi titoli, scritte o la chiusura di un reel, rileggi `DATI/brand.md`:
+tono e parole del cliente, mai le frasi della lista "mai". I font scelti nella pagina Stile vincono su quelli del brand.
 
 ## Copiare lo stile di un reel ("replica questo reel", "voglio uno stile come questo")
 L'utente manda un link, un file o descrive un aspetto: quello è il brief. Non lo avvicini allo stile più simile che

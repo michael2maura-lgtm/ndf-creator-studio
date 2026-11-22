@@ -168,9 +168,8 @@ textarea{min-height:110px;resize:vertical}
  </div>
 </div>
 
-<a id="senza-brand" href="/brand" hidden style="position:fixed;top:0;left:0;right:0;z-index:40;background:var(--acc);color:var(--ink);text-align:center;padding:10px 16px;font-weight:800;font-size:14px;text-decoration:none">Non hai ancora scelto il colore del tuo brand: clicca qui, ci vuole un minuto →</a>
 <div class="barra"><div class="in">
- <div class="schede"><a href="/brand">Brand</a><a href="/" class="qui">Stile</a><a href="/effetti">Effetti</a></div>
+ <div class="schede"><a href="/" class="qui">Stile</a><a href="/effetti">Effetti</a></div>
  <div class="riass"><span class="mono">Le tue scelte</span><div class="cosa" id="riass"></div></div>
  <button class="grande" id="salva">Salva le mie scelte</button>
 </div></div>
@@ -583,7 +582,6 @@ fetch("/dati").then(r => r.json()).then(d => {
 @font-face{font-family:'Poppins';src:url('/file/font/Poppins-Bold.ttf');font-weight:700}
 @font-face{font-family:'Plus Jakarta Sans';src:url('/file/font/PlusJakartaSans.ttf');font-weight:200 800}`;
   if (d.brand) S.accento = d.brand;
-  else $("#senza-brand").hidden = false;   // colore non ancora scelto: si vede lo stesso, con l'invito ad andare sul Brand
   if (d.parola_brand) S.parola = d.parola_brand;
   if (d.scelte) prendi(d.scelte);
   disegnaSlot(); disegna(); base();

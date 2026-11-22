@@ -5,8 +5,8 @@ e salva. Le scelte finiscono in DATI/scelte.json e costruisci.py le usa da sole 
     PY scegli.py --non-aprire non apre il browser (scrive solo l'indirizzo)
     PY scegli.py --resta      non si spegne quando si chiude la pagina
 
-Righe che scrive:  PAGINA PRONTA <indirizzo>  /  BRAND SALVATO <riassunto>  /  SCELTE SALVATE <riassunto>  /  PAGINA CHIUSA
-Senza colore in DATI/profilo.json la pagina Stile mostra in alto l'invito ad andare su /brand (le domande iniziali).
+Righe che scrive:  PAGINA PRONTA <indirizzo>  /  SCELTE SALVATE <riassunto>  /  PAGINA CHIUSA
+Il brand (colore, logo, nome, parole) non è qui: si fa in chat con brand.py.
 Risponde solo da questo computer (127.0.0.1) e manda solo i file della pagina, dei suoni e delle anteprime.
 Si spegne da sola circa 40 secondi dopo che la pagina è stata chiusa.
 """
@@ -29,8 +29,6 @@ import sottotitoli  # noqa: E402
 import ritocchi  # noqa: E402
 
 PAGINA = os.path.join(STUDIO, "pagina", "scegli.html")
-PAGINA_BRAND = os.path.join(STUDIO, "pagina", "brand.html")   # le domande iniziali: colore, logo, nome, parole (DATI/profilo.json)
-PROFILO = os.path.join(DATI, "profilo.json")
 PAGINA_EFFETTI = os.path.join(STUDIO, "pagina", "effetti.html")   # gli effetti: il cliente accende quelli che gli piacciono
 TIPI = {".mp3": "audio/mpeg", ".wav": "audio/wav", ".m4a": "audio/mp4", ".mp4": "video/mp4", ".ttf": "font/ttf",
         ".jpg": "image/jpeg", ".png": "image/png"}
@@ -307,42 +305,6 @@ def extra(corpo):
     return out
 
 
-def profilo_per_la_pagina():
-    pr = leggi(PROFILO) if os.path.exists(PROFILO) else {}
-    c = lambda k: bool(pr.get(k)) and os.path.isfile(os.path.join(DATI, os.path.basename(pr[k])))
-    return {"colore": pr.get("colore"), "nome": pr.get("nome", ""), "sotto": pr.get("sotto", ""), "parola": pr.get("parola", ""),
-            "parole": pr.get("parole") or [], "ha_logo": c("logo"), "ha_foto": c("foto"),
-            "telefono": os.path.exists(os.path.join(STUDIO, "pagina", "telefono.jpg"))}
-
-
-def salva_brand(corpo):
-    """Le risposte della pagina "Il tuo brand" dentro DATI/profilo.json (quello che c'era e non si tocca resta).
-    Logo e foto arrivano come immagini già rimpicciolite dalla pagina; la foto vecchia non si cancella: si rinomina."""
-    import base64
-    acc = str(corpo.get("colore") or "").strip()
-    if not re.fullmatch(r"#[0-9A-Fa-f]{6}", acc):
-        return None
-    pr = leggi(PROFILO) if os.path.exists(PROFILO) else {}
-    pr["colore"] = acc.upper()
-    pr["nome"] = re.sub(r"[^A-Za-z0-9._]", "", str(corpo.get("nome") or ""))[:40]
-    pr["sotto"] = str(corpo.get("sotto") or "").strip()[:50]
-    pr["parola"] = re.sub(r"[^A-Za-zÀ-ÿ0-9]", "", str(corpo.get("parola") or ""))[:20].upper()
-    pr["parole"] = [x for x in (re.sub(r"[^\w .'&-]", "", w).strip()[:40] for w in str(corpo.get("parole") or "").split(",")) if x][:30]
-    for chiave, file, inizio in (("logo", "logo.png", "data:image/png;base64,"), ("foto", "profilo.jpg", "data:image/jpeg;base64,")):
-        d = corpo.get(chiave)
-        if isinstance(d, str) and d.startswith(inizio) and len(d) < 6_000_000:
-            dest = os.path.join(DATI, file)
-            if os.path.exists(dest):
-                os.replace(dest, dest[:-4] + "-prima" + dest[-4:])
-            with open(dest, "wb") as f:
-                f.write(base64.b64decode(d[len(inizio):]))
-            pr[chiave] = file
-    os.makedirs(DATI, exist_ok=True)
-    scrivi(PROFILO, pr)
-    return pr
-
-
-
 VIDEO_PAGINA = os.path.join(DATI, "video-pagina")          # la copia del video caricato nella pagina
 VIDEO_SCELTO = os.path.join(DATI, "video-pagina.json")     # {"file", "nome", "quando"}: lo legge monta-video
 ESTENSIONI = (".mp4", ".mov", ".m4v", ".webm")
@@ -412,21 +374,12 @@ class Pagina(BaseHTTPRequestHandler):
         if not self._nostro():
             return self._manda(403, b"{}")
         percorso = self.path.split("?")[0]
-        if percorso in ("/", "/effetti", "/brand"):
-            with open({"/": PAGINA, "/effetti": PAGINA_EFFETTI, "/brand": PAGINA_BRAND}[percorso], "rb") as f:
+        if percorso in ("/", "/effetti"):
+            with open({"/": PAGINA, "/effetti": PAGINA_EFFETTI}[percorso], "rb") as f:
                 return self._manda(200, f.read(), "text/html; charset=utf-8")
         if percorso == "/dati":
             Pagina.dati, Pagina.file = raccogli()
             return self._manda(200, json.dumps(Pagina.dati, ensure_ascii=False).encode())
-        if percorso == "/profilo":
-            return self._manda(200, json.dumps(profilo_per_la_pagina(), ensure_ascii=False).encode())
-        if percorso in ("/file/logo", "/file/foto"):
-            pr = leggi(PROFILO) if os.path.exists(PROFILO) else {}
-            p = os.path.join(DATI, os.path.basename(pr.get(percorso[6:]) or "-"))
-            if os.path.isfile(p):
-                with open(p, "rb") as f:
-                    return self._manda(200, f.read(), TIPI.get(os.path.splitext(p)[1].lower(), "application/octet-stream"))
-            return self._manda(404, b"{}")
         if percorso.startswith("/file/") and percorso[6:] in Pagina.file:
             p = Pagina.file[percorso[6:]]
             with open(p, "rb") as f:
@@ -444,13 +397,6 @@ class Pagina(BaseHTTPRequestHandler):
         corpo = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
         if self.path == "/ping":
             Pagina.ultimo_ping = time.time()
-            return self._manda(200, b"{}")
-        if self.path == "/salva-brand":
-            pr = salva_brand(corpo)
-            if pr is None:
-                return self._manda(400, b"{}")
-            print(f"BRAND SALVATO colore={pr['colore']} nome={pr.get('nome') or '-'} parola={pr.get('parola') or '-'} "
-                  f"parole={', '.join(pr.get('parole') or []) or '-'} logo={'si' if pr.get('logo') else 'no'} foto={'si' if pr.get('foto') else 'no'}", flush=True)
             return self._manda(200, b"{}")
         if self.path == "/salva-effetti":   # solo gli effetti accesi; le altre scelte restano come sono
             accesi = [k for k in (corpo.get("effetti") or []) if k in effetti.CATALOGO]
