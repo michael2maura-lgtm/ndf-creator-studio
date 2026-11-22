@@ -17,6 +17,8 @@ Si sceglie in base a quello che viene detto e a quello che si vede in quel momen
     compreso, bassa. La voce resta sempre davanti.
   - Video parlato (la persona spiega un concetto in camera, solo sottotitoli e titoli): niente musica, e suoni
     pochissimi o nessuno.
+  - La musica ha la stessa emozione di quello che si dice (seria su una cosa seria, energica su una svolta):
+    una musica allegra sotto un problema serio confonde come un'immagine che non c'entra.
   - Se l'utente lo dice ("con la musica", "senza musica", "monta semplice"), vale quello. Nel messaggio finale
     di' in una riga cosa hai scelto, così può cambiarlo.
 - Mai due suoni forti nello stesso istante, mai un suono sopra una parola importante.

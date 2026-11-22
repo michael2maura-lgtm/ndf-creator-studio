@@ -63,19 +63,35 @@ def barra(r, e, faccia):
 
 
 def scontrino(r, e, faccia):
+    """Lo scontrino esce dalla fessura di una cassa: la carta si allunga riga dopo riga mentre le dici, con un piccolo
+    scatto a ogni riga; alla fine il totale. La carta ha il bordo seghettato e resta inclinata, e ondeggia finché c'è."""
     _font(r)
     n, da, a = len(r.corpo), e["da"], e["a"]
-    righe = "".join(f'<div class="nx-sr" id="ns{n}r{j}"><span>{E(t)}</span><b>{E(p)}</b></div>' for j, (t, p, _) in enumerate(e.get("righe", [])))
+    voci = e.get("righe", [])
+    righe = "".join(f'<div class="nx-sr" id="ns{n}r{j}"><span>{E(t)}</span><b>{E(p)}</b></div>' for j, (t, p, _) in enumerate(voci))
     tot = e.get("totale")
     tot_html = f'<div class="nx-st" id="ns{n}t"><span>{E(tot[0])}</span><b>{E(tot[1])}</b></div>' if tot else ""
-    r.corpo.append(f'<div class="nx-card nx-scontrino" id="ns{n}" style="top:{_petto(faccia) - 40}px"><div class="nx-tit">{E(e.get("titolo", "Ricevuta"))}</div>'
-                   f'{righe}<div class="nx-taglio"></div>{tot_html}</div>')
-    _entra(r, f"#ns{n}", da, a, 120)
-    for j, (_, _, t) in enumerate(e.get("righe", [])):
-        r.tl.append(f'tl.fromTo("#ns{n}r{j}",{{opacity:0,x:-20}},{{opacity:1,x:0,duration:.25,immediateRender:false}},{t:.3f});')
-        r.suono("click", t, 0.25)
+    r.corpo.append(f'<div class="nx-cassa" id="ns{n}" style="top:{_petto(faccia) + 10}px"><div class="nx-fessura"></div>'
+                   f'<div class="nx-storto"><div class="nx-maschera" id="ns{n}m"><div class="nx-carta" id="ns{n}c"><div class="nx-tit">{E(e.get("titolo", "Ricevuta"))}</div>'
+                   f'{righe}<div class="nx-taglio"></div>{tot_html}</div></div><div class="nx-zig"></div></div></div>')
+    _entra(r, f"#ns{n}", da, a, 80)
+    # quanto carta è uscita a ogni momento: si misura nella pagina (altezze vere delle righe)
+    tappe = [(da + 0.25, f"#ns{n}c .nx-tit")] + [(t, f"#ns{n}r{j}") for j, (_, _, t) in enumerate(voci)]
     if tot:
-        r.tl.append(f'tl.fromTo("#ns{n}t",{{opacity:0,scale:.8}},{{opacity:1,scale:1,duration:.35,ease:"back.out(2)",immediateRender:false}},{tot[2]:.3f});')
+        tappe.append((tot[2], f"#ns{n}t"))
+    prima = "0"
+    for k, (t, sel) in enumerate(tappe):
+        ultima = k == len(tappe) - 1
+        q = f'document.querySelector("{sel}")'
+        fine = "c.offsetHeight" if ultima else f"({q}.offsetTop+{q}.offsetHeight+12)"
+        r.tl.append(f'(()=>{{const c=document.querySelector("#ns{n}c");'
+                    f'tl.fromTo("#ns{n}m",{{height:()=>{prima}}},{{height:()=>{fine},duration:{0.45 if k == 0 else 0.32},ease:"power1.out",immediateRender:false}},{t:.3f});}})();')
+        prima = fine
+        if k:
+            r.tl.append(f'tl.fromTo("#ns{n}c",{{x:0}},{{x:4,duration:.05,yoyo:true,repeat:3,ease:"none",immediateRender:false}},{t:.3f});')
+            r.suono("click", t, 0.25)
+    if tot:
+        r.tl.append(f'tl.fromTo("#ns{n}t b",{{scale:.6}},{{scale:1,duration:.4,ease:"back.out(2.5)",immediateRender:false}},{tot[2] + 0.2:.3f});')
         r.suono_libreria("hyperframes/chime.mp3", tot[2], 0.3)
     r.nascondi.append((da, a))
 
@@ -227,8 +243,14 @@ CSS = """
 .nx-pc{font-weight:900;font-size:76px;color:var(--acc)}
 .nx-fondo{height:28px;border-radius:14px;background:rgba(28,26,23,.12);overflow:hidden}
 .nx-fondo i{display:block;height:100%;background:var(--acc);border-radius:14px;transform-origin:0 50%;transform:scaleX(0)}
-.nx-scontrino{left:150px;right:180px;border-radius:10px 10px 26px 26px;font-family:'Inter Tight'}
-.nx-sr,.nx-st{display:flex;justify-content:space-between;font-size:42px;padding:9px 0;opacity:0}
+.nx-cassa{position:absolute;left:130px;right:160px;opacity:0;z-index:40;transform-origin:50% 0}
+.nx-fessura{position:relative;z-index:2;height:34px;margin:0 -24px;border-radius:17px;background:#1C1A17;box-shadow:0 10px 24px rgba(0,0,0,.45),inset 0 -8px 0 #000}
+.nx-storto{transform:rotate(-1.6deg);transform-origin:50% 0;margin-top:-14px;filter:drop-shadow(0 18px 22px rgba(0,0,0,.35))}
+.nx-maschera{overflow:hidden;height:0}
+.nx-carta{position:relative;background:#F7F1E6;color:#1C1A17;padding:44px 40px 40px;font-family:'Inter Tight'}
+.nx-zig{height:18px;background:linear-gradient(-45deg,transparent 12px,#F7F1E6 0) 0 0/24px 18px repeat-x,linear-gradient(45deg,transparent 12px,#F7F1E6 0) 0 0/24px 18px repeat-x}
+.nx-sr,.nx-st{display:flex;justify-content:space-between;font-size:42px;padding:9px 0}
+.nx-st b{display:inline-block}
 .nx-sr span{color:#4a3d33}.nx-sr b{font-weight:800}
 .nx-taglio{border-top:4px dashed rgba(28,26,23,.3);margin:14px 0 8px}
 .nx-st{font-weight:900;font-size:56px}.nx-st b{color:var(--acc)}

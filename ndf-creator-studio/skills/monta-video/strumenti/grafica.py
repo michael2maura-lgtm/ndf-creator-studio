@@ -169,6 +169,35 @@ JS_RESPIRO = """document.querySelectorAll('.resp').forEach(w => {
     {x: 0, y: 0, rotation: 0, duration: giro / 2, ease: "sine.inOut"}], repeat: volte - 1, immediateRender: false}, da + 0.45);
 });"""
 
+TEMPI_LUNGHI = {"zoom", "targhetta", "bianconero", "luce", "schermo", "fondo", "dentro", "sfocato", "pannello", "scena",
+                "telefono", "percorso", "colore"}   # stati d'animo, sfondi e scene: durano quanto il pezzo, non sono schede
+
+
+def accorcia(e):
+    """Un effetto non resta mai fermo a lungo sullo schermo: dura al massimo 4 s, oppure fino all'ultima cosa che
+    succede dentro (l'ultima voce, il tocco, il totale) più 0,9 s; mai meno di 1,6 s. Più a lungo sembra una foto."""
+    if e.get("tipo") in TEMPI_LUNGHI or not isinstance(e.get("da"), (int, float)) or not isinstance(e.get("a"), (int, float)):
+        return
+    da, tempi = e["da"], []
+
+    def cerca(x):
+        if isinstance(x, (int, float)) and not isinstance(x, bool):
+            tempi.append(float(x))
+        elif isinstance(x, (list, tuple)):
+            for y in x:
+                cerca(y)
+        elif isinstance(x, dict):
+            for y in x.values():
+                cerca(y)
+    for k, v in e.items():
+        if k in ("quando", "tocco") or isinstance(v, (list, dict)):
+            cerca(v)
+    dentro = [t for t in tempi if da < t < e["a"]]
+    tetto = max(da + 4.0, (max(dentro) + 0.9) if dentro else 0, da + 1.6)
+    if e["a"] > tetto:
+        e["a"] = round(tetto, 3)
+
+
 def _primo_tempo(voci):
     """Il primo secondo dentro le voci di un effetto senza "da" (pillole, tessere, pila, etichette)."""
     tempi = []
@@ -1048,10 +1077,13 @@ class Reel:
         pezzi = [f'<div class="pc-lab" style="top:{alto}px">[{html.escape(e.get("etichetta", "IL METODO").upper())}]</div>',
                  f'<div class="pc-tit" style="top:{alto + 40}px">{lettere}</div>']
         k_lettera = 0
-        for k, c in enumerate(titolo):   # il titolo entra lettera per lettera, sfocato
-            if c != " ":
-                self.tl.append(f'tl.fromTo("#pc{n}t{k}",{{opacity:0,filter:"blur(10px)"}},{{opacity:1,filter:"blur(0px)",duration:0.35,ease:"power2.out",immediateRender:false}},{da + 0.15 + k_lettera * 0.035:.3f});')
-                k_lettera += 1
+        import random
+        caso = random.Random(len(titolo) * 7 + n)   # le lettere in corsivo affiorano in ordine sparso (sempre lo stesso)
+        pos = [k for k, c in enumerate(titolo) if c != " "]
+        ordine = pos[:]
+        caso.shuffle(ordine)
+        for i, k in enumerate(ordine):
+            self.tl.append(f'tl.fromTo("#pc{n}t{k}",{{opacity:0}},{{opacity:1,duration:0.22,ease:"power1.out",immediateRender:false}},{da + 0.1 + i * 0.5 / max(len(ordine), 1):.3f});')
         y = alto + 40 + righe_tit * 100 + 20
         riga, j_riga = -1, 0
         for j, passo in enumerate(e.get("passi", [])[:5]):
@@ -1060,14 +1092,24 @@ class Reel:
                 pezzi.append(f'<span class="pc-agg" id="pc{n}p{j}"> {html.escape(testo)}</span>')
                 pezzi[riga] = pezzi[riga].replace("</div>", pezzi.pop() + "</div>", 1)
             else:
-                stile = "pc-passo" if j_riga % 2 == 0 else "pc-passo serif"
+                serif = j_riga % 2 == 1
+                stile = "pc-passo serif" if serif else "pc-passo"
                 pezzi.append(f'<div class="pc-filo" id="pc{n}f{j}" style="top:{y}px"></div>')
-                pezzi.append(f'<div class="{stile}" style="top:{y + 84}px"><span id="pc{n}p{j}">{html.escape(testo)}</span></div>')
+                if serif:   # parola in corsivo: le lettere affiorano in ordine sparso
+                    lett = "".join(f'<span class="pc-l" id="pc{n}p{j}l{k}">{html.escape(c)}</span>' if c != " " else " " for k, c in enumerate(testo))
+                    pezzi.append(f'<div class="{stile}" style="top:{y + 84}px"><span id="pc{n}p{j}">{lett}</span></div>')
+                    pos = [k for k, c in enumerate(testo) if c != " "]
+                    caso.shuffle(pos)
+                    for i, k in enumerate(pos):
+                        self.tl.append(f'tl.fromTo("#pc{n}p{j}l{k}",{{opacity:0}},{{opacity:1,duration:0.2,immediateRender:false}},{quando + i * 0.4 / max(len(pos), 1):.3f});')
+                else:
+                    pezzi.append(f'<div class="{stile}" style="top:{y + 84}px"><span id="pc{n}p{j}">{html.escape(testo)}</span></div>')
                 riga = len(pezzi) - 1
-                self.tl.append(f'tl.fromTo("#pc{n}f{j}",{{scaleY:0}},{{scaleY:1,duration:0.3,ease:"power2.out",immediateRender:false}},{quando - 0.3:.3f});')
+                self.tl.append(f'tl.set("#pc{n}f{j}",{{scaleY:0}},{da:.3f});tl.fromTo("#pc{n}f{j}",{{scaleY:0}},{{scaleY:1,duration:0.3,ease:"power2.out",immediateRender:false}},{quando - 0.3:.3f});')
                 y += 170
                 j_riga += 1
-            self.tl.append(f'tl.fromTo("#pc{n}p{j}",{{opacity:0,filter:"blur(8px)"}},{{opacity:1,filter:"blur(0px)",duration:0.3,ease:"power2.out",immediateRender:false}},{quando:.3f});')
+            # le parole dritte compaiono di colpo sulla parola detta (taglio netto, niente dissolvenza)
+            self.tl.append(f'tl.set("#pc{n}p{j}",{{opacity:0}},{da:.3f});tl.set("#pc{n}p{j}",{{opacity:1}},{quando:.3f});')
             self.suono("pop", quando, 0.3)
         self.corpo.append(f'<div class="pc" id="pc{n}">{"".join(pezzi)}</div>')
         self.tl.append(f'tl.set("#pc{n}",{{opacity:1}},{da:.3f});tl.set("#pc{n}",{{opacity:0}},{a:.3f});')
@@ -1232,7 +1274,9 @@ class Reel:
                           f'{";mix-blend-mode:normal;filter:drop-shadow(0 4px 14px rgba(0,0,0,.55))" if chiaro else ""}">{html.escape(testo)}</div></div>')
         self.tl.append(f'tl.fromTo("#tb{n}i",{{opacity:0,scale:2.4}},{{opacity:0.92,scale:1,duration:0.13,ease:"power4.in",immediateRender:false}},{da - 0.13:.3f});'
                        f'tl.fromTo("#tb{n}i",{{scale:1}},{{scale:1.035,duration:0.06,yoyo:true,repeat:1,ease:"power1.out",immediateRender:false}},{da:.3f});'
-                       f'tl.to("#tb{n}i",{{opacity:0,duration:0.2}},{a - 0.2:.3f});')
+                       f'tl.to("#tb{n}i",{{opacity:0,duration:0.2}},{a - 0.2:.3f});'
+                       # il colpo fa tremare tutta l'immagine, come un pugno sul tavolo (margine: non tocca lo zoom)
+                       f'tl.fromTo("#cam",{{marginTop:0}},{{keyframes:[{{marginTop:-18,duration:.05}},{{marginTop:12,duration:.06}},{{marginTop:-7,duration:.06}},{{marginTop:3,duration:.06}},{{marginTop:0,duration:.07}}],ease:"none",immediateRender:false}},{da:.3f});')
         self.suono_libreria("hyperframes/impact-bass-1.mp3", da - 0.02, 0.45)   # il colpo sordo del timbro sul tavolo
         self.nascondi.append((da, a))
 
@@ -1332,30 +1376,48 @@ class Reel:
         self.nascondi.append((da, a))
 
     def tessere(self, e, faccia):
-        """Tessere numerate: quando elenchi ("prima cosa", "seconda cosa"...), per ogni punto una tessera crema con il
-        numero grande e la parola spunta ad arco attorno alla testa, e restano tutte fino alla fine dell'elenco.
-        e = {"a": fine, "voci": [["STORIE", secondo], ["REEL", secondo], ...] (al massimo 4)}."""
+        """Nomi sul muro, uno alla volta: ogni nome è una tessera scura un po' storta che arriva grande e trasparente e
+        sbatte sul muro DIETRO la testa (con i tratti dell'urto); quando arriva il nome dopo, quella di prima viene
+        barrata in rosso e cade via; l'ultima viene barrata e vola via alla fine. Per "non ti serve X, Y, Z".
+        e = {"a": fine, "voci": [["Programmi", secondo], ["Montatore", secondo], ...] (al massimo 4),
+        "etichetta": riga piccola sotto ogni nome (facoltativa)}."""
         self.font_extra("InterTight.ttf")
-        n = len(self.corpo)
         voci = e["voci"][:4]
         a = e["a"]
-        cx, cy = (faccia["sinistra"] + faccia["destra"]) / 2, faccia["occhi"]
-        r = (faccia["destra"] - faccia["sinistra"]) * 0.5 + 180
-        k = len(voci)
-        angoli = [-140, -40] if k == 2 else [-155 + j * (130 / (k - 1)) for j in range(k)] if k > 1 else [-90]
-        acc = self.stile["colori"]["accento"]
-        pezzi = []
-        for j, ((testo, _), ang) in enumerate(zip(voci, angoli)):
-            x = min(max(cx + r * math.cos(math.radians(ang)) - 120, 30), 1050 - 240)
-            y = max(cy + r * math.sin(math.radians(ang)) - 80, 240)
-            pezzi.append(f'<div class="ts" id="ts{n}t{j}" style="left:{x:.0f}px;top:{y:.0f}px;--g:{(ang + 90) * 0.12:.1f}deg">'
-                         f'<b style="color:{acc}">{j + 1:02d}</b><span>{html.escape(testo.upper())}</span></div>')
-        self.corpo.append(f'<div class="ts-tutte" id="ts{n}">{"".join(pezzi)}</div>')
-        for j, (_, quando) in enumerate(voci):
-            self.tl.append(f'tl.fromTo("#ts{n}t{j}",{{opacity:0,scale:0.3,x:{(cx - 540) * 0.2:.0f},y:120}},'
-                           f'{{opacity:1,scale:1,x:0,y:0,duration:0.4,ease:"back.out(1.8)",immediateRender:false}},{quando:.3f});')
-            self.suono("pop", quando, 0.3)
-        self.tl.append(f'tl.to("#ts{n}",{{opacity:0,duration:0.25}},{a - 0.25:.3f});')
+        t0 = voci[0][1]
+        sel = self.ritaglio(t0 - 0.35, max(a, voci[-1][1] + 1.25) + 0.05)   # la persona ritagliata sta davanti alle tessere
+        sx, dx, occhi, mento = faccia["sinistra"], faccia["destra"], faccia["occhi"], faccia["mento"]
+        cima = occhi - (mento - occhi) * 1.1
+        # i posti sul muro, a turno: di fianco alla testa a sinistra, in alto a destra, sopra la testa
+        largo = max(len(t) for t, _ in voci) * 50 + 72          # quanto è larga la tessera più lunga (Inter Tight 900: ~0,68 em a lettera)
+        # se non c'è posto di fianco alla testa la tessera si rimpicciolisce (la testa ne copre solo un angolo)
+        f = max(0.6, min(1.0, (sx - 40 - 15) / largo, (1010 - dx - 15) / largo))
+        largo *= f
+        posti = [(max(sx - largo - 15, 40), occhi - 70, -4), (min(dx + 15, 1010 - largo), cima - 40, 3),
+                 ((sx + dx - largo) / 2, max(cima - 190, 240), -2), (max(sx - largo * 0.85, 40), max(cima - 150, 240), 4)]
+        etich = html.escape(e.get("etichetta", ""))
+        lati = [(-1, -0.6), (1, -0.7), (0.4, -1), (-0.8, -0.9)]
+        for j, (testo, quando) in enumerate(voci):
+            x, y, gira = posti[j % len(posti)]
+            m = len(self.camera)
+            tratti = "".join(f'<i style="left:{math.cos(math.radians(k * 36 + 8)) * 270 - 3:.0f}px;top:{math.sin(math.radians(k * 36 + 8)) * 105 - 14:.0f}px;'
+                             f'transform:rotate({k * 36 + 8 + 90}deg)"></i>' for k in range(10))   # i tratti dell'urto, tutto attorno
+            self.camera.insert(0, f'<div class="ko" id="ko{m}" style="left:{x:.0f}px;top:{y:.0f}px;--g:{gira}deg;--f:{f:.2f}">'
+                                  f'<div class="ko-urto" id="ko{m}u">{tratti}</div>'
+                                  f'<b>{html.escape(testo)}</b>{f"<small>{etich}</small>" if etich else ""}'
+                                  f'<i class="ko-riga" id="ko{m}r"></i></div>')
+            via = voci[j + 1][1] if j + 1 < len(voci) else max(a - 0.55, quando + 0.6)   # quando arriva il nome dopo (o alla fine)
+            dx_via, dy_via = lati[j % len(lati)]
+            ultimo = j + 1 == len(voci)
+            self.tl.append(f'tl.fromTo("#ko{m}",{{opacity:0.45,scale:1.6,rotation:{gira - 7}}},{{opacity:1,scale:1,rotation:{gira},duration:0.2,ease:"power3.in",immediateRender:false}},{quando - 0.2:.3f});'
+                           f'tl.fromTo("#ko{m}u",{{opacity:1,scale:0.7}},{{opacity:0,scale:1.25,duration:0.3,ease:"power2.out",immediateRender:false}},{quando:.3f});'
+                           f'tl.fromTo("#ko{m}r",{{scaleX:0}},{{scaleX:1,duration:0.12,ease:"power2.out",immediateRender:false}},{via - 0.08:.3f});'
+                           + (f'tl.to("#ko{m}",{{x:{dx_via * 420:.0f},y:-260,rotation:{gira + 60 * (1 if dx_via > 0 else -1)},opacity:0,duration:0.45,ease:"power2.in"}},{via + 0.12:.3f});' if ultimo else
+                              f'tl.to("#ko{m}",{{y:520,x:{dx_via * 80:.0f},rotation:{gira + 28 * (1 if dx_via > 0 else -1)},opacity:0,duration:0.5,ease:"power2.in"}},{via + 0.1:.3f});'))
+            self.suono("pop", quando, 0.35)
+            self.suono("transizione", via + 0.1, 0.2)
+        fine = max(a, voci[-1][1] + 1.25)
+        self.tl.append(f'tl.set("{sel}",{{opacity:1}},{t0 - 0.35:.3f});tl.set("{sel}",{{opacity:0}},{fine:.3f});')
 
     def classifica(self, e, faccia):
         """Classifica (tier list): sotto il mento compare una classifica S, A, B, C con delle voci già messe in basso;
@@ -2389,6 +2451,13 @@ def zoom_sui_tagli(r, cart, piano, stile, faccia, riq):
             occupati.append((inizio - 0.2, e["a"] + 0.2 if "a" in e else 1e9))
     fine = piano.get("finale_da") or 1e9
     da_quando = stile.get("zoom_tagli_da", 0)
+    # il gancio: se nei primi secondi non c'è già uno zoom o una grafica, uno zoom lento e morbido verso la faccia
+    # (regole/gancio.md: è il movimento che ferma il pollice; mai di scatto all'inizio)
+    if not any(a < 2.6 and b > 0.1 for a, b in occupati) and stile.get("zoom_gancio", 1.1) > 1:
+        x, y = r.viso(faccia, 0.2)
+        r.tl.append(f'tl.set("#cam",{{transformOrigin:"{x:.0f}px {y:.0f}px",scale:1}},0.05);'
+                    f'tl.to("#cam",{{scale:{stile.get("zoom_gancio", 1.1)},duration:2.6,ease:"sine.inOut"}},0.1);')
+        print(f"Zoom del gancio: lento nei primi 2,6 s (fino a {stile.get('zoom_gancio', 1.1)})")
     parole = leggi(os.path.join(cart, "parole.json")) if os.path.exists(os.path.join(cart, "parole.json")) else []
     k, n, ultimo, prec = 0, 0, -99.0, None
     for seg in leggi(p):
@@ -2516,6 +2585,8 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         r.suono("apertura", 0.0, 0.4)
     # un pannello che finisce poco prima della grafica dopo (meno di 0,3 s) lascia uno o due fotogrammi dello schermo
     # vuoto in mezzo: sul telefono è un lampo. Si allunga fino all'inizio della grafica dopo.
+    for e in piano.get("elementi", []):
+        accorcia(e)
     con_tempi = sorted((e for e in piano.get("elementi", []) if "da" in e and "a" in e), key=lambda x: x["da"])
     for e, dopo in zip(con_tempi, con_tempi[1:]):
         if e["tipo"] == "pannello" and 0 < dopo["da"] - e["a"] < 0.3:
@@ -2633,9 +2704,10 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         # mentre l'effetto resta sullo schermo non sta mai fermo: lo avvolge un contenitore che ondeggia piano
         # (gli effetti a tutto schermo e quelli che si muovono già per conto loro restano come sono)
         inizio = e.get("da") if isinstance(e.get("da"), (int, float)) else _primo_tempo(e.get("voci"))
+        fine = e["a"] if isinstance(e.get("a"), (int, float)) else (D if tipo == "targhetta" else None)   # la targhetta resta fino alla fine
         if (tipo not in SENZA_RESPIRO and len(r.corpo) > prima and inizio is not None
-                and isinstance(e.get("a"), (int, float)) and e["a"] - inizio >= 1.6):
-            r.corpo[prima] = f'<div class="resp" data-da="{inizio:.3f}" data-a="{e["a"]:.3f}">' + r.corpo[prima]
+                and fine is not None and fine - inizio >= 1.6):
+            r.corpo[prima] = f'<div class="resp" data-da="{inizio:.3f}" data-a="{fine:.3f}">' + r.corpo[prima]
             r.corpo[-1] += "</div>"
     r.tl.append(JS_RESPIRO)
     for t in piano.get("transizioni", []):   # cambi di argomento scelti da Claude
@@ -2760,10 +2832,13 @@ html,body{{margin:0;background:{scuro}}}
 .sg-n span{{font-size:28px;color:#777}}
 .sg-b{{position:relative;background:#0095F6;color:#fff;font-size:34px;font-weight:800;padding:16px 34px;border-radius:18px}}
 .sg-tocco{{position:absolute;right:70px;top:50%;width:110px;height:110px;margin-top:-55px;border-radius:50%;background:rgba(120,120,120,.45);opacity:0}}
-.ts-tutte{{position:absolute;inset:0;z-index:31;pointer-events:none}}
-.ts{{position:absolute;width:240px;padding:18px 10px 20px;background:#FBF6EC;border-radius:24px;text-align:center;opacity:0;
- box-shadow:0 16px 36px rgba(0,0,0,.4);font-family:"Inter Tight";transform:rotate(var(--g))}}
-.ts b{{display:block;font-size:100px;font-weight:900;line-height:1}}.ts span{{display:block;font-size:36px;font-weight:800;color:#1a1a1a;margin-top:6px;letter-spacing:1px}}
+.ko{{position:absolute;z-index:2;padding:calc(22px * var(--f,1)) calc(36px * var(--f,1)) calc(20px * var(--f,1));background:#151515;border-radius:24px;opacity:0;font-family:'Inter Tight';
+ text-align:center;transform:rotate(var(--g));box-shadow:0 14px 34px rgba(0,0,0,.4);white-space:nowrap}}
+.ko b{{display:block;font-size:calc(72px * var(--f,1));font-weight:900;line-height:1;color:#fff;letter-spacing:-0.02em}}
+.ko small{{display:block;font-size:24px;font-weight:700;color:#F3D55B;margin-top:8px;letter-spacing:1px}}
+.ko-riga{{position:absolute;left:14px;right:14px;top:46%;height:10px;border-radius:5px;background:#E5484D;transform:rotate(-7deg) scaleX(0);transform-origin:0 50%}}
+.ko-urto{{position:absolute;left:50%;top:50%;width:0;height:0;opacity:0}}
+.ko-urto i{{position:absolute;width:6px;height:28px;border-radius:3px;background:#fff;transform-origin:50% 50%}}
 .cl{{position:absolute;left:110px;right:110px;z-index:31;opacity:0;background:rgba(18,18,22,.9);border-radius:28px;padding:20px;
  font-family:"Inter Tight";box-shadow:0 22px 50px rgba(0,0,0,.45)}}
 .cl-t{{color:#fff;font-size:34px;font-weight:800;margin:0 0 14px 6px}}

@@ -59,6 +59,8 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    Lo zoom cambia da solo a ogni taglio (largo, stretto, largo, più stretto, sulla faccia): non scriverlo nel piano.
 4. `PY STUDIO/strumenti/faccia.py NOME` e guarda `controllo/faccia.jpg`: il riquadro deve stare sulla faccia.
 5. Leggi le ultime 5 righe di `stili/<stile>/registro.md` e scegli scene, clip e pose diverse da quelle.
+   **Prima di tutto il gancio** (primi 2-5 s), in ogni stile: segui `regole/gancio.md` (titolo corto vicino agli
+   occhi, testo-immagine-voce uguali, un cambio ogni 1-2 s solo lì).
    Decidi che video è. **Completo**: ogni 3-6 secondi una scena a tutto schermo di 1-3 secondi, poi si torna sulla
    persona; zoom, transizioni, suoni degli oggetti, musica. **Parlato** (spiega un concetto, annuncio semplice):
    sottotitoli, titoli e finale, niente musica. Se l'utente lo dice, vale quello.
@@ -112,6 +114,7 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    e guarda il foglio: niente nelle zone rosse, niente sulla faccia, niente righe orfane.
 7. `PY STUDIO/strumenti/costruisci.py NOME` (senza zone), poi `PY STUDIO/strumenti/rendi.py NOME`.
 8. `PY STUDIO/strumenti/controlla_tagli.py NOME finale/NOME-vN.mp4 --telefono`: guarda i fotogrammi del video
+   (e fai il controllo "in silenzio" dei primi 5 secondi di `regole/gancio.md`)
    FINITO e il volume. Se stampa DA GUARDARE (nero, o due cambi di immagine troppo vicini), guarda `nascosti.jpg`:
    se è un errore vero (un fotogramma di un'altra scena, un buco nero) correggilo e rifai il video prima di mandarlo;
    se è un passaggio voluto (lampo, transizione) vai avanti. Manda all'utente la copia per il telefono.

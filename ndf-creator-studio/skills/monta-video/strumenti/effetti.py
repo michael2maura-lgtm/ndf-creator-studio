@@ -208,10 +208,15 @@ CATALOGO = {
 # perché c'è la versione uguale al Creator Studio: passi -> checklist, contatore -> contachilometri / numero gigante,
 # targhette -> pillole, chat -> prompt, telefono -> telefono 3D.
 NASCOSTI = {"passi", "contatore", "targhette", "chat", "telefono", "broll", "numeri", "intervista", "carta", "prove", "prova", "miste"}
+# Effetti nostri, né di Cecilia né del Creator Studio (Michael, 21/11: "tutti quelli nostri li togli"): la pagina non
+# li mostra più. Quelli che fanno parte di un modello pronto restano nel motore (vedi DEL_MODELLO), gli altri non li usa nessuno.
+NASCOSTI |= {"titolo", "gigante", "bianconero", "targhetta", "mappa", "barrate", "forte", "fondo", "pila", "schermata",
+             "numeri", "evidenza", "scheda", "broll", "spunte", "frase", "intervista", "carta", "prove", "prova", "miste"}
 
 # Pezzi di un modello, non effetti da scegliere: la pagina Effetti non li mostra e il motore li usa sempre quando
 # sono nello stile.json del modello (Michael, 17/11: il B-roll è il modello "Con immagini", non un effetto).
-DEL_MODELLO = {"broll", "numeri", "intervista", "carta", "prove", "prova", "miste"}   # numeri: i passi di Energia, sempre con il loro "fondo"
+DEL_MODELLO = {"broll", "numeri", "intervista", "carta", "prove", "prova", "miste"}
+DEL_MODELLO |= {"titolo", "gigante", "evidenza", "scheda", "fondo", "forte", "pila", "schermata", "frase", "spunte"}   # Impact, Chiaro, Energia, Primo piano, Con immagini   # numeri: i passi di Energia, sempre con il loro "fondo"
 
 
 def chiave_di(elemento):

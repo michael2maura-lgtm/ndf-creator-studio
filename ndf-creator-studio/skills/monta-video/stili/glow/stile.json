@@ -41,8 +41,6 @@
     "pillole",
     "prompt",
     "numero",
-    "targhetta",
-    "barrate",
     "telefono3d",
     "orbita",
     "commento",
@@ -55,7 +53,6 @@
     "grafico",
     "muro",
     "etichetta",
-    "mappa",
     "barra",
     "scontrino",
     "carrello",
@@ -70,5 +67,6 @@
   "versione": "semplice",
   "transizione": "sfumatura",
   "mirino": false,
-  "zoom_tagli_da": 5
+  "zoom_tagli_da": 5,
+  "zoom_gancio": 1.08
 }

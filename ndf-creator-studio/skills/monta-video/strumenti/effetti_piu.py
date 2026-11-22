@@ -39,6 +39,7 @@ Tutti nel motore grafica, tempi del video TAGLIATO. Mentre ci sono, i sottotitol
      barrato in rosso e vola via. Per "senza questo, senza quello", strumenti o abitudini da lasciare (2-4).
 """
 import html
+import math
 import re
 
 E = html.escape
