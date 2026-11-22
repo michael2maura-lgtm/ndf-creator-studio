@@ -18,11 +18,22 @@ momenti decisivi (con la persona in un riquadro piccolo a destra). Durata tipica
 4. Leggi `testo.txt` e scrivi `vsl.json` con le grafiche (tempi in secondi del video tagliato):
    - `riquadro`: 2-5 parole che riassumono la frase chiave, `*parola*` nel colore del brand. 3-4 secondi.
      Sulle promesse, sui numeri, sul nome del metodo. Una ogni 20-40 secondi al massimo: non su ogni frase.
-   - `numeri`: quando la persona elenca dei passi o dei punti. Una grafica per ogni passo detto, breve (4-6 s),
+   - `clip`: sopra la persona quando dice una cosa che si può far vedere (nel gancio soprattutto), 1,5-3 s.
+     Prima il materiale del cliente, poi Pexels: `PY strumenti/clip.py <numero> <nome> --orizzontale` (1920x1080,
+     fino a 8 s) e GUARDA i fotogrammi prima di usarla: deve mostrare quello che si dice, niente scritte in inglese.
+     La persona resta in un riquadro piccolo in basso a destra (`"persona": false` per toglierla).
+   - `numeri`: quando la persona elenca dei passi o dei punti. Le etichette sono le parole che dice lei nel video
+     (da testo.txt), mai inventate né prese da altri video. Il riquadro della persona si adatta da solo (grande fino
+     a 3 numeri, poi più piccolo); `"persona": "grande" / "media" / "piccola" / false` per sceglierlo. Una grafica per ogni passo detto, breve (4-6 s),
      con le voci già dette che restano (tempo prima di "da") e `"totale"` per tenere fermi i posti.
 5. `PY strumenti/vsl_monta.py <nome> --anteprima` — foglio di fotogrammi presi dal montaggio vero
    (`controllo/foglio-vsl.jpg`). Guardalo TUTTO: scritte che coprono la bocca, testo tagliato, sottotitoli sopra le
    grafiche, tempi sbagliati. Correggi `vsl.json` e riprova: sono secondi, il video non si crea.
+   Audio (di serie): musica bassa sotto tutta la VSL (22 dB sotto la voce, libreria DATI/musica; `"musica"` in
+   vsl.json per un altro brano o false) e un "pop" quando compare ogni numero (`"suono_numeri"`).
+   Colori: quelli del brand del cliente (DATI/profilo.json "colore"). Per una prova fatta per un cliente da questo
+   computer: una cartella dati di prova con il suo colore e `NDF_STUDIO_DATI=<cartella>` davanti ai comandi, così
+   il profilo di Michael resta com'è.
 6. Solo quando il foglio è giusto: `PY strumenti/vsl_monta.py <nome>` — un render solo
    (`finale/<nome>-vN.mp4`, -14 LUFS, 8 Mbit/s). Per 15 minuti: circa 8-9 minuti di attesa.
 
@@ -31,7 +42,6 @@ Pochi token: niente render di prova del video intero. Si controlla sui fotogramm
 ## Cosa manca (prossime sessioni)
 
 - barra dei passaggi in basso con il passaggio attivo acceso
-- clip sopra con la persona nel riquadro piccolo (prima il materiale del cliente, poi Pexels orizzontale fino a 8 s)
 - "clicca il link qui sotto" alla fine
 - materiali del cliente (testimonianze, chat, foto, numeri) a schermo
 - la frase "monta la mia VSL" in SKILL.md

@@ -5,11 +5,15 @@ Così una VSL di 15 minuti non si disegna fotogramma per fotogramma: si disegnan
 Grafiche (in vsl.json, tempi in secondi del video tagliato, parole da testo.txt):
   {"tipo": "riquadro", "da": 12.4, "a": 16.0, "testo": "Il *metodo* che uso"}
       una scritta in un riquadro scuro sopra la persona; *parola* = nel colore del brand
+  {"tipo": "clip", "da": 0.5, "a": 2.7, "file": "pancia-mani-oriz.mp4", "inizio": 1.0, "persona": "piccola"}
+      una clip a schermo pieno (DATI/clip, scaricata con clip.py --orizzontale) con la persona in un riquadro piccolo;
+      "persona": false = solo la clip
   {"tipo": "numeri", "da": 30.0, "a": 41.5, "titolo": "3 errori", "voci": [["Dieta", 31.2], ["Riposo", 34.0], ...]}
       schermo pieno nel colore del brand; i numeri 1-2-3 compaiono uno alla volta quando vengono detti
       (una voce con il tempo prima di "da" è già lì: così la lista torna più volte e cresce; "totale": 3 tiene
       i posti fissi),
-      la persona resta in un riquadro piccolo a destra (lo mette vsl_monta.py nel buco lasciato dalla grafica)
+      la persona resta in un riquadro a destra (lo mette vsl_monta.py nel buco lasciato dalla grafica); "persona":
+      "grande" / "media" / "piccola" / false, se manca si sceglie da sola (grande fino a 3 numeri)
 
 Il disegno è nostro (Pillow), ispirato solo ai video finiti di riferimento.
 """
@@ -29,8 +33,10 @@ LARGO, ALTO, FPS = 1920, 1080, 30
 ENTRA, ESCE = 0.35, 0.3
 FONT = os.path.join(STUDIO, "font", "Poppins-Bold.ttf")
 FONT_2 = os.path.join(STUDIO, "font", "Poppins-SemiBold.ttf")
-# riquadro piccolo della persona nella grafica a schermo pieno (x, y, larghezza, altezza): 3:4, a destra
-PERSONA = (1340, 230, 450, 600)
+# riquadro della persona (x, y, larghezza, altezza), 3:4. La grandezza si adatta: grande quando la grafica ha poco da
+# mostrare (fino a 3 numeri), più piccola quando serve spazio; sopra le clip è piccolo, in basso a destra.
+PERSONA = {"grande": (1340, 230, 450, 600), "media": (1420, 290, 360, 480), "piccola": (1480, 330, 300, 400)}
+PERSONA_CLIP = {"grande": (1400, 470, 390, 520), "media": (1480, 540, 330, 440), "piccola": (1570, 610, 270, 360)}
 RAGGIO = 28
 
 
@@ -51,6 +57,11 @@ def rimbalzo(x):
 
 def rgb(hexa):
     return tuple(int(hexa[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def luce(c):
+    """Il colore del brand schiarito: per le parole accese, che su fondo scuro o sul video si devono leggere."""
+    return mescola(c, (255, 255, 255), 0.45)
 
 
 def mescola(a, b, k):
@@ -130,7 +141,7 @@ class Riquadro:
                 x = self.cx - lr / 2 + 6
                 y = self.cy - bh / 2 + 26 + i * self.alto_riga + sale - 6
                 for w, on in r:
-                    dt.text((x, y), w, font=self.font, fill=(self.acc if on else (255, 255, 255)) + (255,))
+                    dt.text((x, y), w, font=self.font, fill=(luce(self.acc) if on else (255, 255, 255)) + (255,))
                     x += self.font.getlength(w + " ")
             a = txt.getchannel("A").point(lambda v: int(v * testo_k))
             txt.putalpha(a)
@@ -155,13 +166,15 @@ class Numeri:
         self.f_num = _font(FONT, 110)
         self.f_voce = _font(FONT_2, 46)
         self.f_tit = _font(FONT, 64)
-        self.buco = PERSONA            # qui sotto vsl_monta.py mette la persona
+        n = max(g.get("totale", 0), len(g["voci"]))
+        scelta = g.get("persona", "grande" if n <= 3 else "media" if n <= 5 else "piccola")
+        self.buco = PERSONA[scelta] if scelta else None   # qui sotto vsl_monta.py mette la persona
         self.copre = True              # schermo pieno: niente sottotitoli sopra
         self.fondo = self._fondo()
 
     def _fondo(self):
         """Fondo scuro tinto col colore del brand, con una luce morbida e una griglia leggera."""
-        scuro = np.array(mescola((10, 11, 16), self.acc, 0.10), dtype=np.float32)
+        scuro = np.array(mescola((10, 11, 16), self.acc, 0.22), dtype=np.float32)
         yy, xx = np.mgrid[0:ALTO, 0:LARGO].astype(np.float32)
         luce = np.exp(-(((xx - 520) / 900) ** 2 + ((yy - 380) / 600) ** 2))[..., None]
         img = scuro + luce * (np.array(self.acc, np.float32) - scuro) * 0.22
@@ -173,8 +186,10 @@ class Numeri:
         for y in range(0, ALTO, 80):
             dl.line([0, y, LARGO, y], fill=(255, 255, 255, 10))
         im.alpha_composite(lin)
+        if not self.buco:
+            return im
         # cornice del riquadro della persona: ombra e bordo nel colore del brand
-        x, y, w, h = PERSONA
+        x, y, w, h = self.buco
         om = Image.new("RGBA", im.size, (0, 0, 0, 0))
         ImageDraw.Draw(om).rounded_rectangle([x + 8, y + 16, x + w + 8, y + h + 16], RAGGIO, fill=(0, 0, 0, 150))
         im.alpha_composite(om.filter(ImageFilter.GaussianBlur(18)))
@@ -183,9 +198,11 @@ class Numeri:
 
     def __call__(self, t):
         im = self.fondo.copy()
-        x, y, w, h = PERSONA
+        x, y, w, h = self.buco or (0, 0, 0, 0)
         # il buco della persona si apre dopo l'entrata e si chiude prima dell'uscita
-        if ENTRA <= t <= self.dur - ESCE:
+        if not self.buco:
+            pass
+        elif ENTRA <= t <= self.dur - ESCE:
             buco = Image.new("L", im.size, 255)
             ImageDraw.Draw(buco).rounded_rectangle([x, y, x + w, y + h], RAGGIO, fill=0)
             im.putalpha(Image.fromarray(np.minimum(np.array(im.getchannel("A")), np.array(buco))))
@@ -233,7 +250,42 @@ class Numeri:
         return im
 
 
-TIPI = {"riquadro": Riquadro, "numeri": Numeri}
+# ------------------------------------------------------------------ clip
+class Clip:
+    """Una clip a schermo pieno (materiale del cliente o Pexels orizzontale, fino a 8 s) con la persona in un
+    riquadro piccolo. La clip e la persona le mette vsl_monta.py con ffmpeg; qui si disegna solo la cornice del
+    riquadro (ombra e bordo nel colore del brand), che compare e sparisce con la persona."""
+    def __init__(self, g, acc):
+        self.dur = g["a"] - g["da"]
+        self.acc = rgb(acc)
+        scelta = g.get("persona", "piccola")
+        self.buco = PERSONA_CLIP[scelta] if scelta else None
+        self.copre = False             # i sottotitoli restano sopra le clip
+        self.clip = g["file"]
+        self.cornice = Image.new("RGBA", (LARGO, ALTO), (0, 0, 0, 0))
+        if self.buco:
+            x, y, w, h = self.buco
+            om = Image.new("RGBA", (LARGO, ALTO), (0, 0, 0, 0))
+            ImageDraw.Draw(om).rounded_rectangle([x + 6, y + 12, x + w + 6, y + h + 12], RAGGIO, fill=(0, 0, 0, 140))
+            self.cornice.alpha_composite(om.filter(ImageFilter.GaussianBlur(16)))
+            ImageDraw.Draw(self.cornice).rounded_rectangle([x - 5, y - 5, x + w + 5, y + h + 5], RAGGIO + 5,
+                                                           fill=self.acc + (255,))
+            buco = Image.new("L", (LARGO, ALTO), 255)
+            ImageDraw.Draw(buco).rounded_rectangle([x, y, x + w, y + h], RAGGIO, fill=0)
+            self.cornice.putalpha(Image.fromarray(np.minimum(np.array(self.cornice.getchannel("A")), np.array(buco))))
+
+    def __call__(self, t):
+        return self.cornice
+
+    def maschera(self, dest):
+        """Angoli arrotondati per la persona: bianco dentro, nero fuori (la usa ffmpeg con alphamerge)."""
+        x, y, w, h = self.buco
+        m = Image.new("L", (w, h), 0)
+        ImageDraw.Draw(m).rounded_rectangle([0, 0, w - 1, h - 1], RAGGIO, fill=255)
+        m.save(dest)
+
+
+TIPI = {"riquadro": Riquadro, "numeri": Numeri, "clip": Clip}
 
 
 def grafica(g, acc):
