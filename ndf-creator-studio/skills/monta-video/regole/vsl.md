@@ -75,7 +75,7 @@ Se è lenta:
 - nei tratti piatti più clip o grafiche: mai più di circa 15-20 secondi di fila senza una clip, una scritta o una
   grafica (invece di 30-40). Le clip mostrano quello che dice in quel momento (cibo su "alimentazione",
   allenamento in casa su "movimenti da fare a casa");
-- musica un po' più presente: 15 dB sotto la voce invece di 17 (la base è sempre energica, vedi sotto).
+- la musica resta bassa come sempre (la base è energica, vedi sotto): l'energia non si ottiene alzandola.
 L'energia della voce NON si tocca: niente filtri, equalizzatori o compressori per "ravvivarla". Se il tono è piatto,
 la spinta la danno il montaggio e la musica.
 
@@ -88,14 +88,21 @@ Vengono dalle misure e dal mestiere, non da regole di altri programmi.
 - Voce finale intorno a -16 LUFS integrati, picco vero sotto -1 dBTP, loudnorm in due passate.
 - Musica sotto: per la VSL si scelgono SOLO basi energiche, da VSL che vende: sicure, positive, con un battito
   chiaro. Mai brani lenti o da rilassamento (Michael sulla prova con "rilassante country": "molto da insonnia").
-  Stanno in DATI/musica/vsl, gratuite con licenza per video commerciali (Mixkit), mai canzoni commerciali; i brani
+  Stanno in DATI/musica/vsl, gratuite con licenza per video commerciali online, mai canzoni commerciali; i brani
   "rilassante" della libreria dei reel non si usano nelle VSL. Se la cartella è vuota, niente musica (lo studio lo
   dice). Non fidarsi di una misura automatica dei battiti: è stata provata e ha scelto proprio il brano moscio.
   Michael sceglie ascoltando: 2-3 spezzoni di 15-20 secondi in Download con un nome chiaro, mai decidere al buio.
-  Molto sotto la voce (17 dB, misurate tutte e due): si sente ma non copre, e quando la voce parla scende ancora.
+  Livello (Michael: "non farla sentire troppo alta"): 20 dB sotto la voce nelle pause e circa 30 dB sotto mentre
+  la voce parla (ducking che non dipende dal volume del girato). Si deve sentire appena, la voce sempre davanti.
+- Licenza Mixkit (letta il 22/11/2026, "Stock Music Free License" e User Terms): i brani si possono usare nei video
+  commerciali online (VSL, pubblicità, YouTube, social) senza citare l'autore; non in TV/radio, CD/DVD, videogiochi,
+  né remixati in un brano solo musica. NON si possono distribuire dentro lo studio: le User Terms vietano di rendere
+  i brani disponibili a terzi, anche raccolti in una libreria. Quindi ogni cliente scarica la sua base da Mixkit
+  (lo studio gli dà il link della pagina del brano, lui clicca "Download" e la trascina nella cartella dei
+  materiali o in DATI/musica/vsl): così la licenza è sua.
   Cambio di brano solo a un cambio di argomento, all'inizio di una frase:
   `"musica": [{"da": 0, "file": "base-a.mp3"}, {"da": 35.35, "file": "base-b.mp3"}]` (file di DATI/musica/vsl)
-  (un brano solo: `"musica": "file.mp3"`; niente musica: `false`; `"musica_sotto"` per cambiare i 17 dB).
+  (un brano solo: `"musica": "file.mp3"`; niente musica: `false`; `"musica_sotto"` per cambiare i 20 dB).
 - Suoni pochi, solo sulle grafiche: i numeri che compaiono, il contatore, il pulsante finale. Niente whoosh
   sulle clip e sui lampi. `"suono": false` in una grafica lo toglie, `"suono": "file.wav"` lo cambia.
 

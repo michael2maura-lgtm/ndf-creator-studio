@@ -194,9 +194,9 @@ def finale_codec():
 
 def volume_web(entrata, uscita):
     """Volume finale come nei reel: loudnorm in due passate (prima misura, poi regola), -16 LUFS e picco vero sotto
-    -1 dBTP. Si punta a -1,5 dBTP perché la compressione AAC alza un filo i picchi."""
+    -1 dBTP. Si punta a -2 dBTP perché la compressione AAC alza i picchi (con -1,5 si arrivava a -1,0)."""
     import subprocess
-    obiettivo = f"I={OBIETTIVO_LUFS}:TP={PICCO_DB - 0.5}:LRA=11"
+    obiettivo = f"I={OBIETTIVO_LUFS}:TP={PICCO_DB - 1.0}:LRA=11"
     err = subprocess.run([FFMPEG, "-i", entrata, "-af", f"loudnorm={obiettivo}:print_format=json", "-f", "null", "-"],
                          capture_output=True, text=True).stderr
     m = json.loads(re.search(r"\{[^{}]*\}", err[err.rfind("Parsed_loudnorm"):], re.S).group(0))
@@ -237,7 +237,10 @@ def foglio(fotogrammi, didascalie, dest, colonne=3):
 
 
 # ------------------------------------------------------------------ audio
-MUSICA_SOTTO = 17   # dB sotto la voce (misurate tutte e due); quando la voce parla scende ancora di ~7 dB (ducking)
+DUCKING = "threshold=0.015:ratio=2.5:attack=25:release=500:makeup=1"
+# dB sotto la voce (misurate tutte e due): si deve sentire appena, la voce sempre chiara davanti (Michael: "non farla
+# sentire troppo alta"). Quando la voce parla scende ancora di circa 8 dB (ducking), nelle pause risale piano.
+MUSICA_SOTTO = 20
 
 
 def massimo(src):
@@ -295,9 +298,12 @@ def audio(cart, video, piano, grafiche, dur):
     (il volume finale lo fa il render). Ritorna il percorso e cosa c'è dentro."""
     voce = lufs(video)
     ingressi = ["-i", video]
-    filtri = ["[0:a]aresample=48000,aformat=channel_layouts=stereo,asplit[a0][sc]"]
+    # la voce che comanda l'abbassamento della musica si porta sempre a -20 LUFS: così il ducking funziona uguale
+    # con un girato forte o piano (il tagliato non è ancora regolato di volume)
+    filtri = ["[0:a]aresample=48000,aformat=channel_layouts=stereo,asplit[a0][sc0]",
+              f"[sc0]volume={-20 - voce:.2f}dB[sc]"]
     nomi, detto = ["[a0]"], []
-    sotto = piano.get("musica_sotto", MUSICA_SOTTO - (2 if lenta(cart) else 0))   # persona lenta: musica più presente
+    sotto = piano.get("musica_sotto", MUSICA_SOTTO)
     lista = brani(piano, dur, cart)
     misure = {}
     parti = []
@@ -317,8 +323,8 @@ def audio(cart, video, piano, grafiche, dur):
         parti.append(f"[m{i}]")
     if parti:
         filtri.append("".join(parti) + f"amix=inputs={len(parti)}:normalize=0:duration=longest[mt]")
-        # ducking: quando la voce parla la musica scende di circa 7 dB, nelle pause risale piano
-        filtri.append("[mt][sc]sidechaincompress=threshold=0.02:ratio=2.5:attack=30:release=450:makeup=1[m]")
+        # ducking: quando la voce parla la musica scende di circa 8 dB, nelle pause risale piano
+        filtri.append(f"[mt][sc]sidechaincompress={DUCKING}[m]")
         nomi.append("[m]")
         detto.append(", ".join(f"{os.path.basename(f)} da {da:.1f} s" for da, _, f in lista)
                      + f" ({sotto} dB sotto la voce, più giù quando parla)")
