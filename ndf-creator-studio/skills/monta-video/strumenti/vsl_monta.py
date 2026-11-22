@@ -100,7 +100,10 @@ def prepara_grafiche(cart, piano, acc):
     cart_g = os.path.join(cart, "grafiche")
     os.makedirs(cart_g, exist_ok=True)
     out = []
-    for g in sorted(piano.get("grafiche", []), key=lambda g: g["da"]):
+    # livelli: le clip sotto, poi scritte e contatore, poi la barra dei passaggi (resta in vista sopra le clip),
+    # sopra tutto le grafiche a schermo pieno e il lampo
+    livello = {"clip": 0, "riquadro": 1, "contatore": 1, "barra": 2}
+    for g in sorted(piano.get("grafiche", []), key=lambda g: (livello.get(g["tipo"], 3), g["da"])):
         chiave = hashlib.md5((json.dumps(g, sort_keys=True) + acc + vg.FPS_TESTO
                               + str(os.path.getmtime(vg.__file__))).encode()).hexdigest()[:10]
         dest = os.path.join(cart_g, f"{g['tipo']}-{chiave}.mov")
@@ -250,13 +253,41 @@ def trova_brano(nome):
     sys.exit(f"Non trovo la musica {nome} (DATI/musica)")
 
 
-def brani(piano, dur):
+def battiti(f):
+    """Quanto è ritmato un brano: battiti al minuto stimati dai colpi del suono (primo minuto e mezzo)."""
+    import subprocess
+    import numpy as np
+    raw = subprocess.run([FFMPEG, "-v", "error", "-t", "90", "-i", f, "-ac", "1", "-ar", "22050", "-f", "f32le", "-"],
+                         capture_output=True).stdout
+    a = np.frombuffer(raw, np.float32)
+    n, h = 1024, 512
+    if len(a) < 22050 * 8:
+        return 0.0
+    fr = np.lib.stride_tricks.sliding_window_view(a, n)[::h] * np.hanning(n)
+    flusso = np.maximum(np.diff(np.abs(np.fft.rfft(fr, axis=1)), axis=0), 0).sum(1)
+    flusso = (flusso - flusso.mean()) / (flusso.std() + 1e-9)
+    m = min(len(flusso), 4000)
+    ac = np.correlate(flusso[:m], flusso[:m], "full")[m - 1:]
+    fps = 22050 / h
+    lo, hi = int(fps * 60 / 180), int(fps * 60 / 60)
+    return 60 * fps / (int(np.argmax(ac[lo:hi])) + lo)
+
+
+def lenta(cart):
+    try:
+        return bool(leggi(os.path.join(cart, "ritmo.json")).get("lenta"))
+    except (OSError, ValueError):
+        return False
+
+
+def brani(piano, dur, cart=None):
     """La musica sotto la VSL, come [(da, a, file)]. In vsl.json:
        "musica": false                         niente musica
        "musica": "brano.mp3"                   un brano per tutta la VSL (DATI/musica)
        "musica": [{"da": 0, "file": "a.mp3"}, {"da": 35.3, "file": "b.mp3"}]
                                                cambio di brano SOLO a un cambio di argomento, all'inizio di una frase
-    Se manca: rilassante-natura.mp3 della libreria dello studio, se no il primo brano di DATI/musica, se no la base del kit.
+    Se manca: un brano della libreria dello studio (DATI/musica): se la persona parla lenta (ritmo.json di vsl_taglia.py)
+    il più ritmato, se no rilassante-natura.mp3; se la libreria è vuota, la base del kit.
     Solo musica gratuita della libreria dello studio: mai canzoni commerciali."""
     scelta = piano.get("musica", True)
     if scelta is False:
@@ -266,10 +297,14 @@ def brani(piano, dur):
         return [(m["da"], pezzi[i + 1]["da"] if i + 1 < len(pezzi) else dur, trova_brano(m["file"])) for i, m in enumerate(pezzi)]
     if isinstance(scelta, str):
         return [(0.0, dur, trova_brano(scelta))]
-    cart = os.path.join(DATI, "musica")
-    candidati = [os.path.join(cart, "rilassante-natura.mp3")]
-    if os.path.isdir(cart):
-        candidati += [os.path.join(cart, f) for f in sorted(os.listdir(cart)) if f.lower().endswith((".mp3", ".wav", ".m4a"))]
+    libreria = os.path.join(DATI, "musica")
+    tutti = [os.path.join(libreria, f) for f in sorted(os.listdir(libreria)) if f.lower().endswith((".mp3", ".wav", ".m4a"))] \
+        if os.path.isdir(libreria) else []
+    if cart and lenta(cart) and tutti:   # persona lenta: musica con più energia
+        tutti = sorted(tutti, key=battiti, reverse=True)
+        candidati = tutti
+    else:
+        candidati = [os.path.join(libreria, "rilassante-natura.mp3")] + tutti
     candidati.append(os.path.join(STUDIO, "suoni", "kit", "musica-base.wav"))
     c = next((c for c in candidati if os.path.isfile(c)), None)
     return [(0.0, dur, c)] if c else []
@@ -282,8 +317,8 @@ def audio(cart, video, piano, grafiche, dur):
     ingressi = ["-i", video]
     filtri = ["[0:a]aresample=48000,aformat=channel_layouts=stereo,asplit[a0][sc]"]
     nomi, detto = ["[a0]"], []
-    sotto = piano.get("musica_sotto", MUSICA_SOTTO)
-    lista = brani(piano, dur)
+    sotto = piano.get("musica_sotto", MUSICA_SOTTO - (2 if lenta(cart) else 0))   # persona lenta: musica più presente
+    lista = brani(piano, dur, cart)
     misure = {}
     parti = []
     for i, (da, a, f) in enumerate(lista):

@@ -97,13 +97,38 @@ def faccia_in(campioni, da, a, tutta):
     return mediana([c["x"] for c in dentro]), mediana([c["y"] for c in dentro])
 
 
-def zoom_dei_pezzi(tagli, campioni):
+# ritmo: misurato sulla trascrizione delle riprese scelte. Una persona lenta (poche parole al minuto o pause lunghe)
+# rende la VSL "moscia": lo studio la rende più dinamica da solo, senza toccare la voce.
+LENTA_PAROLE, LENTA_PAUSA = 165, 0.5   # sotto 165 parole al minuto o pause medie sopra mezzo secondo
+OBIETTIVO_PAROLE = 168                 # velocità che si cerca di raggiungere, al massimo +8% (i reel arrivano a +12%)
+
+
+def ritmo(cart):
+    """Parole al minuto e pausa media tra le frasi, nelle riprese scelte da Claude (tagli-scelti.json)."""
+    scelti = leggi(os.path.join(cart, "tagli-scelti.json" if os.path.exists(os.path.join(cart, "tagli-scelti.json"))
+                                else "tagli.json"))
+    parole = [w for fr in leggi(os.path.join(cart, "parole_grezze.json")) for w in fr["parole"]
+              if any(t["da"] - 0.05 <= (w["da"] + w["a"]) / 2 <= t["a"] + 0.05 for t in scelti)]
+    if len(parole) < 20:
+        return {"parole_minuto": 0, "pausa_media": 0, "lenta": False, "velocita": 1.0, "zoom_ogni": ZOOM_OGNI}
+    spazi = [b["da"] - a["a"] for a, b in zip(parole, parole[1:]) if 0 < b["da"] - a["a"] < 1.5]
+    parlato = sum(w["a"] - w["da"] for w in parole) + sum(spazi)
+    pm = len(parole) / parlato * 60
+    pause = [x for x in spazi if x > 0.15]
+    pausa = sum(pause) / len(pause) if pause else 0
+    lenta = pm < LENTA_PAROLE or pausa > LENTA_PAUSA
+    vel = round(min(max(OBIETTIVO_PAROLE / pm, 1.05), 1.08), 2) if lenta else 1.0
+    return {"parole_minuto": round(pm), "pausa_media": round(pausa, 2), "lenta": lenta, "velocita": vel,
+            "zoom_ogni": 1.8 if lenta else ZOOM_OGNI}
+
+
+def zoom_dei_pezzi(tagli, campioni, ogni=ZOOM_OGNI):
     """Uno zoom per pezzo: cambia solo su un taglio (lì il salto si nasconde), al massimo ogni ZOOM_OGNI secondi.
     Anche dentro una frase lunga: ogni pausa tolta da stringi.py è un taglio."""
     tutta = campioni or [{"x": LARGO / 2, "y": ALTO * 0.4, "h": ALTO / 3}]
     k, ultimo, t_cut, z = 0, -99.0, 0.0, ZOOM[0]
     for t in tagli:
-        if t_cut - ultimo >= ZOOM_OGNI:
+        if t_cut - ultimo >= ogni:
             z, k, ultimo = ZOOM[k % len(ZOOM)], k + 1, t_cut
         cx, cy = faccia_in(campioni, t["da"], t["a"], tutta)
         t["_zoom"] = (z, cx, cy)
@@ -140,9 +165,10 @@ def blocco_video(video, pezzi, colore, dest):
 def parole_sul_taglio(cart, segmenti):
     """Le parole della trascrizione dell'originale, portate sui tempi del taglio (solo quelle tenute)."""
     grezze = leggi(os.path.join(cart, "parole_grezze.json"))
-    out = []
+    out, prec = [], None
     for fr in grezze:
         for w in fr["parole"]:
+            prima, prec = prec, w   # la parola grezza di prima (anche se è stata tolta)
             # Whisper mette spesso l'inizio delle parole un po' prima della voce vera: si tiene la parola se tocca un
             # pezzo tenuto (il pezzo con più sovrapposizione), non solo se il suo centro ci cade dentro
             def sopra(s):
@@ -150,13 +176,17 @@ def parole_sul_taglio(cart, segmenti):
             s = max(segmenti, key=sopra)
             if sopra(s) < 0.03 or not w["testo"]:
                 continue
-            da = s["inizio"] + max(w["da"], s["da_originale"]) - s["da_originale"]
-            a = s["inizio"] + min(w["a"], s["a_originale"]) - s["da_originale"]
-            if out and w["testo"].startswith("'"):
+            v = s.get("velocita", 1.0)
+            da = s["inizio"] + (max(w["da"], s["da_originale"]) - s["da_originale"]) / v
+            a = s["inizio"] + (min(w["a"], s["a_originale"]) - s["da_originale"]) / v
+            if w["testo"].startswith("'") and (not out or out[-1]["_grezza"] is not prima):
+                w = dict(w, testo=(prima["testo"] if prima else "") + w["testo"])   # "l" + "'acqua": la "l" era fuori
+            elif out and w["testo"].startswith("'"):
                 out[-1]["testo"] += w["testo"]
                 out[-1]["a"] = round(a, 2)
                 continue
-            out.append({"testo": w["testo"], "da": round(da, 2), "a": round(max(a, da + 0.05), 2), "_pezzo": s["id"]})
+            out.append({"testo": w["testo"], "da": round(da, 2), "a": round(max(a, da + 0.05), 2), "_pezzo": s["id"],
+                        "_grezza": w})
     # fine di una frase scelta da Claude (pezzo diverso in tagli-scelti.json): se manca, ci va il punto, così i
     # sottotitoli vanno a capo lì e non uniscono due riprese diverse
     def base(i):
@@ -165,7 +195,7 @@ def parole_sul_taglio(cart, segmenti):
         if k + 1 < len(out) and base(out[k + 1]["_pezzo"]) != base(w["_pezzo"]) and w["testo"][-1:].isalnum():
             w["testo"] += "."
     for w in out:
-        del w["_pezzo"]
+        del w["_pezzo"], w["_grezza"]
     return out
 
 
@@ -205,6 +235,15 @@ def main():
             sys.exit(f"Tempi sbagliati nel pezzo '{t['id']}': {t['da']} → {t['a']}")
     tagli = [t for t in tagli if t["a"] - t["da"] >= 1 / FPS]
 
+    r = ritmo(cart)
+    if "--velocita" in sys.argv:   # per forzarla (1 = com'è girata)
+        r["velocita"] = float(sys.argv[sys.argv.index("--velocita") + 1])
+    vel = r["velocita"]
+    scrivi(os.path.join(cart, "ritmo.json"), r)
+    print(f"Ritmo: {r['parole_minuto']} parole al minuto, pause di {r['pausa_media']} s"
+          + (f" → lenta: velocità +{round((vel - 1) * 100)}%, zoom più spessi, più clip e grafiche nei tratti piatti, "
+             "musica con più energia" if r["lenta"] else " → va bene così"))
+
     hdr = e_hdr(video)
     colore = f",{COLORE_HDR}" if hdr else ""
     if hdr:
@@ -216,7 +255,7 @@ def main():
         for t in tagli:
             t["_zoom"] = (1.0, 0, 0)
     else:
-        zoom_dei_pezzi(tagli, campioni)
+        zoom_dei_pezzi(tagli, campioni, r["zoom_ogni"])
 
     # --- video a blocchi ---
     blocchi, cur = [], []
@@ -257,12 +296,13 @@ def main():
         filtri.append(f"[{ingresso}]atrim={t['da']}:{t['a']},asetpts=PTS-STARTPTS,{scelte.get(scelta, scelta)},"
                       f"aresample=48000,aformat=sample_fmts=s16:channel_layouts=mono,"
                       f"afade=t=in:d={DISSOLVENZA},afade=t=out:st={max(d - DISSOLVENZA, 0):.3f}:d={DISSOLVENZA}[a{i}]")
-        segmenti.append({"id": t["id"], "inizio": round(inizio, 3), "fotogramma": round(inizio * FPS),
-                         "durata": round(d, 3), "da_originale": t["da"], "a_originale": t["a"],
-                         "zoom": t["_zoom"][0]})
+        segmenti.append({"id": t["id"], "inizio": round(inizio / vel, 3), "fotogramma": round(inizio / vel * FPS),
+                         "durata": round(d / vel, 3), "da_originale": t["da"], "a_originale": t["a"],
+                         "zoom": t["_zoom"][0], "velocita": vel})
         inizio += d
     n = len(tagli)
-    filtri.append("".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1,aformat=channel_layouts=stereo[a]")
+    filtri.append("".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1,aformat=channel_layouts=stereo"
+                  + (f",atempo={vel}" if vel != 1 else "") + "[a]")   # più veloce senza cambiare il tono della voce
     graf = os.path.join(tmp, "audio.txt")
     with open(graf, "w") as f:
         f.write(";".join(filtri))
@@ -271,6 +311,11 @@ def main():
             "-map", "[a]", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", solo_audio])
 
     dest = os.path.join(cart, "tagliato.mp4")
+    if vel != 1:   # il video va alla stessa velocità della voce, con gli stessi fotogrammi al secondo
+        veloce = os.path.join(tmp, "video-veloce.mp4")
+        esegui([FFMPEG, "-v", "error", "-y", "-i", solo_video, "-vf", f"setpts=PTS/{vel}", "-r", FPS_TESTO, "-an",
+                *codec_video(), veloce])
+        solo_video = veloce
     esegui([FFMPEG, "-v", "error", "-y", "-i", solo_video, "-i", solo_audio, "-map", "0:v", "-map", "1:a", "-c", "copy",
             *(["-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"] if hdr else []),
             "-movflags", "+faststart", dest])
@@ -286,7 +331,7 @@ def main():
     parole = parole_sul_taglio(cart, segmenti)
     scrivi(os.path.join(cart, "parole.json"), parole)
     scrivi_testo(cart, parole)
-    print(f"Fatto: {sorgente['durata']:.1f} s → {inizio:.1f} s (video {dv:.2f} s, audio {da:.2f} s), "
+    print(f"Fatto: {sorgente['durata']:.1f} s → {inizio / vel:.1f} s (video {dv:.2f} s, audio {da:.2f} s), "
           f"{len(parole)} parole. Leggi {os.path.join(cart, 'testo.txt')}")
 
 

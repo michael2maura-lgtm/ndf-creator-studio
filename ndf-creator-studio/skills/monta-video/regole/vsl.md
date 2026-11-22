@@ -61,6 +61,25 @@ momenti decisivi (con la persona in un riquadro piccolo a destra). Durata tipica
    (`finale/<nome>-vN.mp4`, 8 Mbit/s). Per 15 minuti: circa 8-9 minuti di attesa. Alla fine stampa volume e picco
    vero: devono stare intorno a -16 LUFS e sotto -1 dBTP.
 
+## Ritmo: se la persona è lenta, la VSL si fa più dinamica da sola
+
+Lo decide lo studio, il cliente non deve chiederlo. `vsl_taglia.py` misura sulla trascrizione delle riprese scelte
+le parole al minuto e la pausa media tra le frasi, e scrive `ritmo.json`. È "lenta" sotto 165 parole al minuto o
+con pause medie sopra 0,5 s (la personal trainer della prova: 158 parole al minuto, pause di 0,41 s).
+Se è lenta:
+- velocità +5-8% (quanto basta per arrivare a circa 168 parole al minuto, mai oltre l'8%: i reel arrivano al 12%,
+  in una VSL la voce deve restare naturale). Voce e video insieme, il tono della voce non cambia. `--velocita 1`
+  per lasciarla com'è;
+- pause tra le frasi corte (stringi.py, già di serie: dopo il taglio restano circa 0,2 s);
+- zoom sulla faccia più spessi (al massimo ogni 1,8 s invece di 2,5);
+- nei tratti piatti più clip o grafiche: mai più di circa 15-20 secondi di fila senza una clip, una scritta o una
+  grafica (invece di 30-40). Le clip mostrano quello che dice in quel momento (cibo su "alimentazione",
+  allenamento in casa su "movimenti da fare a casa");
+- musica con più energia: lo studio prende da solo il brano più ritmato della libreria (lo misura) e lo tiene
+  2 dB più presente (15 dB sotto la voce invece di 17).
+L'energia della voce NON si tocca: niente filtri, equalizzatori o compressori per "ravvivarla". Se il tono è piatto,
+la spinta la danno il montaggio e la musica.
+
 ## Misure e audio
 
 Decise con Michael e misurate sulle sue VSL di riferimento ("VSL Michael DEF" -16,5 LUFS, "fatto da me"
