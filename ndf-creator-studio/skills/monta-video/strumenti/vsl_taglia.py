@@ -34,8 +34,9 @@ from taglia import COLORE_HDR, DISSOLVENZA, VOCE, VOCE_FORTE, VOCE_LEGGERA, VOCE
 
 LARGO, ALTO, FPS = 1920, 1080, 30
 BLOCCO = 40.0              # secondi di video per blocco
-ZOOM = [1.0, 1.07, 1.0, 1.13]   # leggeri: una VSL dura minuti, non deve "ballare"
-ZOOM_OGNI = 6.0            # secondi minimi tra due cambi di zoom
+# a ogni stacco l'inquadratura si stringe o si allarga (è il ritmo delle VSL che funzionano), ma leggera
+ZOOM = [1.0, 1.08, 1.0, 1.14, 1.04, 1.1]
+ZOOM_OGNI = 2.5            # secondi minimi tra due cambi di zoom
 QUADRO = f"scale={LARGO}:{ALTO}:force_original_aspect_ratio=increase:flags=lanczos,crop={LARGO}:{ALTO},setsar=1"
 
 

@@ -13,7 +13,8 @@ Come si monta (pensato per 10-15 minuti): il video tagliato passa una volta sola
 piccoli video trasparenti appoggiati solo nei loro secondi; nelle grafiche a schermo pieno la persona va nel riquadro
 piccolo; i sottotitoli li disegna ffmpeg (libass), parola per parola, e spariscono sotto le grafiche a schermo pieno.
 Audio: voce, musica bassa sotto per tutta la VSL ("musica" in vsl.json, false = niente; "musica_sotto": dB sotto la
-voce) e un suono quando compare ogni numero ("suono_numeri": un file, false = niente).
+voce) e i suoni dei passaggi decisi da ogni grafica (whoosh su clip, lampi e chiusura, pop sui numeri;
+"suono": false nella grafica li toglie, "suono": "file.wav" li cambia).
 Volume: -14 LUFS, picchi sotto -2 dB (come i reel: va bene per YouTube, Facebook e le pagine web).
 """
 import hashlib
@@ -67,7 +68,7 @@ def gruppi(parole, max_car=30, max_parole=6):
     return out
 
 
-def sottotitoli(parole, coperti, acc, dest):
+def sottotitoli(parole, coperti, acc, dest, barre=()):
     """File .ass: una riga in basso, la parola detta in quel momento nel colore del brand."""
     luce = "#%02X%02X%02X" % vg.luce(vg.rgb(acc))   # schiarito: sul video si legge meglio
     libere = [w for w in parole if not any(da - 0.1 < (w["da"] + w["a"]) / 2 < a + 0.1 for da, a in coperti)]
@@ -79,7 +80,8 @@ def sottotitoli(parole, coperti, acc, dest):
             fine = g[i + 1]["da"] if i + 1 < len(g) else min(w["a"] + 0.25, dopo)
             testo = " ".join((f"{{\\c{_colore_ass(luce)}&}}{x['testo']}{{\\c&H00FFFFFF&}}" if j == i else x["testo"])
                              for j, x in enumerate(g))
-            righe.append(f"Dialogue: 0,{_tempo_ass(w['da'])},{_tempo_ass(fine)},Sotto,,0,0,0,,{testo}")
+            su = any(da - 0.5 < w["da"] < a + 0.5 for da, a in barre)   # con la barra dei passaggi: più su
+            righe.append(f"Dialogue: 0,{_tempo_ass(w['da'])},{_tempo_ass(fine)},Sotto,,0,0,{150 if su else 0},,{testo}")
     with open(dest, "w", encoding="utf-8") as f:
         f.write("[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\nWrapStyle: 2\n\n"
                 "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, "
@@ -101,7 +103,9 @@ def prepara_grafiche(cart, piano, acc):
         chiave = hashlib.md5((json.dumps(g, sort_keys=True) + acc + str(os.path.getmtime(vg.__file__))).encode()).hexdigest()[:10]
         dest = os.path.join(cart_g, f"{g['tipo']}-{chiave}.mov")
         disegno = vg.grafica(g, acc) if os.path.exists(dest) else vg.crea(g, acc, dest)
-        x = {"g": g, "file": dest, "buco": disegno.buco, "copre": disegno.copre}
+        x = {"g": g, "file": dest, "buco": disegno.buco, "copre": disegno.copre, "area": disegno.area,
+             "suoni": [] if g.get("suono") is False else
+                      [(t, g["suono"] if isinstance(g.get("suono"), str) else f) for t, f in disegno.suoni(g)]}
         if g["tipo"] == "clip":
             x["clip"] = g["file"] if os.path.isabs(g["file"]) else os.path.join(DATI, "clip", g["file"])
             if not os.path.exists(x["clip"]):
@@ -115,8 +119,10 @@ def prepara_grafiche(cart, piano, acc):
 
 def taglio_persona(faccia, w, h):
     """Dove prendere la persona per il riquadro piccolo: la faccia in alto, spalle sotto, proporzioni del riquadro."""
-    alto = min(1080, max(540, faccia["h"] * 3.4))
+    alto = min(1080, max(540, faccia["h"] * (3.4 if w <= h else 4.2)))
     largo = alto * w / h
+    if largo > 1920:   # riquadro largo (la chiusura): si prende quasi tutta l'inquadratura
+        largo, alto = 1920, 1920 * h / w
     x = min(max(faccia["x"] - largo / 2, 0), 1920 - largo)
     y = min(max(faccia["y"] - alto * 0.36, 0), 1080 - alto)
     return f"crop={largo:.0f}:{alto:.0f}:{x:.0f}:{y:.0f},scale={w}:{h}:flags=lanczos,setsar=1"
@@ -165,7 +171,7 @@ def grafo(grafiche, faccia, subs):
             j += 1
         k = entra("-i", x["file"])
         filtri.append(f"[{k}:v]setpts=PTS+{g['da']:.3f}/TB[g{i}]")
-        sopra(f"g{i}")
+        sopra(f"g{i}", x["area"][0], x["area"][1])
     fonts = os.path.join(STUDIO, "font").replace("\\", "/").replace(":", "\\:")
     if subs:
         s = subs.replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
@@ -240,17 +246,24 @@ def audio(cart, video, piano, grafiche, dur):
                       f"volume={vol:.2f}dB,afade=t=in:d=1.5,afade=t=out:st={max(dur - 2.5, 0):.3f}:d=2.5[m]")
         nomi.append("[m]")
         detto.append(f"musica {os.path.basename(musica)} ({piano.get('musica_sotto', MUSICA_SOTTO)} dB sotto la voce)")
-    suono = piano.get("suono_numeri", os.path.join(STUDIO, "suoni", "kit", "pop.wav"))
-    colpi = [t for x in grafiche if x["g"]["tipo"] == "numeri" for _, t in x["g"]["voci"] if t > x["g"]["da"]]
-    if suono and colpi:
-        vol = voce + 12 - massimo(suono)   # il picco del suono sta poco sopra il volume medio della voce
-        for t in colpi:
-            k = ingressi.count("-i")
-            ingressi += ["-i", suono]
-            ms = int(t * 1000)
-            filtri.append(f"[{k}:a]aresample=48000,aformat=channel_layouts=stereo,volume={vol:.2f}dB,adelay={ms}|{ms}[s{k}]")
-            nomi.append(f"[s{k}]")
-        detto.append(f"{len(colpi)} suoni sui numeri")
+    # i suoni dei passaggi: li dà ogni grafica (whoosh sulle clip e sui lampi, pop sui numeri...)
+    colpi = sorted((t, f if os.path.isabs(f) else os.path.join(STUDIO, "suoni", "kit", f))
+                   for x in grafiche for t, f in x["suoni"])
+    picchi = {}
+    for t, f in colpi:
+        if not os.path.exists(f):
+            continue
+        if f not in picchi:
+            picchi[f] = massimo(f)
+        # il picco sta poco sopra il volume medio della voce; i whoosh un po' più bassi (sono lunghi)
+        vol = voce + (7 if "whoosh" in f or "swoosh" in f else 12) - picchi[f]
+        k = ingressi.count("-i")
+        ingressi += ["-i", f]
+        ms = int(max(t, 0) * 1000)
+        filtri.append(f"[{k}:a]aresample=48000,aformat=channel_layouts=stereo,volume={vol:.2f}dB,adelay={ms}|{ms}[s{k}]")
+        nomi.append(f"[s{k}]")
+    if colpi:
+        detto.append(f"{len(colpi)} suoni sui passaggi")
     dest = os.path.join(cart, "mix.wav")
     filtri.append("".join(nomi) + f"amix=inputs={len(nomi)}:normalize=0:duration=first[a]")
     esegui([FFMPEG, "-v", "error", "-y", *ingressi, "-filter_complex", ";".join(filtri), "-map", "[a]",
@@ -264,13 +277,16 @@ def tempi_di_controllo(grafiche, dur):
     for x in grafiche:
         g = x["g"]
         tempi += [(g["da"] + 0.15, "entra"), (g["da"] + 0.6, "dentro")]
+        for k, (t, i) in enumerate(g.get("attivo", [])):
+            if t > g["da"] + 1:
+                tempi.append((t + 0.6, f"barra: passo {i + 1}"))
         for k, (v, t) in enumerate(g.get("voci", [])):
             if t > g["da"]:   # le voci già comparse prima (stessa lista che torna) non servono
                 tempi.append((t + 0.5, f"voce {k + 1}"))
         tempi.append((g["a"] - 0.5, "prima di uscire"))
     liberi = [t for t in (dur * 0.2, dur * 0.55) if not any(x["g"]["da"] - 1 < t < x["g"]["a"] + 1 for x in grafiche)]
     tempi += [(t, "senza grafiche") for t in liberi]
-    return sorted(tempi)
+    return sorted((max(t, 0.05), c) for t, c in tempi)
 
 
 def main():
@@ -293,7 +309,8 @@ def main():
     if piano.get("sottotitoli", True):
         subs = os.path.join(cart, "sottotitoli.ass")
         sottotitoli(leggi(os.path.join(cart, "parole.json")),
-                    [(x["g"]["da"], x["g"]["a"]) for x in grafiche if x["copre"]], acc, subs)
+                    [(x["g"]["da"], x["g"]["a"]) for x in grafiche if x["copre"]], acc, subs,
+                    [(x["g"]["da"], x["g"]["a"]) for x in grafiche if x["g"]["tipo"] == "barra"])
 
     if "--anteprima" in sys.argv:
         ctrl = os.path.join(cart, "controllo")

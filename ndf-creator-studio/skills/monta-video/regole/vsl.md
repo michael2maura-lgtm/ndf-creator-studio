@@ -3,6 +3,13 @@
 Quando il cliente scrive "monta la mia VSL". Motore separato dai reel: `vsl_taglia.py`, `vsl_grafica.py`,
 `vsl_monta.py`. I reel verticali (taglia.py, costruisci.py, grafica.py) non si toccano.
 
+Modo di lavorare preso dalla VSL di riferimento (solo il modo, mai il suo aspetto: colori e font del cliente):
+- **Gancio (primo minuto) movimentato**: lampo di apertura, clip che cambiano ogni 2-4 secondi su quello che dice,
+  una grafica sopra di lei sul numero forte, clip sul risultato sognato. Circa metà clip/grafiche, metà lei.
+- **Dopo il gancio** la persona quasi sempre in video; il ritmo lo danno gli stacchi con lo zoom a ogni taglio.
+- Grafiche solo nei momenti decisivi: metodo, passaggi, numeri. Barra dei passaggi in basso per tutto il capitolo.
+- Chiusura con la sua frase ("clicca il pulsante qui sotto") in un riquadro bianco, lei nella cornice al centro.
+
 Com'è la versione semplice: la persona quasi sempre in video, sottotitoli in basso parola per parola, zoom leggeri
 sulla faccia ai tagli, scritte in un riquadro sopra la persona sulle frasi chiave, grafiche a schermo pieno solo nei
 momenti decisivi (con la persona in un riquadro piccolo a destra). Durata tipica: 10, al massimo 15 minuti.
@@ -16,12 +23,21 @@ momenti decisivi (con la persona in un riquadro piccolo a destra). Durata tipica
 3. `PY strumenti/vsl_taglia.py <nome>` — taglio, pause tolte, voce pulita (DeepFilterNet), zoom, parole sui tempi del
    taglio. Scrive `testo.txt`. Correggi a mano in `parole.json` le parole sentite male (nomi, numeri).
 4. Leggi `testo.txt` e scrivi `vsl.json` con le grafiche (tempi in secondi del video tagliato):
+   - `lampo`: 0,4 s di luce del brand all'apertura (o a un cambio di capitolo), con whoosh.
    - `riquadro`: 2-5 parole che riassumono la frase chiave, `*parola*` nel colore del brand. 3-4 secondi.
      Sulle promesse, sui numeri, sul nome del metodo. Una ogni 20-40 secondi al massimo: non su ogni frase.
+     `"stile"`: "scuro" (di serie), "chiaro" (bianco, testo scuro), "forte" (nel colore del brand, per la parola più forte).
+   - `contatore`: il numero forte che sale da 0 accanto alla persona, con la scritta che si scrive e le figure
+     che si moltiplicano (`"numero": 297, "testo": "donne aiutate"`; `"x"`, `"y"` per spostarlo dalla faccia).
+   - `frase`: una frase decisiva bianca su schermo pieno, parole che entrano una dopo l'altra (3-4 s).
+   - `barra`: `"passi": [...]`, `"attivo": [[secondo, indice], ...]`; resta per tutto il capitolo, le grafiche a
+     schermo pieno ci passano sopra. Con la barra i sottotitoli salgono da soli.
+   - `chiusura`: `"testo"` = le parole che dice la persona per la chiamata finale.
    - `clip`: sopra la persona quando dice una cosa che si può far vedere (nel gancio soprattutto), 1,5-3 s.
      Prima il materiale del cliente, poi Pexels: `PY strumenti/clip.py <numero> <nome> --orizzontale` (1920x1080,
      fino a 8 s) e GUARDA i fotogrammi prima di usarla: deve mostrare quello che si dice, niente scritte in inglese.
-     La persona resta in un riquadro piccolo in basso a destra (`"persona": false` per toglierla).
+     La persona resta in un riquadro piccolo in basso a destra (`"persona": false` per toglierla); `"nome"` mette
+     l'etichetta in basso a sinistra (chi parla in una testimonianza). Whoosh a ogni clip.
    - `numeri`: quando la persona elenca dei passi o dei punti. Le etichette sono le parole che dice lei nel video
      (da testo.txt), mai inventate né prese da altri video. Il riquadro della persona si adatta da solo (grande fino
      a 3 numeri, poi più piccolo); `"persona": "grande" / "media" / "piccola" / false` per sceglierlo. Una grafica per ogni passo detto, breve (4-6 s),
@@ -41,7 +57,8 @@ Pochi token: niente render di prova del video intero. Si controlla sui fotogramm
 
 ## Cosa manca (prossime sessioni)
 
-- barra dei passaggi in basso con il passaggio attivo acceso
-- "clicca il link qui sotto" alla fine
+- momenti in bianco e nero e lampi caldi a metà video
+- nuvoletta col dubbio del cliente sotto la sua foto tonda
+- icone semplici che si costruiscono (folla che cresce, freccia "da ... a ...", piramide)
 - materiali del cliente (testimonianze, chat, foto, numeri) a schermo
 - la frase "monta la mia VSL" in SKILL.md
