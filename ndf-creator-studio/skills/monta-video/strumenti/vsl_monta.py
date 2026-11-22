@@ -5,6 +5,8 @@ Uso:  PY strumenti/vsl_monta.py <nome-lavoro> --anteprima [--tempi 12.5,40,61.2]
           senza creare il video: si guarda il foglio, si corregge vsl.json, si riprova (secondi, non minuti)
       PY strumenti/vsl_monta.py <nome-lavoro>
           crea il video finito: finale/<nome>-vN.mp4 (ogni versione resta)
+      PY strumenti/vsl_monta.py <nome-lavoro> --solo-audio
+          cambiata solo musica o suoni: rifà solo l'audio sopra l'ultima versione (secondi, non minuti)
 
 Legge dal lavoro: tagliato.mp4, parole.json, faccia.json (da vsl_taglia.py) e vsl.json (lo scrive Claude):
   {"grafiche": [...vedi vsl_grafica.py...], "sottotitoli": true}
@@ -237,10 +239,11 @@ def foglio(fotogrammi, didascalie, dest, colonne=3):
 
 
 # ------------------------------------------------------------------ audio
-DUCKING = "threshold=0.015:ratio=2.5:attack=25:release=500:makeup=1"
-# dB sotto la voce (misurate tutte e due): si deve sentire appena, la voce sempre chiara davanti (Michael: "non farla
-# sentire troppo alta"). Quando la voce parla scende ancora di circa 8 dB (ducking), nelle pause risale piano.
-MUSICA_SOTTO = 20
+# abbassamento morbido: entra in 80 ms, risale in 0,9 s (niente buchi), con ginocchio largo
+DUCKING = "threshold=0.015:ratio=1.5:attack=80:release=900:knee=6:makeup=1"
+# dB sotto la voce (misurate tutte e due). Michael: a 17 "troppo alta", a 20/30 "non si sente". Via di mezzo:
+# 13 dB sotto nelle pause, circa 17 mentre la voce parla. Deve sentirsi sempre che c'è, con la voce chiara davanti.
+MUSICA_SOTTO = 13
 
 
 def massimo(src):
@@ -323,7 +326,7 @@ def audio(cart, video, piano, grafiche, dur):
         parti.append(f"[m{i}]")
     if parti:
         filtri.append("".join(parti) + f"amix=inputs={len(parti)}:normalize=0:duration=longest[mt]")
-        # ducking: quando la voce parla la musica scende di circa 8 dB, nelle pause risale piano
+        # ducking: quando la voce parla la musica scende di circa 4 dB, nelle pause risale piano
         filtri.append(f"[mt][sc]sidechaincompress={DUCKING}[m]")
         nomi.append("[m]")
         detto.append(", ".join(f"{os.path.basename(f)} da {da:.1f} s" for da, _, f in lista)
@@ -422,6 +425,23 @@ def main():
 
     cart_f = os.path.join(cart, "finale")
     os.makedirs(cart_f, exist_ok=True)
+    if "--solo-audio" in sys.argv:   # cambiata solo la musica o i suoni: video uguale all'ultima versione, audio nuovo
+        prima = leggi(os.path.join(cart, "ultimo.json"))["video"]
+        v = 1
+        while os.path.exists(os.path.join(cart_f, f"{nome}-v{v}.mp4")):
+            v += 1
+        dest = os.path.join(cart_f, f"{nome}-v{v}.mp4")
+        mix, detto = audio(cart, video, piano, grafiche, dur)
+        print("Audio: voce, " + ", ".join(detto))
+        pronto = volume_web(mix, os.path.join(cart, "audio-finale.wav"))
+        esegui([FFMPEG, "-v", "error", "-y", "-i", prima, "-i", pronto, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+                "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", dest])
+        os.remove(mix)
+        os.remove(pronto)
+        scrivi(os.path.join(cart, "ultimo.json"), {"video": dest, "versione": v})
+        i, tp = misura(dest)
+        print(f"Fatto (solo audio): {dest} ({durata(dest):.1f} s, volume {i:.1f} LUFS, picco vero {tp:.1f} dBTP)")
+        return
     v = 1
     while os.path.exists(os.path.join(cart_f, f"{nome}-v{v}.mp4")):
         v += 1
