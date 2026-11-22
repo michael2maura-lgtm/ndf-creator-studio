@@ -14,7 +14,7 @@ In più, pensato per video di 10-15 minuti:
   - le parole della prima trascrizione si spostano sui tempi del taglio: niente seconda trascrizione
 
 Scrive:
-  tagliato.mp4      1920x1080, 30 fotogrammi al secondo, voce pulita (il volume lo fa vsl_monta.py)
+  tagliato.mp4      1920x1080, con i fotogrammi al secondo del girato (25 o 30), voce pulita (il volume lo fa vsl_monta.py)
   segmenti.json     dove inizia ogni pezzo nel video tagliato
   faccia.json       dove sta la faccia (in pixel del 1920x1080), per il riquadro piccolo della persona
   parole.json       ogni parola con i tempi del video tagliato (per i sottotitoli)
@@ -32,7 +32,27 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import FFMPEG, MODELLI, cartella_lavoro, codec_video, durata, esegui, leggi, scrivi  # noqa: E402
 from taglia import COLORE_HDR, DISSOLVENZA, VOCE, VOCE_FORTE, VOCE_LEGGERA, VOCE_VENTO, e_hdr  # noqa: E402
 
-LARGO, ALTO, FPS = 1920, 1080, 30
+LARGO, ALTO = 1920, 1080
+# fotogrammi al secondo: quelli del girato, mai convertiti (25 resta 25, 30 resta 30). Li fissa main().
+FPS, FPS_TESTO = 30.0, "30"
+FPS_NOTI = {24: "24", 25: "25", 29.97: "30000/1001", 30: "30", 50: "50", 59.94: "60000/1001", 60: "60"}
+
+
+def fps_sorgente(video):
+    """I fotogrammi al secondo del video: il valore standard più vicino (i telefoni a volte segnano 29.98 o 30.02)."""
+    from comune import FFPROBE
+    out = esegui([FFPROBE, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=avg_frame_rate,r_frame_rate",
+                  "-of", "csv=p=0", video]).stdout.strip().splitlines()[0]
+    valori = []
+    for x in out.split(","):
+        if "/" in x and not x.endswith("/0"):
+            a, b = x.split("/")
+            valori.append(float(a) / float(b))
+    vero = valori[-1] if valori else 30.0
+    vicino = min(FPS_NOTI, key=lambda v: abs(v - vero))
+    testo = FPS_NOTI[vicino]
+    a, _, b = testo.partition("/")
+    return float(a) / float(b or 1), testo
 BLOCCO = 40.0              # secondi di video per blocco
 # a ogni stacco l'inquadratura si stringe o si allarga (è il ritmo delle VSL che funzionano), ma leggera
 ZOOM = [1.0, 1.08, 1.0, 1.14, 1.04, 1.1]
@@ -108,12 +128,13 @@ def blocco_video(video, pezzi, colore, dest):
         z, cx, cy = p["_zoom"]
         n_fot = round((p["a"] - p["da"]) * FPS)
         ingressi += ["-ss", f"{p['da']:.4f}", "-t", f"{p['a'] - p['da'] + 0.5:.4f}", "-i", video]
-        filtri.append(f"[{i}:v]setpts=PTS-STARTPTS,fps={FPS},trim=end_frame={n_fot},{QUADRO}"
+        filtri.append(f"[{i}:v]setpts=PTS-STARTPTS,fps={FPS_TESTO},trim=end_frame={n_fot},{QUADRO}"
                       f"{filtro_zoom(z, cx, cy)},setsar=1{colore}[v{i}]")
     n = len(pezzi)
-    filtri.append("".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0,setpts=N/{FPS}/TB[v]")
+    filtri.append("".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0,setpts=N/({FPS_TESTO})/TB[v]")
+    # -r: senza, ffmpeg non sa più la velocità dopo setpts e salva a 25 buttando fotogrammi
     esegui([FFMPEG, "-v", "error", "-y", *ingressi, "-filter_complex", ";".join(filtri), "-map", "[v]", "-an",
-            *codec_video(), dest])
+            "-r", FPS_TESTO, *codec_video(), dest])
 
 
 def parole_sul_taglio(cart, segmenti):
@@ -170,6 +191,8 @@ def main():
     cart = cartella_lavoro(nome)
     sorgente = leggi(os.path.join(cart, "sorgente.json"))
     video = sorgente["video"]
+    global FPS, FPS_TESTO
+    FPS, FPS_TESTO = fps_sorgente(video)
     if "--senza-stringere" not in sys.argv:
         subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "stringi.py"), nome,
                         *[f for f in ("--respiri", "--voce-originale") if f in sys.argv]], check=True)

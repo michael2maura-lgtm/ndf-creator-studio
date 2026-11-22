@@ -15,7 +15,7 @@ piccolo; i sottotitoli li disegna ffmpeg (libass), parola per parola, e sparisco
 Audio: voce, musica bassa sotto per tutta la VSL ("musica" in vsl.json, false = niente; "musica_sotto": dB sotto la
 voce) e i suoni dei passaggi decisi da ogni grafica (whoosh su clip, lampi e chiusura, pop sui numeri;
 "suono": false nella grafica li toglie, "suono": "file.wav" li cambia).
-Volume: -14 LUFS, picchi sotto -2 dB (come i reel: va bene per YouTube, Facebook e le pagine web).
+Volume: -16 LUFS, picco vero sotto -1 dBTP, loudnorm in due passate (misurato sulle VSL di riferimento di Michael).
 """
 import hashlib
 import json
@@ -28,7 +28,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import DATI, FFMPEG, STUDIO, cartella_lavoro, codec_video, durata, esegui, leggi, scrivi  # noqa: E402
 import vsl_grafica as vg  # noqa: E402
 
-OBIETTIVO_LUFS, PICCO_DB = -14.0, -2.0
+# misurate sulle VSL di riferimento di Michael (-16,5 e -16,6 LUFS): -16 integrati, picco vero sotto -1 dBTP
+OBIETTIVO_LUFS, PICCO_DB = -16.0, -1.0
 ACCENTO = "#E86530"
 
 
@@ -100,7 +101,8 @@ def prepara_grafiche(cart, piano, acc):
     os.makedirs(cart_g, exist_ok=True)
     out = []
     for g in sorted(piano.get("grafiche", []), key=lambda g: g["da"]):
-        chiave = hashlib.md5((json.dumps(g, sort_keys=True) + acc + str(os.path.getmtime(vg.__file__))).encode()).hexdigest()[:10]
+        chiave = hashlib.md5((json.dumps(g, sort_keys=True) + acc + vg.FPS_TESTO
+                              + str(os.path.getmtime(vg.__file__))).encode()).hexdigest()[:10]
         dest = os.path.join(cart_g, f"{g['tipo']}-{chiave}.mov")
         disegno = vg.grafica(g, acc) if os.path.exists(dest) else vg.crea(g, acc, dest)
         x = {"g": g, "file": dest, "buco": disegno.buco, "copre": disegno.copre, "area": disegno.area,
@@ -153,14 +155,14 @@ def grafo(grafiche, faccia, subs):
         dur = g["a"] - g["da"]
         if "clip" in x:
             k = entra("-ss", f"{g.get('inizio', 0):.3f}", "-t", f"{dur:.3f}", "-i", x["clip"])
-            filtri.append(f"[{k}:v]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30,"
+            filtri.append(f"[{k}:v]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps={vg.FPS_TESTO},"
                           f"setsar=1,setpts=PTS-STARTPTS+{g['da']:.3f}/TB[cl{i}]")
             sopra(f"cl{i}")
         if x["buco"]:
             bx, by, bw, bh = x["buco"]
             if "clip" in x:   # sopra la clip la persona c'è per tutta la durata, con gli angoli arrotondati
                 da, a = g["da"], g["a"]
-                m = entra("-loop", "1", "-framerate", "30", "-t", f"{dur:.3f}", "-i", x["maschera"])
+                m = entra("-loop", "1", "-framerate", vg.FPS_TESTO, "-t", f"{dur:.3f}", "-i", x["maschera"])
                 filtri.append(f"[p{j}]trim=start={da:.3f}:end={a:.3f},{taglio_persona(faccia, bw, bh)},format=yuva420p[pq{j}]")
                 filtri.append(f"[{m}:v]format=gray,setpts=PTS-STARTPTS+{da:.3f}/TB[mk{j}]")
                 filtri.append(f"[pq{j}][mk{j}]alphamerge[pp{j}]")
@@ -187,6 +189,31 @@ def finale_codec():
     return [("8M" if x == "16M" else "20" if x == "18" else x) for x in c]
 
 
+def volume_web(entrata, uscita):
+    """Volume finale come nei reel: loudnorm in due passate (prima misura, poi regola), -16 LUFS e picco vero sotto
+    -1 dBTP. Si punta a -1,5 dBTP perché la compressione AAC alza un filo i picchi."""
+    import subprocess
+    obiettivo = f"I={OBIETTIVO_LUFS}:TP={PICCO_DB - 0.5}:LRA=11"
+    err = subprocess.run([FFMPEG, "-i", entrata, "-af", f"loudnorm={obiettivo}:print_format=json", "-f", "null", "-"],
+                         capture_output=True, text=True).stderr
+    m = json.loads(re.search(r"\{[^{}]*\}", err[err.rfind("Parsed_loudnorm"):], re.S).group(0))
+    esegui([FFMPEG, "-v", "error", "-y", "-i", entrata, "-af",
+            f"loudnorm={obiettivo}:measured_I={m['input_i']}:measured_TP={m['input_tp']}:measured_LRA={m['input_lra']}:"
+            f"measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true,aresample=48000",
+            "-c:a", "pcm_s24le", uscita])
+    return uscita
+
+
+def misura(src):
+    """Volume integrato (LUFS) e picco vero (dBTP) del file finito."""
+    import subprocess
+    err = subprocess.run([FFMPEG, "-i", src, "-vn", "-af", "ebur128=peak=true", "-f", "null", "-"],
+                         capture_output=True, text=True).stderr
+    riassunto = err[err.rfind("Summary"):]
+    return (float(re.search(r"I:\s+(-?[\d.]+) LUFS", riassunto).group(1)),
+            float(re.search(r"Peak:\s+(-?[\d.inf]+) dBFS", riassunto).group(1)))
+
+
 def lufs(src):
     import subprocess
     err = subprocess.run([FFMPEG, "-i", src, "-vn", "-af", "ebur128", "-f", "null", "-"], capture_output=True, text=True).stderr
@@ -207,7 +234,7 @@ def foglio(fotogrammi, didascalie, dest, colonne=3):
 
 
 # ------------------------------------------------------------------ audio
-MUSICA_SOTTO = 22   # dB sotto la voce (misurate tutte e due): si sente appena, non disturba per 15 minuti
+MUSICA_SOTTO = 17   # dB sotto la voce (misurate tutte e due); quando la voce parla scende ancora di ~7 dB (ducking)
 
 
 def massimo(src):
@@ -216,36 +243,72 @@ def massimo(src):
     return float(re.findall(r"max_volume:\s+(-?[\d.]+) dB", err)[-1])
 
 
-def brano(piano):
-    """La musica sotto la VSL: "musica" in vsl.json (un file di DATI/musica o un percorso), false = niente.
-    Se manca: rilassante-natura.mp3 della libreria dello studio, se no il primo brano di DATI/musica, se no la base del kit."""
+def trova_brano(nome):
+    for c in (nome, os.path.join(DATI, "musica", nome), os.path.join(STUDIO, "suoni", "kit", nome)):
+        if c and os.path.isfile(c):
+            return c
+    sys.exit(f"Non trovo la musica {nome} (DATI/musica)")
+
+
+def brani(piano, dur):
+    """La musica sotto la VSL, come [(da, a, file)]. In vsl.json:
+       "musica": false                         niente musica
+       "musica": "brano.mp3"                   un brano per tutta la VSL (DATI/musica)
+       "musica": [{"da": 0, "file": "a.mp3"}, {"da": 35.3, "file": "b.mp3"}]
+                                               cambio di brano SOLO a un cambio di argomento, all'inizio di una frase
+    Se manca: rilassante-natura.mp3 della libreria dello studio, se no il primo brano di DATI/musica, se no la base del kit.
+    Solo musica gratuita della libreria dello studio: mai canzoni commerciali."""
     scelta = piano.get("musica", True)
     if scelta is False:
-        return None
-    candidati = []
+        return []
+    if isinstance(scelta, list):
+        pezzi = sorted(scelta, key=lambda m: m["da"])
+        return [(m["da"], pezzi[i + 1]["da"] if i + 1 < len(pezzi) else dur, trova_brano(m["file"])) for i, m in enumerate(pezzi)]
     if isinstance(scelta, str):
-        candidati += [scelta, os.path.join(DATI, "musica", scelta)]
+        return [(0.0, dur, trova_brano(scelta))]
     cart = os.path.join(DATI, "musica")
-    candidati.append(os.path.join(cart, "rilassante-natura.mp3"))
+    candidati = [os.path.join(cart, "rilassante-natura.mp3")]
     if os.path.isdir(cart):
         candidati += [os.path.join(cart, f) for f in sorted(os.listdir(cart)) if f.lower().endswith((".mp3", ".wav", ".m4a"))]
     candidati.append(os.path.join(STUDIO, "suoni", "kit", "musica-base.wav"))
-    return next((c for c in candidati if os.path.isfile(c)), None)
+    c = next((c for c in candidati if os.path.isfile(c)), None)
+    return [(0.0, dur, c)] if c else []
 
 
 def audio(cart, video, piano, grafiche, dur):
-    """Voce + musica bassa per tutta la VSL + un suono quando compare ogni numero. Scrive mix.wav (il volume finale
-    lo fa il render). Ritorna il percorso e cosa c'è dentro."""
+    """Voce + musica sotto (si abbassa da sola quando la voce parla) + pochi suoni sulle grafiche. Scrive mix.wav
+    (il volume finale lo fa il render). Ritorna il percorso e cosa c'è dentro."""
     voce = lufs(video)
-    ingressi, filtri, nomi, detto = ["-i", video], ["[0:a]aresample=48000,aformat=channel_layouts=stereo[a0]"], ["[a0]"], []
-    musica = brano(piano)
-    if musica:
-        vol = voce - piano.get("musica_sotto", MUSICA_SOTTO) - lufs(musica)
-        ingressi += ["-stream_loop", "-1", "-i", musica]
-        filtri.append(f"[1:a]aresample=48000,aformat=channel_layouts=stereo,atrim=0:{dur:.3f},asetpts=PTS-STARTPTS,"
-                      f"volume={vol:.2f}dB,afade=t=in:d=1.5,afade=t=out:st={max(dur - 2.5, 0):.3f}:d=2.5[m]")
+    ingressi = ["-i", video]
+    filtri = ["[0:a]aresample=48000,aformat=channel_layouts=stereo,asplit[a0][sc]"]
+    nomi, detto = ["[a0]"], []
+    sotto = piano.get("musica_sotto", MUSICA_SOTTO)
+    lista = brani(piano, dur)
+    misure = {}
+    parti = []
+    for i, (da, a, f) in enumerate(lista):
+        if f not in misure:
+            misure[f] = lufs(f)
+        primo, ultimo = i == 0, i == len(lista) - 1
+        fine = a if ultimo else a + 0.8          # il brano dopo entra mentre questo sfuma
+        lungo = fine - da
+        k = ingressi.count("-i")
+        ingressi += ["-stream_loop", "-1", "-i", f]
+        ms = int(da * 1000)
+        filtri.append(f"[{k}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=0:{lungo:.3f},asetpts=PTS-STARTPTS,"
+                      f"volume={voce - sotto - misure[f]:.2f}dB,afade=t=in:d={1.5 if primo else 0.8},"
+                      f"afade=t=out:st={max(lungo - (2.5 if ultimo else 0.8), 0):.3f}:d={2.5 if ultimo else 0.8},"
+                      f"adelay={ms}|{ms}[m{i}]")
+        parti.append(f"[m{i}]")
+    if parti:
+        filtri.append("".join(parti) + f"amix=inputs={len(parti)}:normalize=0:duration=longest[mt]")
+        # ducking: quando la voce parla la musica scende di circa 7 dB, nelle pause risale piano
+        filtri.append("[mt][sc]sidechaincompress=threshold=0.02:ratio=2.5:attack=30:release=450:makeup=1[m]")
         nomi.append("[m]")
-        detto.append(f"musica {os.path.basename(musica)} ({piano.get('musica_sotto', MUSICA_SOTTO)} dB sotto la voce)")
+        detto.append(", ".join(f"{os.path.basename(f)} da {da:.1f} s" for da, _, f in lista)
+                     + f" ({sotto} dB sotto la voce, più giù quando parla)")
+    else:
+        filtri.append("[sc]anullsink")
     # i suoni dei passaggi: li dà ogni grafica (whoosh sulle clip e sui lampi, pop sui numeri...)
     colpi = sorted((t, f if os.path.isabs(f) else os.path.join(STUDIO, "suoni", "kit", f))
                    for x in grafiche for t, f in x["suoni"])
@@ -255,15 +318,14 @@ def audio(cart, video, piano, grafiche, dur):
             continue
         if f not in picchi:
             picchi[f] = massimo(f)
-        # il picco sta poco sopra il volume medio della voce; i whoosh un po' più bassi (sono lunghi)
-        vol = voce + (7 if "whoosh" in f or "swoosh" in f else 12) - picchi[f]
+        vol = voce + 12 - picchi[f]   # il picco del suono sta poco sopra il volume medio della voce
         k = ingressi.count("-i")
         ingressi += ["-i", f]
         ms = int(max(t, 0) * 1000)
         filtri.append(f"[{k}:a]aresample=48000,aformat=channel_layouts=stereo,volume={vol:.2f}dB,adelay={ms}|{ms}[s{k}]")
         nomi.append(f"[s{k}]")
     if colpi:
-        detto.append(f"{len(colpi)} suoni sui passaggi")
+        detto.append(f"{len(colpi)} suoni sulle grafiche")
     dest = os.path.join(cart, "mix.wav")
     filtri.append("".join(nomi) + f"amix=inputs={len(nomi)}:normalize=0:duration=first[a]")
     esegui([FFMPEG, "-v", "error", "-y", *ingressi, "-filter_complex", ";".join(filtri), "-map", "[a]",
@@ -298,6 +360,8 @@ def main():
     piano = leggi(os.path.join(cart, "vsl.json")) if os.path.exists(os.path.join(cart, "vsl.json")) else {}
     faccia = leggi(os.path.join(cart, "faccia.json"))
     acc = accento()
+    from vsl_taglia import fps_sorgente   # le grafiche con gli stessi fotogrammi al secondo del girato
+    vg.FPS, vg.FPS_TESTO = fps_sorgente(video)
     dur = durata(video)
     for g in piano.get("grafiche", []):
         if not 0 <= g["da"] < g["a"] <= dur + 0.01:
@@ -344,27 +408,21 @@ def main():
     mix, detto = audio(cart, video, piano, grafiche, dur)
     if detto:
         print("Audio: voce, " + ", ".join(detto))
-    guadagno = OBIETTIVO_LUFS - lufs(mix)
+    pronto = volume_web(mix, os.path.join(cart, "audio-finale.wav"))
     ingressi, filtro = grafo(grafiche, faccia, subs)
     script = os.path.join(cart, "montaggio.txt")
     with open(script, "w", encoding="utf-8") as f:
         f.write(filtro)
     print(f"Creo il video ({dur / 60:.1f} minuti, {len(grafiche)} grafiche)...")
-    esegui([FFMPEG, "-v", "error", "-y", "-i", video, *ingressi, "-i", mix,
+    esegui([FFMPEG, "-v", "error", "-y", "-i", video, *ingressi, "-i", pronto,
             "-filter_complex_script", script, "-map", "[v]", "-map", f"{ingressi.count('-i') + 1}:a", *finale_codec(),
-            "-af", f"volume={guadagno:.2f}dB,alimiter=limit={10 ** (PICCO_DB / 20):.3f}:level=false:attack=5:release=50",
-            "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", dest])
-    # il limitatore dei picchi abbassa un po' il volume medio: se manca più di mezzo dB si rifà solo l'audio (secondi)
-    manca = OBIETTIVO_LUFS - lufs(dest)
-    if abs(manca) > 0.5:
-        tmp = dest + ".audio.mp4"
-        esegui([FFMPEG, "-v", "error", "-y", "-i", dest, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
-                "-af", f"volume={guadagno + manca:.2f}dB,alimiter=limit={10 ** (PICCO_DB / 20):.3f}:level=false:attack=5:release=50",
-                "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", tmp])
-        os.replace(tmp, dest)
+            "-r", vg.FPS_TESTO, "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", dest])
     os.remove(mix)
+    os.remove(pronto)
     scrivi(os.path.join(cart, "ultimo.json"), {"video": dest, "versione": v})
-    print(f"Fatto: {dest} ({durata(dest):.1f} s, volume {lufs(dest):.1f} LUFS)")
+    i, tp = misura(dest)
+    print(f"Fatto: {dest} ({durata(dest):.1f} s, {vg.FPS_TESTO} fotogrammi al secondo, volume {i:.1f} LUFS, "
+          f"picco vero {tp:.1f} dBTP)")
 
 
 if __name__ == "__main__":

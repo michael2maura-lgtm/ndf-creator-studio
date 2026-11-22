@@ -29,7 +29,8 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import FFMPEG, STUDIO  # noqa: E402
 
-LARGO, ALTO, FPS = 1920, 1080, 30
+LARGO, ALTO = 1920, 1080
+FPS, FPS_TESTO = 30.0, "30"   # quelli del girato: li fissa vsl_monta.py prima di disegnare
 ENTRA, ESCE = 0.35, 0.3
 FONT = os.path.join(STUDIO, "font", "Poppins-Bold.ttf")
 FONT_2 = os.path.join(STUDIO, "font", "Poppins-SemiBold.ttf")
@@ -153,7 +154,7 @@ class Grafica:
     copre = False                # True = schermo pieno: niente sottotitoli sopra
 
     def suoni(self, g):
-        """[(secondo del video, file del kit)]: i suoni dei passaggi. "suono": false nella grafica li toglie,
+        """[(secondo del video, file del kit)]: pochi suoni, solo dove compare qualcosa da notare (numeri, pulsante). "suono": false nella grafica li toglie,
         "suono": "file.wav" cambia il suono."""
         return []
 
@@ -323,9 +324,6 @@ class Clip(Grafica):
             d.rectangle([60, 940, 68, 1004], fill=self.acc + (255,))
             d.text((60 + 22 + 4, 972), g["nome"], font=f, fill=(18, 18, 22, 255), anchor="lm")
 
-    def suoni(self, g):
-        return [(g["da"], "whoosh.wav")]
-
     def __call__(self, t):
         return self.cornice
 
@@ -443,7 +441,7 @@ class Contatore(Grafica):
         self.alone = self.alone.filter(ImageFilter.GaussianBlur(70))
 
     def suoni(self, g):
-        return [(g["da"] + 0.05, "whoosh.wav"), (g["da"] + 1.0, "pop.wav")]
+        return [(g["da"] + 0.05, "pop.wav")]   # il numero che compare
 
     def __call__(self, t):
         im = Image.new("RGBA", (LARGO, ALTO), (0, 0, 0, 0))
@@ -491,7 +489,7 @@ class Chiusura(Grafica):
         self.fondo = fondo_brand(self.acc, self.buco)
 
     def suoni(self, g):
-        return [(g["da"], "whoosh.wav")]
+        return [(g["da"] + 0.3, "pop.wav")]    # il pulsante che compare
 
     def __call__(self, t):
         im = self.fondo.copy()
@@ -521,9 +519,6 @@ class Lampo(Grafica):
         self.dur = g["a"] - g["da"]
         self.col = luce(rgb(acc))
 
-    def suoni(self, g):
-        return [(g["da"], "whoosh.wav")]
-
     def __call__(self, t):
         x = t / self.dur
         a = (x / 0.3) if x < 0.3 else max(0.0, 1 - (x - 0.3) / 0.7)
@@ -552,7 +547,7 @@ def crea(g, acc, dest):
     n = round(disegno.dur * FPS)
     w, h = disegno.area[2], disegno.area[3]
     p = subprocess.Popen([FFMPEG, "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{w}x{h}",
-                          "-r", str(FPS), "-i", "-", "-c:v", "qtrle", "-pix_fmt", "argb", dest], stdin=subprocess.PIPE)
+                          "-r", FPS_TESTO, "-i", "-", "-c:v", "qtrle", "-pix_fmt", "argb", dest], stdin=subprocess.PIPE)
     ultima, dati = None, None
     for i in range(n):
         chiave = disegno.chiave(i / FPS) if hasattr(disegno, "chiave") else i
