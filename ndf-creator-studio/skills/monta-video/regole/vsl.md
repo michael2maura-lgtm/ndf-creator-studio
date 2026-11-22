@@ -16,6 +16,15 @@ momenti decisivi (con la persona in un riquadro piccolo a destra). Durata tipica
 
 ## Passi (PY = ~/.studio-video/venv/bin/python)
 
+0. **Cartella dei materiali** (decisa da Michael). All'installazione non si crea niente. Quando il cliente scrive
+   "monta la mia VSL": `PY strumenti/vsl_materiali.py "<nome VSL>"` crea `DATI/<nome VSL> - materiali`, la APRE da
+   sola sullo schermo (Finder sul Mac, Esplora file su Windows) e stampa la riga da dire al cliente: cosa trascinarci
+   (foto delle clienti, chat, foto o video del prodotto, la sua musica se ne ha una) e dove si trova, in parole
+   semplici: "La trovi in Documenti → NDFCreatorStudio → <nome VSL> - materiali".
+   Quando scrive "fatto": `PY strumenti/vsl_materiali.py "<nome VSL>" --guarda` elenca cosa c'è. Guarda i file
+   (le foto e un fotogramma dei video) e chiedi SOLO quello che manca, legato a quello che dice nel video, una
+   domanda per messaggio: "Parli di Paola al minuto 4: hai la sua foto?". Il materiale del cliente viene prima
+   delle clip di Pexels; la sua musica, se c'è, prima della libreria dello studio.
 1. `PY strumenti/prepara.py "<video>" <nome>` — trascrizione di tutto il grezzo (20 minuti di grezzo: circa 6 minuti).
 2. Leggi `trascrizione.txt` e scrivi `tagli.json`: l'ultima ripresa buona di ogni frase, come per i reel.
    Le VSL hanno molte frasi ripetute più volte: tieni la ripresa intera e pulita, mai mezza frase di una e mezza
@@ -75,4 +84,4 @@ Pochi token: niente render di prova del video intero. Si controlla sui fotogramm
 - nuvoletta col dubbio del cliente sotto la sua foto tonda
 - icone semplici che si costruiscono (folla che cresce, freccia "da ... a ...", piramide)
 - materiali del cliente (testimonianze, chat, foto, numeri) a schermo
-- la frase "monta la mia VSL" in SKILL.md
+- la frase "monta la mia VSL" in SKILL.md (con il passo 0: SKILL.md ha ancora vecchie modifiche non salvate, da sistemare prima)
