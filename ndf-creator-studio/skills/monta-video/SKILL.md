@@ -1,6 +1,6 @@
 ---
 name: monta-video
-description: Monta un reel parlato in verticale (taglio, sottotitoli italiani parola per parola, titoli, scene, suoni e musica nello stile salvato, volume per Instagram) partendo dal girato grezzo. Usala quando l'utente dice "monta questo video", "montami il video", "monta il reel", "edita questo video", "installa lo studio", "facciamo il mio brand", "cambia i miei colori", o indica un girato da trasformare in reel.
+description: Monta un reel parlato in verticale (taglio, sottotitoli italiani parola per parola, titoli, scene, suoni e musica nello stile salvato, volume per Instagram) partendo dal girato grezzo. Usala quando l'utente dice "monta questo video", "montami il video", "monta il reel", "edita questo video", "installa lo studio", "facciamo il mio brand", "cambia i miei colori", o indica un girato da trasformare in reel. Anche per la VSL orizzontale: "monta la mia VSL", "montami la VSL", "fai la VSL".
 ---
 
 # Monta video
@@ -249,6 +249,30 @@ più simile che c'è). Di' quale usi al posto dell'originale. Mai un font a paga
    sempre questo", `stili.py usa "<nome>"`; per cambiargli nome, `stili.py rinomina "<nome>" "<nuovo>"`.
 Limiti da dire chiari: la musica dell'esempio non si prende (c'è quella dello stile); niente effetti 3D o
 rallentamenti dentro il video se lo studio non li ha.
+
+## La VSL ("monta la mia VSL", "montami la VSL", "fai la VSL")
+Video di vendita orizzontale (16:9) da un girato lungo: motore a parte (`vsl_*.py`), i reel non si toccano.
+Il cliente scrive solo la frase: niente prompt da incollare, niente domande sullo stile. Il modo di lavorare, le
+grafiche, il ritmo, la musica e le misure sono in `regole/vsl.md`: leggilo tutto prima di cominciare e seguilo.
+Durata finale 10, al massimo 15 minuti. Colori e font sono quelli del suo brand (passo 0: manca il brand, prima quello).
+1. **Materiali.** NOME = nome breve della VSL. `PY STUDIO/strumenti/vsl_materiali.py "NOME"`: crea la cartella, la
+   apre da sola sullo schermo e stampa la riga da dirgli (cosa metterci e dove si trova): dilla così. Intanto trova il
+   girato come per i reel (il video lungo più recente) e fai partire la trascrizione (passo 2), che è lunga.
+   Quando scrive "fatto": `vsl_materiali.py "NOME" --guarda`, guarda i file e chiedi SOLO quello che manca e che
+   serve a quello che dice nel video, una domanda per messaggio. Se non ha niente, si va avanti con le clip.
+2. **Trascrizione e tagli.** `PY STUDIO/strumenti/prepara.py "<video>" NOME` in background (20 minuti di grezzo:
+   circa 6 minuti). Poi `tagli.json` (regole/vsl.md, passo 2) e `PY STUDIO/strumenti/vsl_taglia.py NOME`. Leggi
+   `testo.txt` tutto: frasi doppie, parole sentite male (correggile in `parole.json`), durata.
+3. **Grafiche.** Scrivi `vsl.json` con le regole di regole/vsl.md (gancio movimentato, riquadri, numeri, barra,
+   frase, chiusura, clip prima dai suoi materiali poi da Pexels, musica dalle basi energiche).
+4. **Controllo sui fotogrammi.** `PY STUDIO/strumenti/vsl_monta.py NOME --anteprima` e guarda tutto il foglio.
+   Correggi `vsl.json` e riguarda solo i fotogrammi cambiati (`--anteprima --tempi 12.5,40`), finché è giusto.
+5. **Un render solo.** `PY STUDIO/strumenti/vsl_monta.py NOME` in background (15 minuti di VSL: circa 8-9 minuti).
+   Controlla le misure stampate (-16 LUFS, picco sotto -1 dBTP), mettigli il video in Download con un nome chiaro e
+   di' in una riga quanto dura e dove si trova.
+**Correzioni** solo sul pezzo che ha detto: cambi quella grafica o quel taglio, riguardi solo quei fotogrammi, poi un
+render. Cambiata solo la musica: `vsl_monta.py NOME --solo-audio` (secondi). Tagli cambiati: rifai `vsl_taglia.py`
+e sposta i tempi di `vsl.json` dopo il pezzo cambiato.
 
 ## Correzioni dell'utente
 Una correzione per questo video si fa nel `piano.json` o nel `tagli.json` di questo video, poi si rifà dal passaggio

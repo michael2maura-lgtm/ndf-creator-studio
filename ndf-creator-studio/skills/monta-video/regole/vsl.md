@@ -93,7 +93,8 @@ Vengono dalle misure e dal mestiere, non da regole di altri programmi.
   dice). Non fidarsi di una misura automatica dei battiti: è stata provata e ha scelto proprio il brano moscio.
   Michael sceglie ascoltando: 2-3 spezzoni di 15-20 secondi in Download con un nome chiaro, mai decidere al buio.
   Livello, deciso da Michael ascoltando: a 17 dB sotto era "troppo alta", a 20/30 dB "non si sente". Valori giusti:
-  13 dB sotto la voce nelle pause e circa 17 dB sotto mentre la voce parla (misurati), con un abbassamento morbido
+  13 dB sotto la voce nelle pause e circa 17 dB sotto mentre la voce parla (misurati; APPROVATI da Michael sulla
+  prova v7 il 22/11/2026, "Sì, va bene": sono fissi, non si cambiano a tentativi), con un abbassamento morbido
   (entra in 80 ms, risale in 0,9 s, senza buchi) che non dipende dal volume del girato. Deve sentirsi sempre che
   c'è la musica, con la voce chiara davanti. Cambiata solo la musica? `vsl_monta.py <nome> --solo-audio`.
 - Licenza Mixkit (letta il 22/11/2026, "Stock Music Free License" e User Terms): i brani si possono usare nei video
@@ -116,4 +117,3 @@ Pochi token: niente render di prova del video intero. Si controlla sui fotogramm
 - nuvoletta col dubbio del cliente sotto la sua foto tonda
 - icone semplici che si costruiscono (folla che cresce, freccia "da ... a ...", piramide)
 - materiali del cliente (testimonianze, chat, foto, numeri) a schermo
-- la frase "monta la mia VSL" in SKILL.md (con il passo 0: SKILL.md ha ancora vecchie modifiche non salvate, da sistemare prima)
