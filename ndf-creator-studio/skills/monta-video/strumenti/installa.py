@@ -158,6 +158,15 @@ def modelli():
     stato("modelli (voce e faccia)", r.returncode == 0 and os.path.exists(f), "la prima volta scarica circa 1,5 GB")
 
 
+def pulitore_voce():
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from pulitore import deepfilter
+    p = deepfilter()
+    if p:
+        percorsi["deepfilter"] = p
+    stato("pulitore della voce (DeepFilterNet)", bool(p), "" if p else "si usa la pulizia di prima")
+
+
 def suoni():
     elenco = json.load(open(os.path.join(QUI, "suoni", "da-scaricare.json")))
     mancati = 0
@@ -182,6 +191,7 @@ def main():
     node()
     hyperframes()
     modelli()
+    pulitore_voce()
     suoni()
     with open(os.path.join(CASA, "percorsi.json"), "w", encoding="utf-8") as f:
         json.dump(percorsi, f, indent=1, ensure_ascii=False)

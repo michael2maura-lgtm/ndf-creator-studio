@@ -3,7 +3,8 @@
 Uso:  python3 strumenti/taglia.py <nome-lavoro> [--voce-originale | --voce-forte] [--respiri | --senza-stringere]
       Prima toglie da solo le pause (stringi.py: tagli-scelti.json resta la scelta di Claude). --respiri lascia le
       pause dentro le frasi (ritmo calmo); --senza-stringere taglia esattamente come tagli.json.
-      La voce viene pulita (fruscio, rumori bassi, volume uniforme) e i video in HDR corretti nei colori, da soli.
+      La voce viene pulita con DeepFilterNet (via il rumore di fondo; il volume lo fa rendi.py) e i video in HDR
+      corretti nei colori, da soli. Se DeepFilterNet non c'è o non va, si usa la pulizia di prima, senza fermarsi.
       --voce-originale: lascia la voce com'è registrata.
       --voce-forte: pulizia forte, per i video girati in posti rumorosi (eco, passi, rumori di fondo).
 
@@ -36,7 +37,8 @@ VOCE = "highpass=f=80,afftdn=nf=-25,acompressor=threshold=-20dB:ratio=3:attack=5
 # di scatola" sui 300-500 Hz, un po' di presenza, rumore abbassato solo nelle pause. Una pulizia più forte rende la
 # voce metallica: provata e scartata da Michael, 2026-11-05.
 # Pezzi girati in posti diversi (fuori in strada, dentro una stanza): "voce" nel pezzo di tagli.json vale solo
-# per quel pezzo ("originale", "vento", "ai", "ai_forte", "normale", "forte", "leggera"). Fuori la correzione della stanza rovina la voce.
+# per quel pezzo ("deepfilter", "originale", "vento", "ai", "ai_forte", "normale", "forte", "leggera").
+# Di serie dal 22/11/2026: "deepfilter" (DeepFilterNet, pulitore.py), scelto da Michael ascoltando 4 versioni. Fuori la correzione della stanza rovina la voce.
 VOCE_FORTE = ("highpass=f=100,afftdn=nf=-30,equalizer=f=380:t=q:w=1:g=-6,equalizer=f=900:t=q:w=1.5:g=-2,"
               "equalizer=f=3200:t=q:w=1:g=3,equalizer=f=9000:t=q:w=1:g=1.5,deesser=i=0.3,"
               "agate=threshold=0.01:ratio=2:attack=8:release=150:range=0.25")
@@ -77,14 +79,28 @@ def main():
     if hdr:
         print("Il video è in HDR: correggo i colori.")
     colore = f",{COLORE_HDR}" if hdr else ""
-    voce = "anull" if "--voce-originale" in sys.argv else VOCE_FORTE if "--voce-forte" in sys.argv else VOCE
+    voce = "anull" if "--voce-originale" in sys.argv else VOCE_FORTE if "--voce-forte" in sys.argv else "deepfilter"
+    # DeepFilterNet lavora su un file audio: si pulisce una volta tutta la voce dell'originale, poi si taglia da lì
+    df_ok = False
+    if voce == "deepfilter" or any(t.get("voce") == "deepfilter" for t in tagli):
+        from pulitore import pulisci
+        grezza, pulita = os.path.join(cart, "voce-grezza.wav"), os.path.join(cart, "voce-pulita.wav")
+        esegui([FFMPEG, "-v", "error", "-y", "-i", sorgente["video"], "-vn", "-ac", "1", "-ar", "48000",
+                "-c:a", "pcm_s16le", grezza])
+        df_ok = pulisci(grezza, pulita)
+        os.remove(grezza)
+        print("Voce pulita con DeepFilterNet." if df_ok else "DeepFilterNet non disponibile: uso la pulizia normale.")
     filtri, segmenti, inizio = [], [], 0.0
     for i, t in enumerate(tagli):
         d = t["a"] - t["da"]
         filtri.append(f"[0:v]trim={t['da']}:{t['a']},setpts=PTS-STARTPTS,"
                       f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1{colore}[v{i}]")
-        pulizia = {"originale": "anull", "normale": VOCE, "forte": VOCE_FORTE, "leggera": VOCE_LEGGERA, "vento": VOCE_VENTO, "ai": VOCE_AI, "ai_forte": VOCE_AI_FORTE}.get(t.get("voce"), voce)
-        filtri.append(f"[0:a]atrim={t['da']}:{t['a']},asetpts=PTS-STARTPTS,{pulizia},"
+        pulizia = {"deepfilter": "anull" if df_ok else VOCE, "originale": "anull", "normale": VOCE, "forte": VOCE_FORTE, "leggera": VOCE_LEGGERA, "vento": VOCE_VENTO, "ai": VOCE_AI, "ai_forte": VOCE_AI_FORTE}
+        scelta = t["voce"] if t.get("voce") in pulizia else voce   # nome sbagliato in tagli.json: vale la pulizia di serie
+        ingresso = "1:a" if df_ok and scelta == "deepfilter" else "0:a"
+        pulizia = pulizia.get(scelta, scelta)
+        filtri.append(f"[{ingresso}]atrim={t['da']}:{t['a']},asetpts=PTS-STARTPTS,{pulizia},"
+                      f"aresample=48000,aformat=channel_layouts=stereo,"
                       f"afade=t=in:d={DISSOLVENZA},afade=t=out:st={d - DISSOLVENZA:.3f}:d={DISSOLVENZA}[a{i}]")
         segmenti.append({"id": t["id"], "inizio": round(inizio, 3), "fotogramma": round(inizio * FPS),
                          "durata": round(d, 3), "da_originale": t["da"], "a_originale": t["a"]})
@@ -97,10 +113,12 @@ def main():
 
     dest = os.path.join(cart, "tagliato.mp4")
     print(f"Taglio {n} pezzi dall'originale...")
-    esegui([FFMPEG, "-v", "error", "-y", "-i", sorgente["video"], "-filter_complex", ";".join(filtri),
+    esegui([FFMPEG, "-v", "error", "-y", "-i", sorgente["video"], *(["-i", pulita] if df_ok else []), "-filter_complex", ";".join(filtri),
             "-map", "[v]", "-map", "[a]", *codec_video(),
             *(["-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709"] if hdr else []), "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
             "-movflags", "+faststart", dest])
+    if df_ok:
+        os.remove(pulita)
     scrivi(os.path.join(cart, "segmenti.json"), segmenti)
     finale = durata(dest)
     print(f"Fatto: {sorgente['durata']:.1f} s → {finale:.1f} s (attesi {inizio:.1f} s)")
