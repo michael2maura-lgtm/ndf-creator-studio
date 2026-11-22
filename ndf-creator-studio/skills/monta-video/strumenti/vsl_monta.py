@@ -247,30 +247,11 @@ def massimo(src):
 
 
 def trova_brano(nome):
-    for c in (nome, os.path.join(DATI, "musica", nome), os.path.join(STUDIO, "suoni", "kit", nome)):
+    for c in (nome, os.path.join(DATI, "musica", "vsl", nome), os.path.join(DATI, "musica", nome),
+              os.path.join(STUDIO, "suoni", "kit", nome)):
         if c and os.path.isfile(c):
             return c
     sys.exit(f"Non trovo la musica {nome} (DATI/musica)")
-
-
-def battiti(f):
-    """Quanto è ritmato un brano: battiti al minuto stimati dai colpi del suono (primo minuto e mezzo)."""
-    import subprocess
-    import numpy as np
-    raw = subprocess.run([FFMPEG, "-v", "error", "-t", "90", "-i", f, "-ac", "1", "-ar", "22050", "-f", "f32le", "-"],
-                         capture_output=True).stdout
-    a = np.frombuffer(raw, np.float32)
-    n, h = 1024, 512
-    if len(a) < 22050 * 8:
-        return 0.0
-    fr = np.lib.stride_tricks.sliding_window_view(a, n)[::h] * np.hanning(n)
-    flusso = np.maximum(np.diff(np.abs(np.fft.rfft(fr, axis=1)), axis=0), 0).sum(1)
-    flusso = (flusso - flusso.mean()) / (flusso.std() + 1e-9)
-    m = min(len(flusso), 4000)
-    ac = np.correlate(flusso[:m], flusso[:m], "full")[m - 1:]
-    fps = 22050 / h
-    lo, hi = int(fps * 60 / 180), int(fps * 60 / 60)
-    return 60 * fps / (int(np.argmax(ac[lo:hi])) + lo)
 
 
 def lenta(cart):
@@ -286,8 +267,10 @@ def brani(piano, dur, cart=None):
        "musica": "brano.mp3"                   un brano per tutta la VSL (DATI/musica)
        "musica": [{"da": 0, "file": "a.mp3"}, {"da": 35.3, "file": "b.mp3"}]
                                                cambio di brano SOLO a un cambio di argomento, all'inizio di una frase
-    Se manca: un brano della libreria dello studio (DATI/musica): se la persona parla lenta (ritmo.json di vsl_taglia.py)
-    il più ritmato, se no rilassante-natura.mp3; se la libreria è vuota, la base del kit.
+    Se manca: una base ENERGICA della cartella DATI/musica/vsl (sicura, positiva, battito chiaro: da VSL che vende),
+    la prima in ordine di nome. Mai brani lenti o da rilassamento: Michael ha bocciato "rilassante" ("da insonnia").
+    Se la cartella è vuota la VSL esce senza musica e lo studio lo dice: meglio niente che una base moscia.
+    (La misura automatica dei battiti è stata provata e scartata: dava "rilassante country" come il più ritmato.)
     Solo musica gratuita della libreria dello studio: mai canzoni commerciali."""
     scelta = piano.get("musica", True)
     if scelta is False:
@@ -297,17 +280,14 @@ def brani(piano, dur, cart=None):
         return [(m["da"], pezzi[i + 1]["da"] if i + 1 < len(pezzi) else dur, trova_brano(m["file"])) for i, m in enumerate(pezzi)]
     if isinstance(scelta, str):
         return [(0.0, dur, trova_brano(scelta))]
-    libreria = os.path.join(DATI, "musica")
-    tutti = [os.path.join(libreria, f) for f in sorted(os.listdir(libreria)) if f.lower().endswith((".mp3", ".wav", ".m4a"))] \
-        if os.path.isdir(libreria) else []
-    if cart and lenta(cart) and tutti:   # persona lenta: musica con più energia
-        tutti = sorted(tutti, key=battiti, reverse=True)
-        candidati = tutti
-    else:
-        candidati = [os.path.join(libreria, "rilassante-natura.mp3")] + tutti
-    candidati.append(os.path.join(STUDIO, "suoni", "kit", "musica-base.wav"))
-    c = next((c for c in candidati if os.path.isfile(c)), None)
-    return [(0.0, dur, c)] if c else []
+    energiche = os.path.join(DATI, "musica", "vsl")
+    tutti = [os.path.join(energiche, f) for f in sorted(os.listdir(energiche))
+             if f.lower().endswith((".mp3", ".wav", ".m4a"))] if os.path.isdir(energiche) else []
+    if not tutti:
+        print("MUSICA MANCANTE: in DATI/musica/vsl non c'è nessuna base energica per le VSL: la VSL esce senza musica.",
+              file=sys.stderr)
+        return []
+    return [(0.0, dur, tutti[0])]
 
 
 def audio(cart, video, piano, grafiche, dur):
