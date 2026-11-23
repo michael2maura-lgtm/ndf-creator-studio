@@ -110,6 +110,27 @@ def zone_rosse(faccia):
             f'left:{faccia["sinistra"]}px;width:{faccia["destra"] - faccia["sinistra"]}px;background:rgba(255,255,0,.25)"></div>')
 
 
+def effetti_dimenticati(piano, stile):
+    """Il cliente ha acceso degli effetti nella pagina e il piano non ne usa nemmeno uno: ci si ferma, perché lui li
+    aspetta (successo con Pulito: lo stile.md dice "niente grafiche" e gli effetti scelti restavano fuori).
+    Se davvero nessuno c'entra con quello che dice, nel piano si scrive "effetti_saltati": "perché" e si va avanti."""
+    import effetti
+    scelti = [k for k in (stile.get("effetti_scelti") or []) if k != "zoom" and k in effetti.CATALOGO]
+    if not scelti or piano.get("effetti_saltati"):
+        return
+    usati = {effetti.chiave_di(e) for e in piano.get("elementi", []) if "tipo" in e}
+    if usati & set(scelti):
+        fuori = [effetti.CATALOGO[k]["nome"] for k in scelti if k not in usati]
+        print(f"EFFETTI SCELTI DAL CLIENTE: usati {len(usati & set(scelti))} su {len(scelti)}"
+              + (f"; non usati: {', '.join(fuori)} (nel messaggio finale di' in una riga perché)" if fuori else ""), flush=True)
+        return
+    nomi = ", ".join(f'{effetti.CATALOGO[k]["nome"]} ("{k}")' for k in scelti)
+    sys.exit(f"EFFETTI DIMENTICATI: il cliente ha acceso nella pagina {len(scelti)} effetti ({nomi}) e il piano non ne usa "
+             "nessuno. Valgono anche con Pulito e Luce: mettine qualcuno (uno ogni 6-10 s, sulle frasi in cui c'entrano, "
+             "formato in cima al loro file) e rilancia. Se davvero nessuno c'entra, scrivi nel piano "
+             '"effetti_saltati": "il perché" e di\' all\'utente in una riga quali hai saltato e perché.')
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not args:
@@ -124,6 +145,7 @@ def main():
     video = look_girato.applica(cart, piano.get("colore", stile.get("colore_scelto", stile.get("colore"))))  # "colore" = look di serie dello stile
     D = min(durata(video), piano.get("durata_max", 10 ** 6))  # durata_max: per le prove corte
     if stile.get("motore") == "grafica":  # stili con motion graphics: tutto in strumenti/grafica.py
+        effetti_dimenticati(piano, stile)
         grafica.costruisci(cart, piano, stile, cart_stile, parole, faccia, D,
                            zone_rosse(faccia) if "--zone" in sys.argv else "")
         return
