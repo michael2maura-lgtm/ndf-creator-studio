@@ -222,3 +222,34 @@ def codec_video():
 def durata(video):
     out = esegui([FFPROBE, "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video]).stdout
     return float(out.strip())
+
+
+def riepilogo_scelte():
+    """Una riga con quello che il cliente ha scelto nella pagina: stile, sottotitoli, effetti. Claude la scrive al
+    cliente prima di montare, così se qualcosa non è quello che voleva lo vede subito (Michael, 23/11)."""
+    try:
+        sc = leggi(SCELTE)
+    except (OSError, ValueError):
+        sc = {}
+    nome_stile = sc.get("stile") or "pulito"
+    try:
+        st = leggi(os.path.join(cartella_stile(nome_stile), "stile.json"))
+    except SystemExit:
+        st = {}
+    stile = str(st.get("nome") or nome_stile).replace("Stile ", "")
+    try:
+        import sottotitoli
+        k = sc.get("sottotitoli") or st.get("sottotitoli_nome")
+        sott = sottotitoli.CATALOGO.get(k, {}).get("nome") if k else None
+    except Exception:  # noqa: BLE001
+        sott = None
+    try:
+        import effetti
+        eff = [effetti.CATALOGO[k]["nome"] for k in (sc.get("effetti") or []) if k in effetti.CATALOGO and k != "zoom"]
+    except Exception:  # noqa: BLE001
+        eff = []
+    pezzi = [f"stile {stile}" + ("" if sc.get("stile") else " (nella pagina non è salvato nessuno stile: uso Pulito)")]
+    if sott:
+        pezzi.append(f"sottotitoli {sott}")
+    pezzi.append(f"{len(eff)} effetti: {', '.join(eff)}" if eff else "nessun effetto acceso")
+    return "SCELTE DEL CLIENTE: " + "; ".join(pezzi)

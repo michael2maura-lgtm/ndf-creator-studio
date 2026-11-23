@@ -46,7 +46,9 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
 
 ## I passaggi, sempre in quest'ordine
 1. `PY STUDIO/strumenti/prepara.py "<video>" NOME --nomi "<nomi detti nel video>"`
-   Leggi `trascrizione.txt` e guarda `foglio.jpg`.
+   Stampa `SCELTE DEL CLIENTE: ...`: scrivilo SUBITO al cliente in una riga semplice, prima di andare avanti
+   ("Monto in Pulito, con i sottotitoli Semplici e i tuoi 5 effetti: ..."; se non c'è uno stile salvato, diglielo).
+   Se vuole altro, si cambia ora. Poi leggi `trascrizione.txt` e guarda `foglio.jpg`.
 2. Scrivi `tagli.json` seguendo `regole/taglio.md`, poi `PY STUDIO/strumenti/taglia.py NOME`. Tu scegli QUALI frasi
    tenere; le pause le toglie da solo (`stringi.py`, dentro taglia.py): il reel non si ferma mai. `--respiri` solo se
    l'utente vuole un ritmo calmo.

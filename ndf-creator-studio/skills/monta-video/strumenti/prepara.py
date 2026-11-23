@@ -16,7 +16,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import nomi_con_il_profilo, FFMPEG, FFPROBE, MODELLI, cartella_lavoro, durata, esegui, scrivi  # noqa: E402
+from comune import nomi_con_il_profilo, riepilogo_scelte, FFMPEG, FFPROBE, MODELLI, cartella_lavoro, durata, esegui, scrivi  # noqa: E402
 
 
 def misure(video):
@@ -90,6 +90,7 @@ def main():
     w, h = misure(video)
     scrivi(os.path.join(cart, "sorgente.json"), {"video": video, "durata": round(dur, 2), "larghezza": w, "altezza": h})
     print(f"Video: {w}x{h}, {dur:.1f} secondi")
+    print(riepilogo_scelte(), flush=True)
 
     foglio(video, dur, os.path.join(cart, "foglio.jpg"))
     audio = os.path.join(cart, "audio.wav")
