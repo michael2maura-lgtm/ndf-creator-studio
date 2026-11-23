@@ -332,13 +332,17 @@ def colpiti(r, e, faccia):
     n, da, a = len(r.corpo), e["da"], e["a"]
     voci = e.get("voci", [])[:4]
     cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
-    y = max(cima - 230, 130)
+    # mai sopra y 250 (lì Instagram mette i suoi tasti): con la testa alta le targhe scendono e toccano i capelli,
+    # non la faccia (Michael, 23/11: con "2 prova" STRESS finiva a y 90)
+    y = max(cima - 230, 250 + 90)
     posti = [(90, y + 40, -6), (560, y - 30, 5), (260, y - 90, -3), (600, y + 60, 4)]
     pezzi = []
     for j, v in enumerate(voci):
         testo, t = v[0], v[1]
         sotto = v[2] if len(v) > 2 else ""
         lx, ly, rot = posti[j]
+        largo = max(len(testo) * 46, len(sotto) * 14) + 68   # 68 px in grassetto: ~46 px a lettera, più il bordo
+        lx = max(40, min(lx, 1030 - largo))   # la targa resta tutta dentro lo schermo
         pezzi.append(f'<div class="px-tg" id="pt{n}k{j}" style="left:{lx}px;top:{ly:.0f}px"><strong>{E(testo)}</strong>'
                      + (f'<small>{E(sotto)}</small>' if sotto else "") + f'<i id="pt{n}x{j}"></i></div>')
         r.tl.append(f'tl.fromTo("#pt{n}k{j}",{{opacity:0,scale:1.8,rotation:{rot * 3}}},{{opacity:1,scale:1,rotation:{rot},duration:.22,ease:"power4.in",immediateRender:false}},{t:.3f});'
