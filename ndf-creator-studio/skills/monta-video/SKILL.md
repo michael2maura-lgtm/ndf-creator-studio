@@ -22,19 +22,33 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
   `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`. Poi
   `uv run --python 3.12 --no-project STUDIO/strumenti/installa.py` (uv è in `~/.local/bin` se non lo trova).
   Se una riga dice MANCA, rilancialo una volta; se resta, di' in una riga cosa manca.
+- **Comando `claude` (per aggiornare):** chi ha solo l'app Claude non ce l'ha nel terminale. Se `claude` non si trova, su Mac
+  usa quello dentro l'app: `ls ~/Library/Application\ Support/Claude/claude-code/*/*/claude.app/Contents/MacOS/claude | tail -1`
+  (su Windows cerca `claude.exe` in `%APPDATA%\Claude\claude-code`). Se non c'è neanche quello, non fa niente: l'app scarica
+  da sola le versioni nuove, basta che il cliente la chiuda del tutto e la riapra.
+- **Chiudere del tutto l'app** (lo dici sempre così dopo un aggiornamento, è l'unico modo perché la versione nuova parta):
+  su Mac premere Cmd+Q con l'app Claude davanti (chiudere la finestra non basta); su Windows tasto destro sull'icona di
+  Claude vicino all'orologio, Esci. Poi riaprirla e aprire una nuova sessione in Code.
 - `PY STUDIO/strumenti/aggiornamenti.py`: se dice che c'è una versione nuova, dillo in una riga e chiedi se
   aggiornare. Con un sì aggiorni tu, fuori dalla sandbox: `claude plugin marketplace update ndf-creator-studio`,
-  poi `claude plugin update ndf-creator-studio@ndf-creator-studio`; poi di' di chiudere e riaprire Claude Code.
-- L'utente dice "aggiorna lo studio", "installa l'aggiornamento", "aggiorna il plugin" o simili: vuole la versione
-  nuova, NON cambiare lo studio. Non chiedere cosa modificare e non toccare nessun file: lancia i due comandi qui
-  sopra (anche se aggiornamenti.py dice AGGIORNATO, così è sicuro), poi di' in una riga: "Fatto: chiudi del tutto
-  l'app Claude, riaprila e apri una nuova sessione in Code."
+  poi `claude plugin update ndf-creator-studio@ndf-creator-studio`; poi di' di chiudere del tutto l'app e riaprirla (vedi sopra).
   Su Mac lo stesso comando (e ogni strumento) riprende da iCloud i file dello studio che il Mac ha spostato lì col
   disco pieno; può metterci un paio di minuti: lancialo con un tempo lungo, mai interromperlo. Righe che stampa:
   `ICLOUD OK` → niente da dire; `ICLOUD BLOCCATO` → di' in parole semplici di aprire il Finder, Documenti, clic
   destro su NDFCreatorStudio, "Mantieni scaricato", e controlla internet; `DISCO PIENO` → dillo in una riga
   (con il disco pieno i video vanno più lenti e il Mac sposta i file su iCloud). Una pagina o un montaggio che resta
   fermo senza motivo: rilancia `aggiornamenti.py` prima di tutto.
+- `DA CARTELLA`: lo studio è installato da una cartella del computer e gli aggiornamenti non gli arrivano mai.
+  Di' in una riga: "Il tuo studio è installato in un modo che blocca gli aggiornamenti: lo sistemo io, un minuto."
+  Poi, fuori dalla sandbox, senza toccare altri file (i video e il brand in Documenti restano):
+  `claude plugin marketplace remove ndf-creator-studio`, `claude plugin marketplace add michael2maura-lgtm/ndf-creator-studio`,
+  `claude plugin install ndf-creator-studio@ndf-creator-studio`; se c'era il plugin con un altro nome di marketplace
+  (`claude plugin list`), toglilo con `claude plugin uninstall`. Poi: "Fatto: chiudi del tutto l'app Claude, riaprila
+  e apri una nuova sessione in Code."
+- L'utente dice "aggiorna lo studio", "installa l'aggiornamento", "aggiorna il plugin" o simili: vuole la versione
+  nuova, NON cambiare lo studio. Non chiedere cosa modificare e non toccare nessun file: lancia i due comandi di
+  aggiornamento (marketplace update, poi plugin update; il comando `claude` come detto sopra) (anche se aggiornamenti.py dice AGGIORNATO, così è sicuro), poi di' in una riga: "Fatto: chiudi del tutto
+  l'app Claude, riaprila e apri una nuova sessione in Code."
 - Manca il colore in `DATI/profilo.json` (brand mai fatto): prima di montare fai il brand in chat (sezione "Il brand",
   qui sotto), poi monta. L'intervista `crea-stile` si fa solo se l'utente la chiede.
 - L'utente non dice quale video ("montami il video", senza file): non chiedere MAI il percorso del file e non chiedere
