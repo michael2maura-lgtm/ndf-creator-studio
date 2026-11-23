@@ -4,7 +4,7 @@ Dopo `prepara.py` leggi `trascrizione.txt` e guarda `foglio.jpg`, poi scrivi `ta
 
 - Via tutto quello che è fuori onda: commenti, frasi dette prima di partire, il braccio che avvia o ferma la registrazione.
 - Frase ripetuta: tieni l'ultima ripresa completa e pulita.
-- Le pause le toglie da solo `taglia.py` (stringi.py): tu scegli solo le frasi. Nessun silenzio sopra 0,22 s resta
+- Le pause le toglie da solo `taglia.py` (stringi.py): tu scegli solo le frasi. Tra due frasi resta un piccolo respiro (circa 0,28 s), nessun silenzio più lungo resta
   nel reel. Una pausa voluta (un effetto, una battuta): nel pezzo `"stringi": false`.
 - **Inizio di un pezzo:** dove finisce il silenzio (elenco PAUSE), meno 0,06 s. Non usare l'inizio della parola di Whisper: può essere in ritardo di 0,1-0,3 s e si mangia la prima lettera (successo: "Sento" diventato "Tanto").
 - **Fine di un pezzo:** dove inizia il silenzio dopo l'ultima parola.

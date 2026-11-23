@@ -7,8 +7,8 @@ Uso:  python3 strumenti/rendi.py <nome-lavoro> [--bozza]
 
 Scrive lavori/<nome>/finale/<nome>-vN.mp4 (ogni versione resta, non si sovrascrive mai).
 Volume: -14 LUFS come vuole Instagram, picchi mai sopra -1 dB. L'immagine non si tocca.
-Velocità: il reel finito va un po' più veloce del girato (VELOCITA in comune.py, 1.12 = +12%). Si cambia nella pagina
-(Normale 1, Svelta 1.12, Veloce 1.2) o per un solo reel con "velocita" nel piano. La voce accelera senza cambiare tono.
+Velocità: il reel finito va un po' più veloce del girato (VELOCITA in comune.py, 1.05 = +5%). Si cambia nella pagina
+(Normale 1, Svelta 1.05, Veloce 1.2) o per un solo reel con "velocita" nel piano. La voce accelera senza cambiare tono.
 """
 import os
 import subprocess

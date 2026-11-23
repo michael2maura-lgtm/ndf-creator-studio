@@ -20,9 +20,10 @@ from comune import FFMPEG, cartella_lavoro, leggi, scrivi  # noqa: E402
 
 SR = 16000
 PASSO = 0.01            # 10 ms per misura
-PAUSA_MAX = 0.22        # un silenzio più lungo di così si taglia
-MARGINE_PRIMA = 0.07    # aria lasciata prima che riparta la voce (non mangiare la prima lettera)
-MARGINE_DOPO = 0.09     # aria lasciata dopo l'ultima parola (le code delle parole sono basse)
+PAUSA_MAX = 0.32        # un silenzio più lungo di così si taglia (era 0,22: frasi attaccate senza respiro, 23/11/2026)
+MARGINE_PRIMA = 0.10    # aria lasciata prima che riparta la voce (non mangiare la prima lettera)
+MARGINE_DOPO = 0.18     # aria lasciata dopo l'ultima parola (le code basse e un piccolo respiro: tra due frasi restano
+                        # circa 0,28 s, approvato da Michael sul reel prova-2 v6, 23/11/2026)
 PEZZO_MIN = 0.18        # pezzi di voce più corti di così non si separano (una sillaba sola non sta da sola)
 
 

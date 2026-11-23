@@ -67,10 +67,10 @@ Lo decide lo studio, il cliente non deve chiederlo. `vsl_taglia.py` misura sulla
 le parole al minuto e la pausa media tra le frasi, e scrive `ritmo.json`. È "lenta" sotto 165 parole al minuto o
 con pause medie sopra 0,5 s (la personal trainer della prova: 158 parole al minuto, pause di 0,41 s).
 Se è lenta:
-- velocità +5-8% (quanto basta per arrivare a circa 168 parole al minuto, mai oltre l'8%: i reel arrivano al 12%,
-  in una VSL la voce deve restare naturale). Voce e video insieme, il tono della voce non cambia. `--velocita 1`
+- velocità +3-5% (quanto basta per avvicinarsi a 168 parole al minuto, mai oltre il 5%, come i reel: la voce deve
+  restare naturale; con di più i clienti sentono "troppo veloce, sembra che tagli", 23/11/2026). Voce e video insieme, il tono della voce non cambia. `--velocita 1`
   per lasciarla com'è;
-- pause tra le frasi corte (stringi.py, già di serie: dopo il taglio restano circa 0,2 s);
+- pause tra le frasi corte (stringi.py, già di serie: dopo il taglio resta un piccolo respiro, circa 0,28 s);
 - zoom sulla faccia più spessi (al massimo ogni 1,8 s invece di 2,5);
 - nei tratti piatti più clip o grafiche: mai più di circa 15-20 secondi di fila senza una clip, una scritta o una
   grafica (invece di 30-40). Le clip mostrano quello che dice in quel momento (cibo su "alimentazione",

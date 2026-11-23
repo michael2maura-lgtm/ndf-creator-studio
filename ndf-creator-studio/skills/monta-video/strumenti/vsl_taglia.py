@@ -100,7 +100,7 @@ def faccia_in(campioni, da, a, tutta):
 # ritmo: misurato sulla trascrizione delle riprese scelte. Una persona lenta (poche parole al minuto o pause lunghe)
 # rende la VSL "moscia": lo studio la rende più dinamica da solo, senza toccare la voce.
 LENTA_PAROLE, LENTA_PAUSA = 165, 0.5   # sotto 165 parole al minuto o pause medie sopra mezzo secondo
-OBIETTIVO_PAROLE = 168                 # velocità che si cerca di raggiungere, al massimo +8% (i reel arrivano a +12%)
+OBIETTIVO_PAROLE = 168                 # velocità che si cerca di raggiungere, al massimo +5%, come i reel
 
 
 def ritmo(cart):
@@ -117,7 +117,7 @@ def ritmo(cart):
     pause = [x for x in spazi if x > 0.15]
     pausa = sum(pause) / len(pause) if pause else 0
     lenta = pm < LENTA_PAROLE or pausa > LENTA_PAUSA
-    vel = round(min(max(OBIETTIVO_PAROLE / pm, 1.05), 1.08), 2) if lenta else 1.0
+    vel = round(min(max(OBIETTIVO_PAROLE / pm, 1.03), 1.05), 2) if lenta else 1.0
     return {"parole_minuto": round(pm), "pausa_media": round(pausa, 2), "lenta": lenta, "velocita": vel,
             "zoom_ogni": 1.8 if lenta else ZOOM_OGNI}
 
