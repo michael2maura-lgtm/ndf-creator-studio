@@ -1,6 +1,6 @@
 ---
 name: monta-video
-description: Monta un reel parlato in verticale (taglio, sottotitoli italiani parola per parola, titoli, scene, suoni e musica nello stile salvato, volume per Instagram) partendo dal girato grezzo. Usala quando l'utente dice "monta questo video", "montami il video", "monta il reel", "edita questo video", "installa lo studio", "facciamo il mio brand", "cambia i miei colori", o indica un girato da trasformare in reel. Anche per la VSL orizzontale: "monta la mia VSL", "montami la VSL", "fai la VSL".
+description: Monta un reel parlato in verticale (taglio, sottotitoli italiani parola per parola, titoli, scene, suoni e musica nello stile salvato, volume per Instagram) partendo dal girato grezzo. Usala quando l'utente dice "monta questo video", "montami il video", "monta il reel", "edita questo video", "installa lo studio", "aggiorna lo studio", "installa l'aggiornamento", "aggiorna il plugin", "facciamo il mio brand", "cambia i miei colori", o indica un girato da trasformare in reel. Anche per la VSL orizzontale: "monta la mia VSL", "montami la VSL", "fai la VSL".
 ---
 
 # Monta video
@@ -25,6 +25,10 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
 - `PY STUDIO/strumenti/aggiornamenti.py`: se dice che c'è una versione nuova, dillo in una riga e chiedi se
   aggiornare. Con un sì aggiorni tu, fuori dalla sandbox: `claude plugin marketplace update ndf-creator-studio`,
   poi `claude plugin update ndf-creator-studio@ndf-creator-studio`; poi di' di chiudere e riaprire Claude Code.
+- L'utente dice "aggiorna lo studio", "installa l'aggiornamento", "aggiorna il plugin" o simili: vuole la versione
+  nuova, NON cambiare lo studio. Non chiedere cosa modificare e non toccare nessun file: lancia i due comandi qui
+  sopra (anche se aggiornamenti.py dice AGGIORNATO, così è sicuro), poi di' in una riga: "Fatto: chiudi del tutto
+  l'app Claude, riaprila e apri una nuova sessione in Code."
   Su Mac lo stesso comando (e ogni strumento) riprende da iCloud i file dello studio che il Mac ha spostato lì col
   disco pieno; può metterci un paio di minuti: lancialo con un tempo lungo, mai interromperlo. Righe che stampa:
   `ICLOUD OK` → niente da dire; `ICLOUD BLOCCATO` → di' in parole semplici di aprire il Finder, Documenti, clic
