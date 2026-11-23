@@ -5,7 +5,7 @@ Uso:  python3 strumenti/costruisci.py <nome-lavoro> [--zone]
 
 Legge da lavori/<nome>/: tagliato.mp4, parole.json, faccia.json, piano.json
   piano.json (lo scrive Claude, tempi in secondi del video TAGLIATO):
-  {"stile": "ndf",
+  {"stile": "pulito",                                      quello scelto nella pagina (scelte.json "stile"); se manca lo mette costruisci.py
    "correzioni": {"effeccamento": "affiancamento"},        sostituzioni nel testo dei sottotitoli
    "aggiungi": [{"testo": "persone.", "da": 50.1, "a": 50.7}],  parole che Whisper ha saltato
    "colore": "argento",                                     facoltativo: look del girato (strumenti/colore.py)
@@ -131,14 +131,45 @@ def effetti_dimenticati(piano, stile):
              '"effetti_saltati": "il perché" e di\' all\'utente in una riga quali hai saltato e perché.')
 
 
+def stile_del_piano(cart, piano):
+    """Lo stile con cui si monta: quello scelto dal cliente nella pagina (scelte.json "stile"), se no Pulito.
+    Prima, senza "stile" nel piano, si montava con il vecchio Stile NDF (schermate scure con la luce di traverso, niente
+    effetti): è successo a una cliente che aveva scelto Pulito e 5 effetti (Michael, 23/11). Un altro stile solo se il
+    cliente l'ha chiesto in chat: nel piano "stile_chiesto": true."""
+    from comune import DATI, SCELTE
+    try:
+        scelto = leggi(SCELTE).get("stile")
+    except (OSError, ValueError):
+        scelto = None
+    nome = piano.get("stile")
+    if not nome:
+        nome = scelto or "pulito"
+        piano["stile"] = nome
+        with open(os.path.join(cart, "piano.json"), "w", encoding="utf-8") as f:
+            json.dump(piano, f, ensure_ascii=False, indent=1)
+        print(f"STILE: nel piano mancava, uso {nome} ({'scelto nella pagina' if scelto else 'di serie'})", flush=True)
+        return nome
+    if piano.get("stile_chiesto") or nome == scelto:
+        return nome
+    di_utente = os.path.isdir(os.path.join(DATI, "stili", nome))
+    modello = leggi(os.path.join(cartella_stile(nome), "stile.json")).get("modello")
+    if scelto or not (di_utente or modello):
+        giusto = scelto or "pulito"
+        sys.exit(f'STILE DIVERSO: il piano dice "{nome}" ma {"nella pagina il cliente ha scelto" if scelto else "lo stile di serie è"} '
+                 f'"{giusto}". Scrivi "stile": "{giusto}" nel piano e rilancia. Se il cliente in chat ha chiesto proprio '
+                 f'"{nome}", aggiungi nel piano "stile_chiesto": true.')
+    return nome
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not args:
         sys.exit(__doc__)
     cart = cartella_lavoro(args[0])
     piano = leggi(os.path.join(cart, "piano.json"))
-    cart_stile = cartella_stile(piano.get("stile", "ndf"))
-    stile = con_le_scelte(piano.get("stile", "ndf"), leggi(os.path.join(cart_stile, "stile.json")))
+    nome_stile = stile_del_piano(cart, piano)
+    cart_stile = cartella_stile(nome_stile)
+    stile = con_le_scelte(nome_stile, leggi(os.path.join(cart_stile, "stile.json")))
     faccia = leggi(os.path.join(cart, "faccia.json"))
     parole = parole_corrette(leggi(os.path.join(cart, "parole.json")), piano)
     # colore del girato: quello del piano ("colore": "argento"), se no quello scelto nella pagina, se no l'originale

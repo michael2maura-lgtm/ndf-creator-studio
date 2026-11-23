@@ -174,7 +174,8 @@ dice quando): grafica.py salta gli altri con una NOTA. Gli effetti che l'utente 
 sullo stile: anche se lo stile.md dice "niente grafiche" (Pulito, Luce), se scelte.json "effetti" ne ha di accesi li
 metti nel reel, pochi (uno ogni 6-10 secondi) e sulle frasi giuste. Se nessuno c'entra con quello che dice, nel
 riepilogo finale di' in una riga quali hai saltato e perché: l'utente deve sapere che li hai visti. L'utente non sceglie niente reel per reel. Le scelte le usa `costruisci.py` da solo: tu nel piano
-scrivi lo stile scelto e basta. Tasto Segui ("segui"): solo su una frase che invita a seguire, e solo se c'è
+scrivi lo stile scelto (scelte.json "stile"; se è vuoto, "pulito") e basta. Un altro stile solo se il cliente
+l'ha chiesto in chat, con "stile_chiesto": true nel piano: se no costruisci.py si ferma (STILE DIVERSO). Tasto Segui ("segui"): solo su una frase che invita a seguire, e solo se c'è
 `DATI/profilo.json` ({"nome": nome Instagram, "sotto": riga sotto, "foto": "profilo.jpg"} con la foto in DATI); se manca,
 chiedi una volta il link del profilo Instagram, prendi foto e nome dalla pagina pubblica e salvali lì. Un'anteprima di uno stile è `anteprima.mp4` (il video intero, 540 px di larghezza, con l'audio) più la sua copertina
 `anteprima.jpg` (un fotogramma con la faccia ferma e una scritta, mai una mano davanti)

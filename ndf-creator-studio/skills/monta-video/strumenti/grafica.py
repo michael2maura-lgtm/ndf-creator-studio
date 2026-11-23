@@ -2600,6 +2600,11 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         if tipo not in ("scena", "pannello") and not con_numeri and accesi is not None and effetti.chiave_di(e) not in accesi:   # le scene sono lo stile, non un effetto
             print(f'NOTA: "{effetti.CATALOGO.get(effetti.chiave_di(e), {}).get("nome", effetti.chiave_di(e))}" non è tra gli effetti accesi, lo salto')
             continue
+        if tipo == "scena" and stile.get("modello") and not stile.get("scene"):
+            # i modelli pronti (Pulito, Chiaro, Energia...) non hanno le schermate scure del Racconto: una scena qui
+            # sembra una transizione non chiesta (Michael, 23/11, video di una cliente con Pulito: "PER TE", "GRATUITA")
+            print(f'NOTA: la scena "{e.get("testo") or e.get("scena") or ""}" non fa parte di questo modello, la salto')
+            continue
         if tipo == "gigante":
             r.gigante(e)
             r.bande(e["a"])
