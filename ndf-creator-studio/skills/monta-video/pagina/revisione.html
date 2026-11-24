@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rivedi il tuo video · NDF Creator Studio</title>
+<style>
+:root{--acc:#E86530;--fondo:#141416;--nero:#0B0B0C;--cr:#F4EDE0;--gr:#A79E8E;--ln:rgba(244,237,224,.14);--ok:#2FBF71}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--cr);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 120px;display:grid;grid-template-columns:minmax(260px,420px) 1fr;gap:32px;align-items:start}
+@media (max-width:800px){main{grid-template-columns:1fr}}
+h1{font-size:30px;margin:0 0 6px;letter-spacing:-.5px}
+.sotto{color:var(--gr);margin:0 0 22px;font-size:16px;line-height:1.45}
+.vid{position:sticky;top:20px}
+video{width:100%;aspect-ratio:9/16;background:#000;border-radius:18px;display:block}
+.barra{position:relative;height:28px;margin-top:10px}
+.barra .linea{position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:var(--ln)}
+.barra .pin{position:absolute;top:3px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:var(--acc);color:#fff;
+ font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid var(--fondo)}
+.barra .pin.fatta{background:#4a4a4a}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px}
+.nota-qui{width:100%;margin-top:12px;background:var(--acc);color:#fff;font-weight:800;font-size:19px;padding:16px}
+.scrivi{display:none;margin-top:12px;background:var(--nero);border:1px solid var(--ln);border-radius:16px;padding:14px}
+.scrivi.on{display:block}
+.scrivi .quando{color:var(--acc);font-weight:800;margin-bottom:8px}
+textarea{width:100%;min-height:90px;resize:vertical;background:#1d1d20;color:var(--cr);border:1px solid var(--ln);border-radius:12px;
+ padding:12px;font:inherit;font-size:16px}
+.riga{display:flex;gap:10px;margin-top:10px}
+.riga button{flex:1;padding:12px;font-weight:700}
+.salva{background:var(--cr);color:#111}
+.annulla{background:transparent;color:var(--gr);border:1px solid var(--ln)!important}
+h2{font-size:20px;margin:0 0 12px}
+.vuoto{color:var(--gr);border:1px dashed var(--ln);border-radius:14px;padding:18px;line-height:1.5}
+.nota{display:flex;gap:12px;align-items:flex-start;background:var(--nero);border:1px solid var(--ln);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.nota .t{flex:none;background:var(--acc);color:#fff;font-weight:800;border-radius:9px;padding:4px 9px;cursor:pointer}
+.nota .x{flex:none;background:transparent;color:var(--gr);font-size:20px;line-height:1;padding:2px 6px}
+.nota .testo{flex:1;line-height:1.45;white-space:pre-wrap}
+.nota.fatta{opacity:.6}.nota.fatta .t{background:#4a4a4a}
+.nota .risposta{display:block;margin-top:6px;color:var(--ok);font-size:14px}
+.fondo{position:fixed;left:0;right:0;bottom:0;background:rgba(11,11,12,.96);border-top:1px solid var(--ln);padding:14px 16px}
+.fondo .in{max-width:1100px;margin:0 auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.fondo .info{flex:1;color:var(--gr);min-width:200px}
+.correggi{background:var(--acc);color:#fff;font-weight:800;padding:15px 22px;font-size:17px}
+.approva{background:var(--ok);color:#0b2416;font-weight:800;padding:15px 22px;font-size:17px}
+.fatto{display:none;position:fixed;inset:0;background:rgba(11,11,12,.96);align-items:center;justify-content:center;text-align:center;padding:24px}
+.fatto.on{display:flex}.fatto h1{font-size:34px}.fatto p{color:var(--gr);font-size:18px;max-width:520px;line-height:1.5}
+</style></head><body>
+<main>
+ <div class="vid">
+  <video id="v" src="/video" controls playsinline preload="metadata"></video>
+  <div class="barra" id="barra"><div class="linea"></div></div>
+  <button class="nota-qui" id="notaQui">📍 Nota qui</button>
+  <div class="scrivi" id="scrivi">
+   <div class="quando" id="quando"></div>
+   <textarea id="testo" placeholder="Cosa vuoi cambiare in questo punto? Per esempio: «togli questa scritta», «qui la parola giusta è…», «metti la foto degli oli»"></textarea>
+   <div class="riga"><button class="annulla" id="annulla">Annulla</button><button class="salva" id="salva">Aggiungi la nota</button></div>
+  </div>
+ </div>
+ <div>
+  <h1>Rivedi il tuo video</h1>
+  <p class="sotto">Guardalo e, dove vuoi cambiare qualcosa, fermalo e premi <b>Nota qui</b>. Scrivi come lo diresti a un montatore. Alla fine premi <b>Correggi</b>; se va bene così, <b>Approva</b>.</p>
+  <h2 id="titoloNote">Le tue note</h2>
+  <div id="note"></div>
+ </div>
+</main>
+<div class="fondo"><div class="in">
+ <div class="info" id="info">Versione —</div>
+ <button class="approva" id="approva">✓ Va bene così: approva</button>
+ <button class="correggi" id="correggi">Ho finito: correggi</button>
+</div></div>
+<div class="fatto" id="fatto"><div><h1 id="fattoT">Fatto!</h1><p id="fattoP"></p></div></div>
+<script>
+const v = document.getElementById("v");
+let dati = {note: []}, mie = [], momento = 0;
+const mmss = s => { s = Math.max(0, s); return Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0"); };
+function salvaSu() { fetch("/salva", {method: "POST", body: JSON.stringify({note: mie})}).catch(() => {}); }
+function disegna() {
+  const box = document.getElementById("note"), barra = document.getElementById("barra");
+  const fatte = (dati.note || []).filter(n => n.fatta);
+  box.innerHTML = "";
+  barra.querySelectorAll(".pin").forEach(p => p.remove());
+  const tutte = [...fatte.map(n => ({...n, vecchia: true})), ...mie.map((n, i) => ({...n, i}))].sort((a, b) => a.t - b.t);
+  if (!tutte.length) box.innerHTML = '<div class="vuoto">Ancora nessuna nota. Ferma il video dove vuoi cambiare qualcosa e premi <b>Nota qui</b>.</div>';
+  let k = 0;
+  tutte.forEach(n => {
+    const el = document.createElement("div"); el.className = "nota" + (n.vecchia ? " fatta" : "");
+    el.innerHTML = `<span class="t">${mmss(n.t)}</span><span class="testo"></span>` + (n.vecchia ? "" : '<button class="x" title="Togli">×</button>');
+    el.querySelector(".testo").textContent = n.testo;
+    if (n.vecchia && n.risposta) { const r = document.createElement("span"); r.className = "risposta"; r.textContent = "✓ " + n.risposta; el.querySelector(".testo").appendChild(r); }
+    el.querySelector(".t").onclick = () => { v.currentTime = n.t; v.pause(); };
+    if (!n.vecchia) el.querySelector(".x").onclick = () => { mie.splice(n.i, 1); salvaSu(); disegna(); };
+    box.appendChild(el);
+    if (v.duration) { k++; const p = document.createElement("div"); p.className = "pin" + (n.vecchia ? " fatta" : "");
+      p.style.left = (n.t / v.duration * 100) + "%"; p.textContent = n.vecchia ? "✓" : k; p.onclick = () => { v.currentTime = n.t; v.pause(); }; barra.appendChild(p); }
+  });
+  document.getElementById("titoloNote").textContent = mie.length ? `Le tue note (${mie.length})` : "Le tue note";
+  document.getElementById("correggi").textContent = mie.length ? `Ho finito: correggi (${mie.length})` : "Ho finito: correggi";
+}
+document.getElementById("notaQui").onclick = () => {
+  v.pause(); momento = v.currentTime;
+  document.getElementById("quando").textContent = "Nota a " + mmss(momento);
+  document.getElementById("scrivi").classList.add("on");
+  document.getElementById("testo").value = ""; document.getElementById("testo").focus();
+};
+document.getElementById("annulla").onclick = () => document.getElementById("scrivi").classList.remove("on");
+document.getElementById("salva").onclick = () => {
+  const t = document.getElementById("testo").value.trim();
+  if (!t) return;
+  mie.push({t: momento, testo: t}); salvaSu();
+  document.getElementById("scrivi").classList.remove("on"); disegna();
+};
+document.getElementById("testo").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) document.getElementById("salva").click(); });
+function fine(azione) {
+  if (azione === "correggi" && !mie.length) { alert("Non hai ancora scritto nessuna nota: ferma il video e premi «Nota qui»."); return; }
+  fetch("/fine", {method: "POST", body: JSON.stringify({azione, note: mie})}).then(() => {
+    document.getElementById("fattoT").textContent = azione === "approva" ? "Approvato! 🎉" : "Fatto, ricevute!";
+    document.getElementById("fattoP").textContent = azione === "approva"
+      ? "Il video è pronto da pubblicare. Puoi chiudere questa pagina."
+      : "Torna nella chat di Claude: sto correggendo il video e ti riapro questa pagina con la versione nuova.";
+    document.getElementById("fatto").classList.add("on");
+  });
+}
+document.getElementById("correggi").onclick = () => fine("correggi");
+document.getElementById("approva").onclick = () => fine("approva");
+fetch("/dati").then(r => r.json()).then(d => {
+  dati = d;
+  mie = (d.note || []).filter(n => !n.fatta && n.versione === d.versione).map(n => ({t: n.t, testo: n.testo}));
+  document.getElementById("info").textContent = "Versione " + d.versione.replace("v", "") + (mie.length ? ` · ${mie.length} note da mandare` : "");
+  disegna();
+});
+v.addEventListener("loadedmetadata", disegna);
+setInterval(() => fetch("/ping", {method: "POST", body: "{}"}).catch(() => {}), 5000);
+fetch("/ping", {method: "POST", body: "{}"}).catch(() => {});
+</script></body></html>

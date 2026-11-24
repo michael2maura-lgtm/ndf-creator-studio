@@ -132,6 +132,10 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
 9. `PY STUDIO/strumenti/registro.py <stile> "NOME | scene: ... | clip: ... | omini: ... | suoni: ..."` con
    quello che hai usato davvero. Di' in poche righe cosa hai fatto, se hai messo la musica e perché, e cosa deve
    ascoltare o controllare (le parole corrette a intuito, con il secondo). Tu non senti l'audio: dillo.
+10. Apri la pagina di revisione: `PY STUDIO/strumenti/revisione.py NOME`, in sottofondo, e di' in una riga: "Ti ho
+   aperto la pagina del video: fermalo dove vuoi cambiare qualcosa, premi Nota qui, e alla fine Correggi oppure
+   Approva. Se preferisci, scrivimelo qui." Quando la pagina si chiude, la sua ultima riga dice cosa ha scelto
+   (CORREGGI o APPROVATO): vedi "Correzioni dell'utente".
 
 Modelli rifatti da zero (quelli che la pagina mostra al passo 1, stile.json "modello": true), per ora tre: **Pulito** (`pulito`: solo la persona, tagli netti, sottotitoli, zoom leggero, sfumatura di luce sui cambi di argomento; niente grafiche, titoli, musica: vedi il suo stile.md) ed **Energia** (`energia`: tutto il testo sopra la testa, parole giganti e targhe inclinate a due colori, elenchi che si costruiscono, sfondi nuovi dietro la persona staccata, disegni animati sulle parole che si possono disegnare, l'orbita dei reel; elementi in `strumenti/effetti_sopra.py`, regole nel suo stile.md). In Energia l'inventiva è il format: ogni parola che si può far vedere diventa un disegno o una grafica. **Chiaro** (`chiaro`: il livello di mezzo, va bene per tutti: titolo sul gancio con la parola chiave in corsivo, poi una grafica ogni 7-8 secondi tra parola chiave elegante e scheda numerata sotto il mento; zoom ogni pochi secondi, sfumatura sui cambi di argomento; elementi in `strumenti/effetti_chiaro.py`, regole nel suo stile.md). Se l'utente non sa quale scegliere, consiglia Chiaro.
 Stili pronti, cinque: **Glow** (`glow`: Impact semplice, sfumatura e pop-up, per i contenuti organici), **Scene** (tu che parli e tra una frase e l'altra la scena giusta: clip e foto nella finestra,
@@ -287,6 +291,12 @@ render. Cambiata solo la musica: `vsl_monta.py NOME --solo-audio` (secondi). Tag
 e sposta i tempi di `vsl.json` dopo il pezzo cambiato.
 
 ## Correzioni dell'utente
+Dalla pagina di revisione (riga `CORREGGI n note`): leggi `lavori/NOME/note.json`; ogni nota con "fatta": false ha
+il testo, `t` (il secondo del video finito, quello che ha visto) e `t_piano` (lo stesso momento nei tempi del piano:
+usa questo). Correggi tutte le note in una volta sola, fai la versione dopo, poi in note.json metti a ogni nota
+"fatta": true e in "risposta" una riga su cosa hai fatto ("tolta la scritta", "foto degli oli cambiata"); se una
+nota non si può fare, dillo nella risposta e in chat. Poi riapri la pagina sulla versione nuova (revisione.py NOME),
+con le note fatte che si vedono spuntate. `APPROVATO vN`: il video è finito; se ha note, leggile comunque.
 Una correzione per questo video si fa nel `piano.json` o nel `tagli.json` di questo video, poi si rifà dal passaggio
 che è cambiato e si crea la versione dopo (v2, v3: le vecchie restano). Tagli cambiati dopo il piano:
 `regole/taglio.md` spiega come spostare il piano da solo (`rimappa.py`).
