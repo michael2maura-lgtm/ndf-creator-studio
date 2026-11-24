@@ -332,6 +332,8 @@ def css_forte(P, fam="Anton"):
             f"font-size:54px;font-weight:900}}"
             f".psc-ok{{position:absolute;left:0;right:0;margin:0 auto;width:fit-content;background:#2FBF71;color:#fff;font-family:'{fam}';"
             f"font-size:52px;padding:8px 32px;border-radius:14px;transform:rotate(-2deg);opacity:0;text-transform:uppercase;box-shadow:0 10px 30px rgba(0,0,0,.4)}}"
+            f".pfo{{position:absolute;border-radius:30px;overflow:hidden;opacity:0;border:5px solid {acc};"
+            f"box-shadow:0 0 40px rgba({rgb},.35),0 24px 50px rgba(0,0,0,.6)}}.pfo img{{width:100%;height:100%;object-fit:cover;display:block}}"
             # prima / adesso
             f".pcf{{position:absolute;width:420px;height:400px;border-radius:34px;text-align:center;opacity:0;padding-top:46px;box-sizing:border-box}}"
             f".pcf-e{{font-family:'{fam}';font-size:52px;text-transform:uppercase}}"
@@ -2243,7 +2245,7 @@ class Reel:
     def pannello(self, e, faccia):
         """Grafica nel pannello in alto (o a tutto schermo con "pieno": "scuro" | "chiaro"), una per frase.
         e = {"da", "a", "pieno": null, "modulo": {"tipo": titolo|schede|icone|lista|flusso|numero|cta, ...}}.
-        Stile "Diviso forte" (stile.json "forte"): anche telefoni|scrivi|confronto, e "testa": [{"testo", "stile", "da"}]
+        Stile "Diviso forte" (stile.json "forte"): anche telefoni|foto|scrivi|confronto, e "testa": [{"testo", "stile", "da"}]
         nel modulo per il titolo grosso in alto con il disegno sotto (stili/diviso-forte/stile.md dice quando)."""
         da, a = e["da"], e["a"]
         self.font_extra("InstrumentSerif-Italic.ttf")
@@ -2285,11 +2287,11 @@ class Reel:
         quante = len(m.get("icone") or m.get("nodi") or []) or m.get("quante", 3)
         scala = {"titolo": 1.0, "nota": 1.0, "cta": 1.25, "numero": 1.1, "lista": 1.15, "schede": 1.35,
                  "icone": 1.5 if quante <= 2 else 1.12, "flusso": 1.4 if quante <= 3 else 1.1}.get(m["tipo"], 1.2)
-        if m.get("testa") or m["tipo"] in ("telefoni", "scrivi", "confronto"):
+        if m.get("testa") or m["tipo"] in ("telefoni", "scrivi", "confronto", "foto"):
             # già grandi giusti; le icone e le schede sotto il titolo si ingrandiscono un po'
             scala = {"icone": 1.12, "schede": 1.2, "lista": 1.1, "flusso": 1.2 if quante <= 3 else 1.0}.get(m["tipo"], 1.0)
             if alto_g is not None:   # mai sopra la riga dei sottotitoli: se lo spazio è poco, la grafica si rimpicciolisce
-                alt = {"telefoni": 540, "scrivi": 300, "confronto": 400, "icone": 300, "schede": 400, "lista": 400,
+                alt = {"telefoni": 540, "foto": 580, "scrivi": 300, "confronto": 400, "icone": 300, "schede": 400, "lista": 400,
                        "flusso": 220, "numero": 420, "nota": 300, "cta": 350}.get(m["tipo"], 400)
                 scala = min(scala, (950 - alto_g) / alt)
         dentro = testa + f'<div style="position:absolute;inset:0;transform-origin:540px {cy}px;transform:scale({scala})">{dentro}</div>'
@@ -2513,6 +2515,30 @@ class Reel:
             ok = m.get("ok_da", invia + 0.35)
             self.tl.append(f'tl.fromTo("#pe{n}o",{{opacity:0,scale:0.6}},{{opacity:1,scale:1,duration:0.25,ease:"back.out(2)",immediateRender:false}},{ok:.3f});')
             self.suono("ding", ok, 0.35)
+        return "".join(out)
+
+    def p_foto(self, m, n, da, a, cy):
+        """Foto vere (DATI/immagini, scaricate da Pexels con clip.py) in schede col bordo del colore d'accento, sotto il
+        titolo: quando la persona nomina una cosa che si vede (un prodotto, un risultato, un luogo). Da 1 a 3 foto, ognuna
+        entra quando la dici e dentro si avvicina piano. m = {"foto": [["oli", secondo], ["capelli", secondo]]}."""
+        foto = m["foto"][:3]
+        k = len(foto)
+        larg, alt = {1: (760, 560), 2: (420, 560), 3: (290, 440)}[k]
+        gap = 40 if k > 1 else 0
+        x0 = 540 - (k * larg + (k - 1) * gap) / 2
+        out = []
+        for j, (nome, t) in enumerate(foto):
+            src = os.path.join(DATI, "immagini", nome + ".jpg")
+            dest = f"foto-{re.sub(r'[^\w-]', '-', nome)}.jpg"
+            if os.path.exists(src) and not os.path.exists(os.path.join(self.assets, dest)):
+                shutil.copy2(src, os.path.join(self.assets, dest))
+            ruota = 0 if k == 1 else (-3, 3, -2)[j]
+            out.append(f'<div class="pfo" id="pe{n}f{j}" style="left:{x0 + j * (larg + gap):.0f}px;top:{cy - alt / 2:.0f}px;'
+                       f'width:{larg}px;height:{alt}px;transform:rotate({ruota}deg)"><img id="pe{n}f{j}i" src="assets/{dest}"></div>')
+            self.tl.append(f'tl.fromTo("#pe{n}f{j}",{{opacity:0,y:90,scale:0.85}},{{opacity:1,y:0,scale:1,duration:0.3,ease:"back.out(1.6)",'
+                           f'immediateRender:false}},{t:.3f});'
+                           f'tl.fromTo("#pe{n}f{j}i",{{scale:1}},{{scale:1.1,duration:{max(a - t, 0.5):.3f},ease:"none",immediateRender:false}},{t:.3f});')
+            self.suono("pop", t, 0.3)
         return "".join(out)
 
     def p_confronto(self, m, n, da, a, cy):

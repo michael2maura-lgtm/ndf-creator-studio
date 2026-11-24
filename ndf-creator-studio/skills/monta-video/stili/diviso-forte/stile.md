@@ -30,6 +30,12 @@ pannello resta vuoto). Le parole sulla grafica sono quelle dette, accorciate.
   - `confronto`: prima / adesso, due numeri o due situazioni ("prima tre ore, adesso cinque minuti"): niente "testa"
   - `numero`: un numero da solo detto con forza
   - `lista`: passaggi o cose da fare in fila
+  - `foto`: quando la persona nomina una cosa che si vede (un prodotto, un risultato, un luogo: "oli essenziali",
+    "capelli folti", "la spazzola piena di capelli"): 1-3 foto vere da Pexels (strumenti/clip.py con un link
+    pexels.com/photo/..., finiscono in DATI/immagini), ognuna quando la dici. Guarda ogni foto prima: deve mostrare
+    proprio quella cosa. Le foto le pensi e le cerchi TU, in ogni video, senza che l'utente lo chieda: appena una frase
+    nomina qualcosa che si può vedere, quella frase ha la sua foto. Chi vende un prodotto o un servizio che si vede:
+    almeno 2-3 pannelli con le foto. L'utente poi corregge a parole ("cambia la foto degli oli") (Michael, 24/11/2026)
   - `telefoni`: SOLO quando si parla di video, reel o montaggi da mostrare ("montaggi così, così o così"): tre telefoni
     con le anteprime degli stili dello studio, uno per ogni volta che lo dici. Per altri argomenti mai
   - `cta`: la chiusura scelta nella pagina (segui, commenta la parola): bottone con la parola, il mouse che clicca
