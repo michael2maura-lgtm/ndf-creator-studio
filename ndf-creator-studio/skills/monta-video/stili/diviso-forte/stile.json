@@ -1,0 +1,81 @@
+{
+  "nome": "Stile Diviso forte",
+  "motore": "grafica",
+  "descrizione": "Schermo diviso che spiega: in alto un titolo grosso e un disegno per ogni frase, una riga di sottotitoli, tu sotto in una cornice.",
+  "colori": {
+    "accento": "#E86530",
+    "accento_luce": "#FF8A4C",
+    "testo": "#F9F7F4",
+    "scuro": "#140E0A",
+    "banda": "#4A2412"
+  },
+  "font": {
+    "titoli": {
+      "file": "font/Anton-Regular.ttf",
+      "famiglia": "Anton",
+      "peso": 400,
+      "larghezza": 100
+    },
+    "mono": {
+      "file": "font/JetBrainsMono.ttf",
+      "famiglia": "JetBrains Mono"
+    }
+  },
+  "suoni": {
+    "transizione": "suoni/transizione.mp3",
+    "impatto": "suoni/impatto.mp3",
+    "glitch": "suoni/glitch.mp3",
+    "pop": "suoni/pop.mp3",
+    "tastiera": "suoni/tastiera.mp3",
+    "ding": "suoni/ding.mp3",
+    "livello": "suoni/livello.mp3",
+    "click": "suoni/click.mp3",
+    "musica": "suoni/musica.wav"
+  },
+  "sottotitoli_nome": "riga-forte",
+  "transizione": "taglio",
+  "mirino": false,
+  "finale": false,
+  "fonte": {
+    "esempio": "zz-diviso-ig",
+    "base": "diviso"
+  },
+  "layout": "diviso",
+  "pannello": {
+    "acc": "#E86530",
+    "acc_rgb": "232,101,48",
+    "viola_rgb": "255,138,76",
+    "blu_rgb": "184,72,28",
+    "fondo_alto": "#22160F",
+    "fondo": "#140E0A",
+    "vetro_rgb": "38,27,20",
+    "fondo_pieno": "#2A1A10",
+    "verde": "#E86530",
+    "verde_rgb": "232,101,48",
+    "cta_rgb": "30,20,14",
+    "x": "#D9342B",
+    "chiaro1": "#F4F0E8",
+    "chiaro2": "#ECE5DA",
+    "chiaro3": "#F2E2D4",
+    "griglia_rgb": "232,101,48",
+    "testo_chiaro": "#140E0A",
+    "schede": [
+      "linear-gradient(160deg,#FF8A4C,#E86530 65%,#B8441A)",
+      "linear-gradient(160deg,#5A2C14,#C24A1A 60%,#E86530)",
+      "linear-gradient(160deg,#F6C9A4,#FF8A4C 70%,#E86530)"
+    ],
+    "righe": [
+      "#E86530",
+      "#C2562A",
+      "#B8441A",
+      "#D86A35",
+      "#7A3414"
+    ]
+  },
+  "modello": true,
+  "ordine": 5.5,
+  "riquadro": true,
+  "forte": true,
+  "stacchi": false,
+  "nascosto": false
+}

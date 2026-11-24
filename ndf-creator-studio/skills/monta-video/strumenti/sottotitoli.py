@@ -154,6 +154,13 @@ CATALOGO = {
                + OMBRA + "}.st .k{background:%acc%;padding:2px 14px;border-radius:10px;text-shadow:none;"
                "box-decoration-break:clone;-webkit-box-decoration-break:clone}",
     },
+    "riga-forte": {
+        "nome": "Riga forte", "per": "Schermo diviso forte, video che spiegano",
+        "descrizione": "Tre o quattro parole in maiuscolo, piccole e in grassetto; la parola importante colorata.",
+        "modo": "accumula", "parole": 4, "lettere": 24, "maiuscolo": True, "entra": ENTRA_MORBIDO, "font": ["poppins-forte"],
+        "css": ".st{font-family:%f-poppins-forte%;font-size:46px;line-height:1.1;color:#fff;letter-spacing:-.5px;"
+               "text-shadow:0 3px 12px rgba(0,0,0,.7)}.st .k{color:%acc%}",
+    },
     "pulito": {
         "nome": "Pulito", "per": "Tutti i giorni, va bene sempre",
         "descrizione": "Una riga semplice e leggibile, la parola importante colorata.",

@@ -299,6 +299,49 @@ def css_riquadro(P):
             f"box-shadow:0 16px 40px rgba(0,0,0,.10);opacity:0}}"
             f".pno-c svg{{width:64px;height:64px;color:{scuro}}}")
 
+def css_forte(P, fam="Anton"):
+    """Lo schermo diviso "forte" (stile.json "forte": true, con "riquadro": true): fondo scuro con raggi del colore
+    d'accento, titoli stretti e grossi in maiuscolo con la parola importante su una fascia, la persona in una cornice
+    arrotondata col bordo d'accento, una riga di sottotitoli tra la grafica e la cornice."""
+    acc, rgb, sc = P["acc"], P["acc_rgb"], P.get("fondo", "#140E0A")
+    raggi = (f"repeating-conic-gradient(from 0deg at 50% 34%,rgba({rgb},.13) 0deg 5deg,rgba(0,0,0,0) 5deg 14deg)")
+    return (f"html,body,#root{{background:{sc}}}"
+            f".pan{{z-index:1;height:1920px;box-shadow:none;background:radial-gradient(ellipse 75% 45% at 50% 34%,rgba(0,0,0,0),{sc} 92%),"
+            f"{raggi},radial-gradient(ellipse 90% 60% at 50% 30%,rgba({rgb},.22),{sc} 80%)}}.pan:after,.pan-luce{{display:none}}"
+            f"#riq{{bottom:34px;border:5px solid {acc};border-radius:40px;box-shadow:0 0 50px rgba({rgb},.35),0 20px 50px rgba(0,0,0,.6)}}"
+            f".pt-r,.pt-r.forte,.pt-r.corsivo,.pt-r.accento{{font-family:'{fam}';font-weight:400;font-style:normal;font-size:112px;"
+            f"letter-spacing:0;text-transform:uppercase;line-height:1.05;color:#fff;text-shadow:0 6px 24px rgba(0,0,0,.55)}}"
+            f".pt-r.accento{{left:0;right:0;margin:0 auto;width:fit-content;background:{acc};padding:0 26px 6px;transform:rotate(-2deg);"
+            f"box-shadow:0 10px 30px rgba(0,0,0,.45);text-shadow:none}}"
+            f".pt-r.piccolo{{font-size:84px}}.pt-r.testa{{font-size:100px}}"
+            f".pi,.pi svg,.pn,.pn-sopra,.ps-nome,.pno-e{{color:#fff}}.pn-lab{{color:{acc};padding-top:60px}}"
+            f".pl2{{height:auto!important}}.pl2-t{{font-size:38px}}.pl2-r{{height:86px;font-size:44px}}.pf span{{font-size:20px;text-align:center;line-height:1.1}}"
+            f".pl2{{background:rgba(20,14,10,.9);border:3px solid {acc};box-shadow:0 0 40px rgba({rgb},.25)}}.pl2-t{{color:rgba(255,255,255,.6)}}"
+            f".pf{{background:rgba(20,14,10,.92);border:3px solid rgba(255,255,255,.18);color:rgba(255,255,255,.6);box-shadow:none}}"
+            # telefoni con le anteprime
+            f".ptel{{position:absolute;width:280px;height:500px;border-radius:34px;border:6px solid #1b1b1b;background:#000;overflow:hidden;opacity:0;"
+            f"box-shadow:0 0 0 3px {acc},0 24px 50px rgba(0,0,0,.6)}}.ptel img{{width:100%;height:100%;object-fit:cover;display:block}}"
+            f".ptel-n{{position:absolute;left:-30px;right:-30px;text-align:center;font-family:'{fam}';font-size:42px;color:#fff;text-transform:uppercase}}"
+            # casella in cui si scrive
+            f".psc{{position:absolute;left:80px;right:80px;height:136px;border-radius:70px;background:#fff;display:flex;align-items:center;"
+            f"padding:0 20px 0 44px;opacity:0;box-shadow:0 0 0 4px {acc},0 20px 50px rgba(0,0,0,.5)}}"
+            f".psc-t{{flex:1;font-family:'Poppins Bold';font-size:50px;color:#1a1a1a;white-space:nowrap;overflow:hidden}}"
+            f".psc-t i{{display:inline-block;width:4px;height:52px;background:{acc};vertical-align:middle;margin-left:4px}}"
+            f".psc-v{{color:#9a9a9a}}"
+            f".psc-b{{width:96px;height:96px;border-radius:50%;background:#d8d8d8;color:#fff;display:flex;align-items:center;justify-content:center;"
+            f"font-size:54px;font-weight:900}}"
+            f".psc-ok{{position:absolute;left:0;right:0;margin:0 auto;width:fit-content;background:#2FBF71;color:#fff;font-family:'{fam}';"
+            f"font-size:52px;padding:8px 32px;border-radius:14px;transform:rotate(-2deg);opacity:0;text-transform:uppercase;box-shadow:0 10px 30px rgba(0,0,0,.4)}}"
+            # prima / adesso
+            f".pcf{{position:absolute;width:420px;height:400px;border-radius:34px;text-align:center;opacity:0;padding-top:46px;box-sizing:border-box}}"
+            f".pcf-e{{font-family:'{fam}';font-size:52px;text-transform:uppercase}}"
+            f".pcf-v{{font-family:'{fam}';font-size:150px;line-height:1.1;text-transform:uppercase}}"
+            f".pcf.prima{{background:rgba(255,255,255,.07);border:3px solid rgba(255,255,255,.2);color:rgba(255,255,255,.75)}}"
+            f".pcf.dopo{{background:{acc};color:#fff;box-shadow:0 0 60px rgba({rgb},.55)}}"
+            f".pcf-x{{position:absolute;left:30px;right:30px;top:205px;height:14px;border-radius:7px;background:{P.get('x', '#D9342B')};"
+            f"transform:rotate(-12deg) scaleX(0);transform-origin:0 50%}}")
+
+
 
 def css_scene(stile):
     """Lo stile delle scene a tutto schermo (Reel.scena): serve qui e a costruisci.py, che le usa nello stile Scene."""
@@ -2199,7 +2242,9 @@ class Reel:
 
     def pannello(self, e, faccia):
         """Grafica nel pannello in alto (o a tutto schermo con "pieno": "scuro" | "chiaro"), una per frase.
-        e = {"da", "a", "pieno": null, "modulo": {"tipo": titolo|schede|icone|lista|flusso|numero|cta, ...}}."""
+        e = {"da", "a", "pieno": null, "modulo": {"tipo": titolo|schede|icone|lista|flusso|numero|cta, ...}}.
+        Stile "Diviso forte" (stile.json "forte"): anche telefoni|scrivi|confronto, e "testa": [{"testo", "stile", "da"}]
+        nel modulo per il titolo grosso in alto con il disegno sotto (stili/diviso-forte/stile.md dice quando)."""
         da, a = e["da"], e["a"]
         self.font_extra("InstrumentSerif-Italic.ttf")
         n = len(self.corpo)
@@ -2210,6 +2255,29 @@ class Reel:
         if self.stile.get("testo_fisso"):   # il testo fisso sta in alto: la grafica scende per non toccarlo
             cy += 40 if pieno else 90
         m = e["modulo"]
+        if self.stile.get("forte") and da > 0.1:
+            # cambio di frase, come nell'esempio: un lampo bianco leggero e la persona che scatta più vicina, poi torna
+            # al suo posto in un terzo di secondo (Michael, 24/11/2026: "uno zoom che è un colpo")
+            if not getattr(self, "lampo_forte", False):
+                self.lampo_forte = True
+                self.corpo.append('<div id="lf" style="position:absolute;inset:0;background:#fff;opacity:0;z-index:60;pointer-events:none"></div>')
+            # più deciso (Michael: "il suo è un po' più efficace"): lampo più forte, zoom più vicino che resta un attimo
+            self.tl.append(f'tl.fromTo("#lf",{{opacity:0.6}},{{opacity:0,duration:0.2,ease:"power1.out",immediateRender:false}},{da:.3f});'
+                           f'tl.fromTo("#bg",{{scale:1.24}},{{scale:1,duration:0.34,ease:"power3.inOut",immediateRender:false}},{da + 0.1:.3f});'
+                           f'tl.set("#bg",{{scale:1.24}},{da:.3f});')
+        testa = ""
+        alto_g = None
+        if m.get("testa"):   # aspetto "forte": il titolo grosso in alto e la grafica sotto, come una pagina
+            righe = m["testa"]
+            # sotto la zona di Instagram in alto (fino a 230 px) e sotto il testo fisso, se c'è
+            su = 250 + (85 if self.stile.get("testo_fisso") else 0)
+            for j, r in enumerate(righe):
+                testa += (f'<div class="pt-r testa {r.get("stile", "forte")}" id="pe{n}h{j}" style="top:{su + j * 112}px">'
+                          f'{html.escape(r["testo"])}</div>')
+                self._entra(f"#pe{n}h{j}", r.get("da", da), 18)
+                self._suono_riga(r.get("stile", "forte"), r.get("da", da))
+            alto_g = su + len(righe) * 112 + 30   # dove comincia la grafica
+            cy = round((alto_g + 950) / 2)        # al centro dello spazio fino alla riga dei sottotitoli
         dentro = getattr(self, "p_" + m["tipo"])(m, n, da, a, cy)
         sfondo = f'<div class="pan-fondo{" chiaro" if pieno == "chiaro" else ""}"></div>' if pieno else ""
         # icone, schede, liste e caselle si disegnano piccole e si ingrandiscono attorno al centro: grandi come nell'esempio
@@ -2217,7 +2285,14 @@ class Reel:
         quante = len(m.get("icone") or m.get("nodi") or []) or m.get("quante", 3)
         scala = {"titolo": 1.0, "nota": 1.0, "cta": 1.25, "numero": 1.1, "lista": 1.15, "schede": 1.35,
                  "icone": 1.5 if quante <= 2 else 1.12, "flusso": 1.4 if quante <= 3 else 1.1}.get(m["tipo"], 1.2)
-        dentro = f'<div style="position:absolute;inset:0;transform-origin:540px {cy}px;transform:scale({scala})">{dentro}</div>'
+        if m.get("testa") or m["tipo"] in ("telefoni", "scrivi", "confronto"):
+            # già grandi giusti; le icone e le schede sotto il titolo si ingrandiscono un po'
+            scala = {"icone": 1.12, "schede": 1.2, "lista": 1.1, "flusso": 1.2 if quante <= 3 else 1.0}.get(m["tipo"], 1.0)
+            if alto_g is not None:   # mai sopra la riga dei sottotitoli: se lo spazio è poco, la grafica si rimpicciolisce
+                alt = {"telefoni": 540, "scrivi": 300, "confronto": 400, "icone": 300, "schede": 400, "lista": 400,
+                       "flusso": 220, "numero": 420, "nota": 300, "cta": 350}.get(m["tipo"], 400)
+                scala = min(scala, (950 - alto_g) / alt)
+        dentro = testa + f'<div style="position:absolute;inset:0;transform-origin:540px {cy}px;transform:scale({scala})">{dentro}</div>'
         self.corpo.append(f'<div class="pan-el{" pieno " + pieno if pieno else ""}" id="pe{n}">{sfondo}{dentro}</div>')
         if m["tipo"] == "titolo":   # la frase scritta grande nel pannello è già il sottotitolo: niente doppione sotto
             self.nascondi.append((da, a))
@@ -2227,6 +2302,15 @@ class Reel:
         # come nell'esempio: si entra e si esce con un taglio netto (a tutto schermo) o quasi (nel pannello)
         self.tl.append(f'tl.set("#pe{n}",{{opacity:1}},{da:.3f});' + (f'tl.set("#pe{n}",{{opacity:0}},{a:.3f});' if pieno else
                        f'tl.to("#pe{n}",{{opacity:0,duration:0.1}},{a - 0.1:.3f});'))
+
+    def _suono_riga(self, stile_riga, t):
+        """Il suono di una riga di titolo. Aspetto "forte": ogni cosa il suo suono, come nell'esempio (Michael, 24/11/2026:
+        "il colpetto, tutto uguale"): la fascia arancione entra con l'impatto, le altre righe in silenzio."""
+        if not self.stile.get("forte"):
+            self.suono("pop", t, 0.2)
+        elif "accento" in stile_riga:
+            self.suono("impatto", t, 0.32, dur=1.0)
+        # le righe bianche entrano senza suono: il fruscio "non si può sentire" (Michael, 24/11/2026)
 
     def _entra(self, sel, t, dy=24):
         self.tl.append(f'tl.fromTo("{sel}",{{opacity:0,y:{dy},scale:0.92}},{{opacity:1,y:0,scale:1,duration:0.22,ease:"back.out(1.8)",immediateRender:false}},{t:.3f});')
@@ -2239,7 +2323,7 @@ class Reel:
         for j, r in enumerate(righe):
             out.append(f'<div class="pt-r {r.get("stile", "forte")}" id="pe{n}t{j}" style="top:{alto + j * 120}px">{html.escape(r["testo"])}</div>')
             self._entra(f"#pe{n}t{j}", r.get("da", da), 18)
-            self.suono("pop", r.get("da", da), 0.2)
+            self._suono_riga(r.get("stile", "forte"), r.get("da", da))
         return "".join(out)
 
     def p_nota(self, m, n, da, a, cy):
@@ -2302,6 +2386,8 @@ class Reel:
             self.suono("pop", t, 0.25)
             if barra:
                 self.tl.append(f'tl.fromTo("#pe{n}i{j}x",{{scaleX:0}},{{scaleX:1,duration:0.2,ease:"power2.out",immediateRender:false}},{t + 0.35:.3f});')
+                if self.stile.get("forte"):   # la barra rossa ha il suo suono
+                    self.suono("glitch", t + 0.35, 0.25, dur=0.4)
         return "".join(out)
 
     def p_lista(self, m, n, da, a, cy):
@@ -2374,6 +2460,75 @@ class Reel:
             self.tl.append(f'tl.fromTo("#pe{n}m",{{opacity:0,x:160,y:120}},{{opacity:1,x:0,y:0,duration:0.5,ease:"power2.out",immediateRender:false}},{t - 0.5:.3f});'
                            f'tl.fromTo("#pe{n}b",{{scale:1}},{{keyframes:[{{scale:0.94,duration:0.08}},{{scale:1,duration:0.12}}],immediateRender:false}},{t:.3f});')
             self.suono("click", t, 0.45)
+        return "".join(out)
+
+    def p_telefoni(self, m, n, da, a, cy):
+        """Tre telefoni in fila con l'anteprima di uno stile ciascuno (quella dello studio, stili/<nome>/anteprima.jpg),
+        che entrano uno alla volta quando li indichi ("così, così o così"). m = {"stili": ["glow", "scene", "pulito"],
+        "tempi": [secondo, ...], "nomi": ["glow", ...] (facoltativo)}."""
+        stili, tempi = m["stili"][:3], m.get("tempi") or [da + 0.3 * j for j in range(3)]
+        larg, gap = 280, 36
+        x0 = 540 - (len(stili) * larg + (len(stili) - 1) * gap) / 2
+        out = []
+        for j, s in enumerate(stili):
+            src = os.path.join(STUDIO, "stili", s, "anteprima.jpg")
+            nome = f"tel-{s}.jpg"
+            if os.path.exists(src) and not os.path.exists(os.path.join(self.assets, nome)):
+                shutil.copy2(src, os.path.join(self.assets, nome))
+            ruota = (-7, 0, 7)[j] if len(stili) == 3 else 0
+            alza = 30 if j == 1 and len(stili) == 3 else 0
+            out.append(f'<div class="ptel" id="pe{n}t{j}" style="left:{x0 + j * (larg + gap):.0f}px;top:{cy - 250 - alza:.0f}px;'
+                       f'transform:rotate({ruota}deg)"><img src="assets/{nome}"></div>')
+            t = tempi[j] if j < len(tempi) else da
+            self.tl.append(f'tl.fromTo("#pe{n}t{j}",{{opacity:0,y:120,rotation:{ruota * 2}}},{{opacity:1,y:0,rotation:{ruota},duration:0.3,'
+                           f'ease:"back.out(1.6)",immediateRender:false}},{t:.3f});')
+            self.suono("pop", t, 0.3)   # niente fruscio (Michael, 24/11/2026)
+            if m.get("nomi"):
+                out.append(f'<div class="ptel-n" id="pe{n}t{j}n" style="left:{x0 + j * (larg + gap) - 30:.0f}px;width:{larg + 60}px;'
+                           f'right:auto;top:{cy + 250:.0f}px;opacity:0">{html.escape(m["nomi"][j])}</div>')
+                self.tl.append(f'tl.fromTo("#pe{n}t{j}n",{{opacity:0}},{{opacity:1,duration:0.2,immediateRender:false}},{t + 0.15:.3f});')
+        return "".join(out)
+
+    def p_scrivi(self, m, n, da, a, cy):
+        """Casella bianca in cui la frase si scrive lettera per lettera, poi il tasto d'invio si colora e (facoltativo)
+        sotto compare un bollino verde. m = {"vuoto": "Scrivi qui...", "testo": "monta questo video", "scrivi": secondo,
+        "fine": secondo, "invia": secondo, "ok": "video pronto"}."""
+        testo, t0 = m["testo"], m.get("scrivi", da + 0.3)
+        t1 = max(m.get("fine", t0 + 0.05 * len(testo)), t0 + 0.2)
+        invia = m.get("invia", t1 + 0.25)
+        out = [f'<div class="psc" id="pe{n}c" style="top:{cy - 68:.0f}px"><div class="psc-t"><span id="pe{n}x" class="psc-v">'
+               f'{html.escape(m.get("vuoto", "Scrivi..."))}</span><i id="pe{n}k"></i></div><div class="psc-b" id="pe{n}b">↑</div></div>']
+        self._entra(f"#pe{n}c", da)
+        passo = (t1 - t0) / max(len(testo), 1)
+        self.tl.append(f'tl.set("#pe{n}x",{{className:""}},{t0:.3f});')
+        for k in range(1, len(testo) + 1):
+            self.tl.append(f'tl.set("#pe{n}x",{{textContent:{json.dumps(testo[:k])}}},{t0 + passo * (k - 1):.3f});')
+        self.suono("tastiera", t0, 0.3, dur=t1 - t0 + 0.1, se_manca="click")   # i tasti mentre si scrive
+        self.tl.append(f'tl.set("#pe{n}k",{{opacity:0}},{invia:.3f});'
+                       f'tl.to("#pe{n}b",{{backgroundColor:"{self.P['acc']}",scale:1.12,duration:0.12}},{invia:.3f});'
+                       f'tl.to("#pe{n}b",{{scale:1,duration:0.15}},{invia + 0.12:.3f});')
+        self.suono("click", invia, 0.45)
+        if m.get("ok"):
+            out.append(f'<div class="psc-ok" id="pe{n}o" style="top:{cy + 110:.0f}px">✓ {html.escape(m["ok"])}</div>')
+            ok = m.get("ok_da", invia + 0.35)
+            self.tl.append(f'tl.fromTo("#pe{n}o",{{opacity:0,scale:0.6}},{{opacity:1,scale:1,duration:0.25,ease:"back.out(2)",immediateRender:false}},{ok:.3f});')
+            self.suono("ding", ok, 0.35)
+        return "".join(out)
+
+    def p_confronto(self, m, n, da, a, cy):
+        """Prima e adesso: due schede affiancate; a sinistra quella di prima (grigia, poi barrata), a destra quella di
+        adesso che si accende. m = {"prima": ["prima", "3 ore", secondo], "dopo": ["adesso", "5 min", secondo]}."""
+        (e1, v1, t1), (e2, v2, t2) = m["prima"], m["dopo"]
+        out = [f'<div class="pcf prima" id="pe{n}p" style="left:90px;top:{cy - 200:.0f}px"><div class="pcf-e">{html.escape(e1)}</div>'
+               f'<div class="pcf-v">{html.escape(v1)}</div><i class="pcf-x" id="pe{n}x"></i></div>',
+               f'<div class="pcf dopo" id="pe{n}d" style="left:570px;top:{cy - 200:.0f}px"><div class="pcf-e">{html.escape(e2)}</div>'
+               f'<div class="pcf-v">{html.escape(v2)}</div></div>']
+        self._entra(f"#pe{n}p", t1)
+        self.suono("pop", t1, 0.3)
+        self.tl.append(f'tl.fromTo("#pe{n}x",{{scaleX:0}},{{scaleX:1,duration:0.2,ease:"power2.out",immediateRender:false}},{t2 - 0.1:.3f});'
+                       f'tl.fromTo("#pe{n}d",{{opacity:0,scale:0.7}},{{opacity:1,scale:1,duration:0.3,ease:"back.out(2)",immediateRender:false}},{t2:.3f});')
+        self.suono("glitch", t2 - 0.1, 0.25, dur=0.4)   # "3 ore" barrato
+        self.suono("livello", t2, 0.35, dur=1.2, se_manca="pop")   # "5 min" si accende
         return "".join(out)
 
     def finale(self, piano, da):
@@ -2549,7 +2704,21 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         cima = faccia["occhi"] - (faccia["mento"] - faccia["occhi"]) * 0.95
         sposta = int(Reel.PAN_H + 40 - cima)
         y_sub = Reel.PAN_H - 90
-        if stile.get("riquadro"):   # la persona più piccola in un riquadro arrotondato, il fondo chiaro tutto intorno
+        if stile.get("riquadro") and stile.get("forte"):   # cornice larga sotto la grafica, la testa appena sotto il bordo
+            ct = stile.get("riq_top", 1060)
+            alto = 1920 - 34 - ct                 # quanto è alta la cornice
+            sc = 1020 / 1080
+            if (faccia["mento"] - cima) * sc > 0.85 * alto:   # faccia ripresa da vicino: la persona più piccola, il mento dentro
+                sc = 0.85 * alto / (faccia["mento"] - cima)
+            w = round(1080 * sc)
+            # la faccia al centro della cornice, un po' in alto; il video copre sempre tutta la cornice
+            y = round(0.47 * alto - (cima + faccia["mento"]) / 2 * sc)
+            y = max(min(y, 0), round(alto - 1920 * sc))
+            riq = {"top": ct, "w": w, "left": (1080 - w) // 2, "s": sc, "y": y}
+            sposta = 0
+            y_sub = ct - 62   # la riga dei sottotitoli tra la grafica e la cornice
+            r.tl.append(f'tl.set("#bg",{{transformOrigin:"50% {(faccia["occhi"] / 1920) * 100:.0f}%"}},0);')
+        elif stile.get("riquadro"):   # la persona più piccola in un riquadro arrotondato, il fondo chiaro tutto intorno
             ct = Reel.RIQ_TOP
             sc = max(0.6, min(0.9, (1290 - ct - 50) / (faccia["mento"] - cima)))   # il mento sopra la zona dei tasti
             sc = max(sc, (1920 + 60 - ct - 50) / (1920 - cima))   # ma il video arriva fino in fondo al riquadro
@@ -3254,6 +3423,10 @@ window.__timelines["main"] = tl;
         pagina = pagina.replace("</style>", CSS_APP + "</style>", 1)
     if riq:   # fondo chiaro, scritte scure: come lo Show and Tell
         pagina = pagina.replace("</style>", css_riquadro(r.P) + "</style>", 1)
+        if stile.get("forte"):
+            r.font_extra("Poppins-Bold.ttf")   # i titoli usano il font dei titoli dello stile (Anton, o quello scelto nella pagina)
+            pagina = pagina.replace("</style>", "@font-face{font-family:'Poppins Bold';src:url('assets/Poppins-Bold.ttf')}"
+                                    + css_forte(r.P, ft["famiglia"]) + "</style>", 1)
     pagina = font_degli_effetti(pagina, stile.get("sottotitoli_scelti") or propri)
     pagina = colore_degli_effetti(pagina, stile.get("accento_brand"))
     pagina = ritocchi.titoli(pagina, ft["famiglia"], stile.get("ritocchi_titoli"), stile["colori"]["accento"])
