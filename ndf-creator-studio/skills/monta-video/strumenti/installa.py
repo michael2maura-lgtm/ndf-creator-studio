@@ -187,6 +187,14 @@ def suoni():
     stato("suoni gratuiti", mancati == 0, f"{len(elenco) - mancati} su {len(elenco)}")
 
 
+def musiche_libere():
+    """Le musiche di pubblico dominio (musica/libere.json): dalla loro fonte, in DATI/suoni/musiche-libere."""
+    r = gira([PY, os.path.join(QUI, "musiche.py"), "scarica"], timeout=1800)
+    righe = [x for x in (r.stdout or "").splitlines() if x.startswith("MUSICHE PRONTE")]
+    n = int(righe[-1].split()[-1]) if righe else 0
+    stato("musiche libere", n > 0, f"{n} brani")
+
+
 def main():
     if platform.system() not in ("Darwin", "Windows"):
         sys.exit("Lo studio funziona su Mac e su Windows.")
@@ -200,6 +208,7 @@ def main():
     modelli()
     pulitore_voce()
     suoni()
+    musiche_libere()
     with open(os.path.join(CASA, "percorsi.json"), "w", encoding="utf-8") as f:
         json.dump(percorsi, f, indent=1, ensure_ascii=False)
     plugin = os.path.join(os.path.dirname(os.path.dirname(QUI)), ".claude-plugin", "plugin.json")

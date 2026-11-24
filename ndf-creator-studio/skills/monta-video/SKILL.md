@@ -71,6 +71,12 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    Decidi che video è. **Completo**: ogni 3-6 secondi una scena a tutto schermo di 1-3 secondi, poi si torna sulla
    persona; zoom, transizioni, suoni degli oggetti, musica. **Parlato** (spiega un concetto, annuncio semplice):
    sottotitoli, titoli e finale, niente musica. Se l'utente lo dice, vale quello.
+   **La musica la scegli dal tono del video** (se il video ha musica e il cliente non ne ha scelta una nella pagina):
+   `PY STUDIO/strumenti/musiche.py scegli <tono>` e nel piano `"musica": "<il percorso che stampa>"`. Toni:
+   `calma` (storia personale, racconto, riflessione), `positiva` (consigli, spiegazioni, presentazioni),
+   `morbida` (bellezza, cura di sé, benessere), `carica` (sport, sfida, motivazione), `energica` (annunci, ritmo
+   alto). Sono musiche di pubblico dominio (`musica/libere.json`): non serve citarle. Non ripete i brani degli
+   ultimi video. Se stampa MANCA si usa la musica dello stile. Nel resoconto di' quale tono hai scelto e perché.
    Scrivi `piano.json` (formato in cima a `strumenti/costruisci.py`, `scene.py`, `suoni_reel.py`, `split.py`)
    seguendo `stili/<stile>/stile.md` e `regole/suoni.md`. Scene: `testo`, `capitolo` (01 02 03), `clip` (clip vere in
    `DATI/clip/`, "x" per la X rossa), `omino` (in_piedi, spallucce, braccia_su, scrivania; "chiaro", "croce",

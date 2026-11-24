@@ -1,0 +1,159 @@
+{
+ "nota": "Musiche di pubblico dominio (CC0 1.0, verificate sulla pagina di ognuna il 25/11/2026): si usano anche nelle pubblicità, senza pagare e senza citare nessuno. Si scaricano dalla fonte originale all'installazione (strumenti/musiche.py), non stanno nel plugin. Toni: calma (storie, racconti), energica, positiva (consigli, presentazioni), morbida (bellezza, cura di sé), carica (sport, motivazione). Approvate da Michael il 25/11/2026: «tienili tutti».",
+ "voci": [
+  {
+   "id": "heavenly-loop",
+   "tono": "calma",
+   "autore": "isaiah658",
+   "pagina": "https://opengameart.org/content/heavenly-loop",
+   "file": "https://opengameart.org/sites/default/files/Heavenly%20Loop.flac",
+   "estensione": "flac",
+   "licenza": "CC0-1.0",
+   "sha256": "1324464c995635ce1a7833c5b3f33eba7356b60e17e802ebbf286bd1abe0a5a4",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "slow-stride",
+   "tono": "calma",
+   "autore": "isaiah658",
+   "pagina": "https://opengameart.org/content/slow-stride",
+   "file": "https://opengameart.org/sites/default/files/Slow%20Stride%20Loop.flac",
+   "estensione": "flac",
+   "licenza": "CC0-1.0",
+   "sha256": "42598ee6d19ccc9b2659a6a4bde081aab0e8d0ea8fc6d97428d46803653ab337",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "contemplation",
+   "tono": "calma",
+   "autore": "Joth",
+   "pagina": "https://opengameart.org/content/contemplation-0",
+   "file": "https://opengameart.org/sites/default/files/Contemplation.mp3",
+   "estensione": "mp3",
+   "licenza": "CC0-1.0",
+   "sha256": "283962d3a975c93613c46cda30c9f0816176ae3e2899f961591a49e2d41b4bf3",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "shine-blitz",
+   "tono": "energica",
+   "autore": "zesona",
+   "pagina": "https://opengameart.org/content/shine-blitz",
+   "file": "https://opengameart.org/sites/default/files/shineblitz_0.ogg",
+   "estensione": "ogg",
+   "licenza": "CC0-1.0",
+   "sha256": "877f4067f73028b4cff2ed8072a934b48dec2abe4f85e076106d235c46b4f10a",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "happier-tune",
+   "tono": "energica",
+   "autore": "Gena Sealov",
+   "pagina": "https://opengameart.org/content/happier-tune",
+   "file": "https://opengameart.org/sites/default/files/happier_tune.flac",
+   "estensione": "flac",
+   "licenza": "CC0-1.0",
+   "sha256": "af75710e54f076057e580e7ae1345639378b9a0acf1fe9f563f402bf6ea8bfdd",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "tropical-loop",
+   "tono": "energica",
+   "autore": "wipics",
+   "pagina": "https://opengameart.org/content/tropical-loop",
+   "file": "https://opengameart.org/sites/default/files/Tropical.wav",
+   "estensione": "wav",
+   "licenza": "CC0-1.0",
+   "sha256": "87435f569c25dc6d5c6399ed1d7360fd0b71345691131c56cf59dcd9a07ca771",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "upbeat-song",
+   "tono": "positiva",
+   "autore": "Ruhinre",
+   "pagina": "https://opengameart.org/node/178922",
+   "file": "https://opengameart.org/sites/default/files/happy.wav",
+   "estensione": "wav",
+   "licenza": "CC0-1.0",
+   "sha256": "111bdb4b78d625dc8cca25f9d9301dc710530d1691c8dd2c5743ef9642eb063e",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "happy-beat",
+   "tono": "positiva",
+   "autore": "burabotti",
+   "pagina": "https://opengameart.org/content/happy-beat",
+   "file": "https://opengameart.org/sites/default/files/happybeat.ogg",
+   "estensione": "ogg",
+   "licenza": "CC0-1.0",
+   "sha256": "7be39701ccbe9faa9d69952bd6dd6a6412bcdf3212dea33085ac8cc6dcd35804",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "bright-eyes",
+   "tono": "positiva",
+   "autore": "tomcat",
+   "pagina": "https://opengameart.org/content/bright-eyes",
+   "file": "https://opengameart.org/sites/default/files/bright_eyes.ogg",
+   "estensione": "ogg",
+   "licenza": "CC0-1.0",
+   "sha256": "aba00ab0df9fedb871719d34091ff2383057aa25edf35e8a13573051e90af5bc",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "first-light",
+   "tono": "morbida",
+   "autore": "Yoiyami",
+   "pagina": "https://opengameart.org/node/182244",
+   "file": "https://opengameart.org/sites/default/files/first_light_particles_0.wav",
+   "estensione": "wav",
+   "licenza": "CC0-1.0",
+   "sha256": "f0538a1a67450cc1d5e305fad5bc0d5d422ad809f720d695ab356e55fbe40fc5",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "elevate-piano",
+   "tono": "morbida",
+   "autore": "Fupi",
+   "pagina": "https://opengameart.org/node/109773",
+   "file": "https://opengameart.org/sites/default/files/elevatesoftpiano.flac",
+   "estensione": "flac",
+   "licenza": "CC0-1.0",
+   "sha256": "0280579ea8a9beb09460020f327d2155b8e7c1457348064561643bd7a9a34e47",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "chill-lofi",
+   "tono": "morbida",
+   "autore": "omfgdude",
+   "pagina": "https://opengameart.org/content/chill-lofi-inspired",
+   "file": "https://opengameart.org/sites/default/files/ChillLofi.ogg",
+   "estensione": "ogg",
+   "licenza": "CC0-1.0",
+   "sha256": "7ea7fd1b7c95ed1ca5f6ebb796626570137bcb75c7f2ea87b6c61212c7a86694",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "elevate",
+   "tono": "carica",
+   "autore": "Fupi",
+   "pagina": "https://opengameart.org/node/109773",
+   "file": "https://opengameart.org/sites/default/files/elevate.flac",
+   "estensione": "flac",
+   "licenza": "CC0-1.0",
+   "sha256": "2fad7d52144e287f95788f03a37a8fbb8501f1ecadec931923701bae746c3383",
+   "verificata": "2026-11-25"
+  },
+  {
+   "id": "electro-tune",
+   "tono": "carica",
+   "autore": "TinyWorlds",
+   "pagina": "https://opengameart.org/content/energetic-electro-tune",
+   "file": "https://opengameart.org/sites/default/files/mixdown.ogg",
+   "estensione": "ogg",
+   "licenza": "CC0-1.0",
+   "sha256": "4a2360010627f1fc04eedb640285a032d6d4bdd3e1aed24b469a8b0c29f76dd4",
+   "verificata": "2026-11-25"
+  }
+ ]
+}

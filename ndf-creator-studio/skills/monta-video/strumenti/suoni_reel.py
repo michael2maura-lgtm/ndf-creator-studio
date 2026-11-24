@@ -10,7 +10,7 @@ import os
 import shutil
 import subprocess
 
-from comune import FFMPEG, trova
+from comune import DATI, FFMPEG, trova
 
 VOL_EFFETTI = 0.45  # circa 7 dB sotto la voce
 VOL_COLPO = 0.5
@@ -150,7 +150,10 @@ def prepara(piano, stile, cart_stile, reel, D):
     if cfg.get("musica") and suoni.get("musica"):
         # la musica si ripete fino alla fine del video e sfuma nell'ultimo secondo e mezzo
         dest = os.path.join(assets, "musica.m4a")
-        subprocess.run([FFMPEG, "-v", "error", "-y", "-stream_loop", "-1", "-i", os.path.join(cart_stile, suoni["musica"]),
+        brano = piano.get("musica") if isinstance(piano.get("musica"), str) else None   # musica scelta per questo video
+        src = next((q for q in (brano, os.path.join(DATI, "musica", brano or "")) if brano and os.path.isfile(q)),
+                   os.path.join(cart_stile, suoni["musica"]))
+        subprocess.run([FFMPEG, "-v", "error", "-y", "-stream_loop", "-1", "-i", src,
                         "-t", f"{D:.3f}", "-af", f"afade=t=in:d=0.8,afade=t=out:st={max(D - 1.5, 0):.3f}:d=1.5",
                         "-c:a", "aac", "-b:a", "160k", dest], check=True)
         audio("musica", "assets/musica.m4a", 0, D, VOL_MUSICA)
