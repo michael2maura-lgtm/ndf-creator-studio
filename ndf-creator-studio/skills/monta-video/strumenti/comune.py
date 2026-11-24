@@ -115,8 +115,6 @@ def con_le_scelte(nome_stile, stile):
         suoni.update({k: v for k, v in sc.get("suoni", {}).items() if v == "" or os.path.exists(v)})  # "" = nessun suono
         if sc.get("musica") == "nessuna":
             suoni.pop("musica", None)
-        elif sc.get("musica") and os.path.exists(sc["musica"]):
-            suoni["musica"] = sc["musica"]
         nuovo["suoni"] = suoni
         if sc.get("transizione"):
             nuovo["transizione_scelta"] = sc["transizione"]
@@ -124,6 +122,9 @@ def con_le_scelte(nome_stile, stile):
             nuovo["stacchi"] = False
     elif sc.get("musica") == "nessuna" and "suoni" in stile:
         nuovo["suoni"] = {k: v for k, v in stile["suoni"].items() if k != "musica"}
+    if sc.get("musica") not in (None, "", "nessuna", "modello") and os.path.exists(sc["musica"]) and "suoni" in nuovo:
+        nuovo["suoni"] = dict(nuovo["suoni"], musica=sc["musica"])   # un brano scelto nella pagina: con qualsiasi stile
+    nuovo["musica_scelta"] = sc.get("musica")   # None = la sceglie lo studio dal tono del video (musiche.py)
     if sc.get("sottotitoli"):
         nuovo["sottotitoli_scelti"] = sc["sottotitoli"]
     if sc.get("colore"):
@@ -252,6 +253,9 @@ def riepilogo_scelte():
     if sott:
         pezzi.append(f"sottotitoli {sott}")
     pezzi.append(f"{len(eff)} effetti: {', '.join(eff)}" if eff else "nessun effetto acceso")
+    m = sc.get("musica")
+    pezzi.append("musica: " + ("nessuna" if m == "nessuna" else "quella del modello" if m == "modello" else
+                               "dal tono del video (musiche.py scegli)" if not m else os.path.basename(str(m))))
     return "SCELTE DEL CLIENTE: " + "; ".join(pezzi)
 
 

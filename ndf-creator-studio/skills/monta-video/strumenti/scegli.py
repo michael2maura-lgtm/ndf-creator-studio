@@ -206,8 +206,8 @@ def raccogli():
                   "transizione": sc.get("transizione"), "diviso": sc.get("diviso"),
                   **{k: sc[k] for k in ("modello", "accento", "chiusura", "parola", "ricevi", "durata", "punti", "testo_fisso", "note",
                                          "titoli", "sott", "fisso") if k in sc},
-                  "musica": "nessuna" if sc.get("musica") == "nessuna" else per_percorso.get(os.path.realpath(sc["musica"]))
-                  if sc.get("musica") else None}
+                  "musica": sc.get("musica") if sc.get("musica") in ("nessuna", "modello") else
+                  per_percorso.get(os.path.realpath(sc["musica"])) if sc.get("musica") else None}
     except (OSError, ValueError):
         pass
     transizioni = {}
@@ -424,9 +424,9 @@ class Pagina(BaseHTTPRequestHandler):
                     suoni[m] = ""
                 elif h in Pagina.file and h != di_serie.get(m):
                     suoni[m] = Pagina.file[h]
-            musica = corpo.get("musica")
-            if musica and musica != "nessuna":
-                musica = Pagina.file.get(musica) if musica != di_serie.get("musica") else None
+            musica = corpo.get("musica")   # None = la sceglie lo studio dal tono del video
+            if musica and musica not in ("nessuna", "modello"):
+                musica = Pagina.file.get(musica)   # un brano preciso: vale con qualsiasi modello
             sott = corpo.get("sottotitoli")
             if sott not in sottotitoli.CATALOGO or sott == di_serie.get("sottotitoli"):
                 sott = None  # quelli dello stile

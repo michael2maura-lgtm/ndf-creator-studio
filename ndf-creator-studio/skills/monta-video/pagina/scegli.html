@@ -461,13 +461,15 @@ function disegna() {
        + colori("Testo", "sott.testo", s.testo, [[null,"Dello stile"],["#FFFFFF","Bianco"],["#111111","Nero"],["#FFD84D","Giallo"],[S.accento,"Il tuo colore"]])
        + colori("Parole in evidenza", "sott.evidenza", s.evidenza, [[null,"Dello stile"],[S.accento,"Il tuo colore"],["#FFFFFF","Bianco"],["#FFD84D","Giallo"],["#111111","Nero"]])
        + (x.riquadro ? colori("Riquadro", "sott.riquadro", s.riquadro, [[null,"Scuro"],[S.accento,"Il tuo colore"],["#FFFFFF","Chiaro"],["#000000","Nero"]]) : ""))),
-   passo(5, "Chiusura e durata", CHIUSURE.find(c => c.k === S.chiusura).nome + ", " + (S.durata < 120 ? S.durata + " secondi" : S.durata / 60 + " minuti"),
+   passo(5, "Chiusura, durata e musica", CHIUSURE.find(c => c.k === S.chiusura).nome + ", " + (S.durata < 120 ? S.durata + " secondi" : S.durata / 60 + " minuti") + ", " + nomeMusica(),
      blocco("La chiusura", `<div class="riga" style="margin:0">${CHIUSURE.map(c => `<button class="chip ${S.chiusura === c.k ? "si" : ""}" data-chi="${c.k}" title="${c.d}">${c.nome}</button>`).join("")}</div>
        <div ${S.chiusura === "commenta" ? "" : "hidden"} style="margin-top:12px"><p class="spieg" style="margin:0 0 6px">La parola da commentare</p><input type="text" id="parola" value="${esc(S.parola)}" maxlength="20" placeholder="INFO" style="max-width:220px"><p class="spieg" style="margin:12px 0 6px">Cosa riceve chi commenta (si legge: per ricevere…)</p><input type="text" id="ricevi" value="${esc(S.ricevi)}" maxlength="40" placeholder="la guida gratuita" style="max-width:320px"></div>`)
      + blocco("La durata massima", `<p class="spieg">Se il video è più lungo, lo studio lo taglia tenendo ritmo e significato.</p><div class="riga" style="margin:0">${DURATE.map(d => `<button class="chip ${S.durata === d ? "si" : ""}" data-dur="${d}">${d < 120 ? d + " secondi" : d / 60 + " minuti"}</button>`).join("")}</div>`)
      + blocco("Musica e velocità", `<div class="riga nome"><span class="cosa">Musica</span><div>
-         <button class="chip ${S.musica !== "nessuna" ? "si" : ""}" data-mus="">Quella del modello</button>
+         <button class="chip ${!S.musica ? "si" : ""}" data-mus="">La sceglie lo studio dal tono del video</button>
+         <button class="chip ${S.musica === "modello" ? "si" : ""}" data-mus="modello">Quella del modello</button>
          <button class="chip ${S.musica === "nessuna" ? "si" : ""}" data-mus="nessuna">Nessuna, la metto io su Instagram</button></div></div>
+       ${musicheLibere()}
        <div class="riga nome"><span class="cosa">Velocità</span><div>${VELOCITA.map(v => `<button class="chip ${S.velocita === v.v ? "si" : ""}" data-vel="${v.v}">${v.nome}</button>`).join("")}</div></div>`)),
    passo(6, "Un testo fisso per tutto il reel", S.testo_fisso || "Nessuno",
      blocco("La scritta fissa", `<p class="spieg">Una scritta che resta in alto dall'inizio alla fine: il nome della tua rubrica o il tema del video.</p>
@@ -487,6 +489,27 @@ function riassunto() {
   $("#riass").textContent = [st ? st.nome.replace(/^Stile /, "") : null, "Titoli " + nomeFont(S.titoli.font, "del modello"),
     "Sottotitoli " + sottDi().nome, CHIUSURE.find(c => c.k === S.chiusura).nome + (S.chiusura === "commenta" ? " " + S.parola : ""), "max " + S.durata + "s"].filter(Boolean).join(" · ");
 }
+const TONI_MUSICA = [["calma","Calme","storie e racconti"],["positiva","Positive","consigli e spiegazioni"],["morbida","Morbide","bellezza e benessere"],["carica","Cariche","sport e motivazione"],["energica","Energiche","annunci, ritmo alto"]];
+function musicheLibere() {   // i brani di pubblico dominio (DATI/suoni/musiche-libere): si ascoltano e si sceglie
+  const lib = (D.suoni || []).filter(x => x.da === "musiche-libere" && /^musica-/.test(x.nome));
+  if (!lib.length) return "";
+  return `<p class="spieg" style="margin:14px 0 8px">Oppure scegline una tu: musiche libere, si usano anche nelle pubblicità senza pagare niente. ▶ per ascoltarla.</p>`
+    + TONI_MUSICA.map(([k, nome, per]) => {
+      const qui = lib.filter(x => x.nome.startsWith("musica-" + k + "-"));
+      if (!qui.length) return "";
+      return `<div class="riga nome"><span class="cosa">${nome}<br><small style="opacity:.6;font-weight:400">${per}</small></span><div>`
+        + qui.map(x => { const n = x.nome.replace("musica-" + k + "-", "").replace(/-/g, " ");
+          return `<span style="display:inline-flex;gap:4px;align-items:center;margin:0 8px 8px 0"><button class="chip" data-ascolta="${x.id}" title="Ascolta">▶</button><button class="chip ${S.musica === x.id ? "si" : ""}" data-mus="${x.id}">${esc(n.charAt(0).toUpperCase() + n.slice(1))}</button></span>`; }).join("")
+        + `</div></div>`; }).join("");
+}
+let ascolto = null;
+function nomeMusica() {
+  if (!S.musica) return "musica dal tono";
+  if (S.musica === "nessuna") return "senza musica";
+  if (S.musica === "modello") return "musica del modello";
+  const x = (D.suoni || []).find(s => s.id === S.musica);
+  return x ? x.nome.replace(/^musica-[a-z]+-/, "").replace(/-/g, " ") : "musica scelta";
+}
 function avviso(t) { const a = $("#avviso"); a.textContent = t; a.style.display = "block"; clearTimeout(a._t); a._t = setTimeout(() => a.style.display = "none", 2800); }
 function metti(chiave, v) { const [a, b] = chiave.split("."); if (b) S[a][b] = v; else S[a] = v; }
 
@@ -503,7 +526,15 @@ document.addEventListener("click", e => {
     disegna(); base(); return; }   // come nella pagina di riferimento: il modello si disegna in diretta sul video, e ogni scelta cambia lì sopra
   if ("look" in t.dataset) { S.colore = t.dataset.look || null; disegna(); if (S.colore) telefono(`/file/look-${S.colore}`, "img", "Il look del video", false); else base(); return; }
   if (t.dataset.sott) { S.sottotitoli = t.dataset.sott; disegna(); base("Sottotitoli " + sottDi().nome); return; }
-  if ("mus" in t.dataset) { S.musica = t.dataset.mus || null; disegna(); return; }
+  if ("ascolta" in t.dataset) {   // anteprima del brano: un clic suona, un altro clic si ferma
+    const src = "/file/" + t.dataset.ascolta;
+    if (ascolto && !ascolto.paused && ascolto._src === src) { ascolto.pause(); t.textContent = "▶"; return; }
+    if (ascolto) ascolto.pause();
+    document.querySelectorAll("[data-ascolta]").forEach(b => b.textContent = "▶");
+    ascolto = new Audio(src); ascolto._src = src; ascolto.volume = 0.8; ascolto.play().catch(() => {}); t.textContent = "■";
+    ascolto.onended = () => { t.textContent = "▶"; };
+    return; }
+  if ("mus" in t.dataset) { S.musica = t.dataset.mus || null; if (ascolto) ascolto.pause(); disegna(); return; }
   if ("vel" in t.dataset) { S.velocita = t.dataset.vel === "null" ? null : +t.dataset.vel; disegna(); return; }
   if (t.dataset.chi) { S.chiusura = t.dataset.chi; disegna(); base(); return; }
   if (t.dataset.dur) { S.durata = +t.dataset.dur; disegna(); return; }
@@ -568,7 +599,7 @@ function prendi(sc) {   // rimette nella pagina delle scelte salvate
   for (const k of ["stile", "modello", "colore", "sottotitoli", "velocita", "chiusura", "parola", "ricevi", "durata", "punti", "testo_fisso", "note"]) if (sc[k] != null) S[k] = sc[k];
   for (const k of ["titoli", "sott", "fisso"]) if (sc[k]) Object.assign(S[k], sc[k]);
   if (sc.accento) S.accento = sc.accento;
-  S.musica = sc.musica === "nessuna" ? "nessuna" : null;
+  S.musica = sc.musica || null;   // null = dal tono del video, "modello", "nessuna" o l'id di un brano
   if (S.stile && !stileDi(S.stile)) { S.stile = null; S.modello = null; }
 }
 
