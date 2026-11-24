@@ -83,6 +83,7 @@ import effetti_testimonianza
 import sottotitoli
 import ritocchi
 import suoni_reel
+import comune  # noqa: E402
 from comune import DATI, FFMPEG, STUDIO, durata, girato, leggi, trova
 
 GSAP = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"
@@ -684,6 +685,9 @@ class Reel:
         import ritaglio as rit
         c = self.stile["colori"]
         t, fine = e["quando"], e.get("a", self.D)
+        meglio = comune.senza_mani(faccia, t, 0.6)
+        if any(comune.mani_sulla_faccia(c) for c in faccia.get("campioni", []) if abs(c["t"] - t) <= 0.25) and meglio != t:
+            print(f"NOTA MANI: a {t:.2f} s una mano copre la faccia; l'adesivo viene meglio a {meglio:.2f} s (\"quando\")")
         im = rit.fotogramma(os.path.dirname(self.reel), t)
         taglio = int(min(faccia["mento"] + 380, 1919))   # taglio dritto sotto il petto: niente scrivania o mani in basso
         a_px = np.array(im.getchannel("A"))
@@ -2787,6 +2791,16 @@ def costruisci(cart, piano, stile, cart_stile, parole, faccia, D, zone_html=""):
         if e["tipo"] == "pannello" and 0 < dopo["da"] - e["a"] < 0.3:
             e["a"] = dopo["da"]
     zoom_sui_tagli(r, cart, piano, stile, faccia, riq)
+    # le mani: un titolo sul petto che copre per quasi tutto il tempo le mani che gesticolano si nota. Solo un avviso:
+    # chi monta decide se spostarlo di qualche secondo (sottotitoli esclusi: stanno sempre lì)
+    if not diviso:
+        for e in piano.get("elementi", []):
+            sul_petto = e.get("tipo") in ("titolo", "numero", "prompt", "contatore") or e.get("dove") == "petto"
+            if sul_petto and "da" in e and e.get("a", e["da"]) - e["da"] >= 1.0:
+                q = comune.mani_nella_fascia(faccia, e["da"], e["a"], petto - 40, petto + 320)
+                if q is not None and q >= 0.6:
+                    print(f'NOTA MANI: {e["tipo"]} {e["da"]:.1f}-{e["a"]:.1f} s copre le mani che gesticolano per il {q * 100:.0f}% '
+                          f'del tempo: se il gesto conta, spostalo dove le mani sono giù')
     for e in sorted(piano.get("elementi", []), key=lambda x: x["da"] if "da" in x else x["quando"] if "quando" in x else x["voci"][0][-1] if x.get("voci") else 0):
         tipo = e["tipo"]
         prima = len(r.corpo)

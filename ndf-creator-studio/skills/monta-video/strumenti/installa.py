@@ -36,6 +36,7 @@ HYPERFRAMES = "hyperframes@0.8.34"
 NODE = "v22.11.0"
 PACCHETTI = ["faster-whisper", "mediapipe", "opencv-python-headless", "Pillow", "numpy", "scipy", "av>=12,<17", "static-ffmpeg"]
 FACCIA = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+MANI = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"  # Apache 2.0, ~8 MB
 percorsi = {"python": PY}
 
 
@@ -153,6 +154,12 @@ def modelli():
     f = os.path.join(MODELLI, "face_detector.tflite")
     if not os.path.exists(f):
         scarica(FACCIA, f)
+    m = os.path.join(MODELLI, "hand_landmarker.task")   # le mani: per non coprirle e per i fotogrammi senza mani in faccia
+    if not os.path.exists(m):
+        try:
+            scarica(MANI, m)
+        except Exception:
+            pass   # senza le mani lo studio funziona lo stesso
     r = gira([PY, "-c", "import sys; from faster_whisper import WhisperModel; "
                         "WhisperModel('large-v3-turbo', device='cpu', compute_type='int8', download_root=sys.argv[1])", MODELLI])
     stato("modelli (voce e faccia)", r.returncode == 0 and os.path.exists(f), "la prima volta scarica circa 1,5 GB")

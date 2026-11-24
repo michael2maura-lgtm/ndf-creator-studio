@@ -64,7 +64,7 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    taglia.py, parole.py e il controllo, al massimo 3 giri: finché non dice `DA SISTEMARE: 0` non passi al piano
    (una ripetizione voluta va bene). Se resta qualcosa, nel messaggio finale di' il secondo da ascoltare.
    Lo zoom cambia da solo a ogni taglio (largo, stretto, largo, più stretto, sulla faccia): non scriverlo nel piano.
-4. `PY STUDIO/strumenti/faccia.py NOME` e guarda `controllo/faccia.jpg`: il riquadro deve stare sulla faccia.
+4. `PY STUDIO/strumenti/faccia.py NOME` e guarda `controllo/faccia.jpg`: il riquadro verde deve stare sulla faccia (quelli blu sono le mani: lo studio le segue per non coprirle).
 5. Leggi le ultime 5 righe di `stili/<stile>/registro.md` e scegli scene, clip e pose diverse da quelle.
    **Prima di tutto il gancio** (primi 2-5 s), in ogni stile: segui `regole/gancio.md` (titolo corto vicino agli
    occhi, testo-immagine-voce uguali, un cambio ogni 1-2 s solo lì).
@@ -118,7 +118,9 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    **La faccia ha lo stesso colore in tutto il video**: i filtri colore vanno sulle clip e sulle foto, mai sulle
    riprese della persona (anche quando è ritagliata o dentro un riquadro).
 6. `PY STUDIO/strumenti/costruisci.py NOME --zone`, poi `PY STUDIO/strumenti/foto.py NOME <6-8 momenti>`
-   e guarda il foglio: niente nelle zone rosse, niente sulla faccia, niente righe orfane.
+   e guarda il foglio: niente nelle zone rosse, niente sulla faccia, niente righe orfane. Una riga `NOTA MANI` dice che
+   un titolo sul petto copre a lungo le mani che gesticolano, o che un fermo immagine cade con una mano sulla faccia:
+   sposta l'elemento ai secondi indicati, o dove le mani sono giù, se il gesto conta.
 7. `PY STUDIO/strumenti/costruisci.py NOME` (senza zone), poi `PY STUDIO/strumenti/rendi.py NOME`.
 8. `PY STUDIO/strumenti/controlla_tagli.py NOME finale/NOME-vN.mp4 --telefono`: guarda i fotogrammi del video
    (e fai il controllo "in silenzio" dei primi 5 secondi di `regole/gancio.md`)

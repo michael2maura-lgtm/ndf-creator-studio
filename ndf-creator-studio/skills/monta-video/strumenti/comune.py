@@ -253,3 +253,35 @@ def riepilogo_scelte():
         pezzi.append(f"sottotitoli {sott}")
     pezzi.append(f"{len(eff)} effetti: {', '.join(eff)}" if eff else "nessun effetto acceso")
     return "SCELTE DEL CLIENTE: " + "; ".join(pezzi)
+
+
+def _tocca(a, b):
+    """True se i riquadri [x0, y0, x1, y1] a e b si sovrappongono."""
+    return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+
+
+def mani_sulla_faccia(c):
+    """True se nel campione c di faccia.json una mano passa davanti alla faccia (con un po' di margine)."""
+    if "y" not in c:
+        return False
+    m = 0.15 * c["l"]
+    faccia = [c["x"] - m, c["y"] - m, c["x"] + c["l"] + m, c["y"] + c["h"] + m]
+    return any(_tocca(faccia, r) for r in c.get("mani", []))
+
+
+def senza_mani(faccia, t, raggio=0.6):
+    """Il secondo più vicino a t (entro raggio) in cui nessuna mano copre la faccia: per fermi immagine, adesivi e
+    copertine. Se non c'è, o se faccia.json non ha le mani, torna t."""
+    camp = [c for c in faccia.get("campioni", []) if abs(c["t"] - t) <= raggio and "mani" in c and "y" in c]
+    puliti = [c for c in camp if not mani_sulla_faccia(c)]
+    return min(puliti, key=lambda c: abs(c["t"] - t))["t"] if puliti else t
+
+
+def mani_nella_fascia(faccia, da, a, y0, y1):
+    """Quanta parte del tempo da-a (0-1) le mani stanno nella fascia orizzontale y0-y1 (es. il petto, dove vanno i
+    titoli). None se faccia.json non ha le mani."""
+    camp = [c for c in faccia.get("campioni", []) if da <= c["t"] <= a and "mani" in c]
+    if not camp:
+        return None
+    fascia = [0, y0, 1080, y1]
+    return sum(1 for c in camp if any(_tocca(fascia, r) for r in c["mani"])) / len(camp)
