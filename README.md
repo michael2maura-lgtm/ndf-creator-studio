@@ -18,7 +18,7 @@ Sul Mac non serve.
 **Passo 1.** Apri l'app Claude, clicca in alto su **Code** e incolla questo messaggio:
 
 ```
-Installa per me lo studio video "NDF Creator Studio". Si trova su GitHub: michael2maura-lgtm/ndf-creator-studio. Aggiungi questo marketplace e installa il plugin ndf-creator-studio. Quando hai finito, dimmi di chiudere e riaprire l'app.
+Installa per me lo studio video "NDF Creator Studio". Si trova su GitHub: michael2maura-lgtm/ndf-creator-studio. Aggiungi questo marketplace e installa il plugin ndf-creator-studio (se il comando claude non c'è, scrivili tu nelle impostazioni di Claude Code). Quando hai finito, dimmi solo questo: "Chiudi e riapri l'app, apri una nuova sessione e scrivi: installa lo studio".
 ```
 
 Quando Claude chiede il permesso, clicca **Consenti**.
