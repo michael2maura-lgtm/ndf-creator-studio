@@ -144,6 +144,13 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    `PY STUDIO/strumenti/didascalia.py NOME` finché dice DIDASCALIA OK. Manda all'utente la copertina e il testo
    della didascalia in chat, pronto da copiare. Se nel video c'è una frase rischiosa per il network (soldi promessi,
    effetti medici), diglielo in una riga con il secondo.
+   **Il critico, prima di mandare il video:** `PY STUDIO/strumenti/critico.py NOME`, poi lancia un subagente (strumento
+   Agent, tipo general-purpose) con il prompt: "Sei il critico di un reel. Leggi <il percorso LEGGIMI.md che ha
+   stampato> e segui le istruzioni: guarda tutte le immagini e rispondi solo nel formato richiesto." Non dirgli
+   cosa hai fatto tu: deve guardare con occhi nuovi. Correggi le righe GRAVE che sono davvero problemi (un giro
+   solo: piano o tagli, poi la versione dopo), le PICCOLO solo se si sistemano in un attimo; se una GRAVE secondo te
+   è sbagliata, lasciala ma dillo nel resoconto. Se lo strumento Agent non c'è, fai tu questi controlli con
+   `regole/critico.md`. Al cliente non serve sapere del critico: digli solo cosa hai sistemato.
 9. `PY STUDIO/strumenti/registro.py <stile> "NOME | scene: ... | clip: ... | omini: ... | suoni: ..."` con
    quello che hai usato davvero. Di' in poche righe cosa hai fatto, se hai messo la musica e perché, e cosa deve
    ascoltare o controllare (le parole corrette a intuito, con il secondo). Tu non senti l'audio: dillo.
