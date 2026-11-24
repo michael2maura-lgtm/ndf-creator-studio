@@ -109,6 +109,8 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    Zoom: decidilo sempre tu, in ogni video, seguendo `regole/zoom.md` (l'utente non deve chiederlo).
    **Poche cose fatte bene**: una grafica alla volta, mai lampi, adesivi o pillole su ogni parola. Se un elemento non
    aiuta a capire o a sentire, toglilo.
+   Una grafica o una scena NUOVA (che non c'è nel catalogo, una scena disegnata, un modello nuovo): prima leggi le guide
+   per animare in `riferimenti/motion/LEGGIMI.md` (dice quali e quando) e falla seguendo quelle regole.
    **Scena piena dal primo fotogramma**: una scena a tutto schermo non si apre mai su uno sfondo vuoto (anche mezzo
    secondo fa sembrare il reel in ritardo). Gli elementi principali ci sono già, tenui, e si accendono sulla parola
    detta; dal nulla compaiono solo gli accenti (un timbro, un cerchio, un oggetto che vola).
