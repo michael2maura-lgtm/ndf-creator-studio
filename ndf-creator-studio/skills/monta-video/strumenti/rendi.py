@@ -123,6 +123,116 @@ def solo_audio(reel, video_prima, finito, vel=1.0, gia_veloce=False):
     os.remove(finito + ".mov")
 
 
+# Come HyperFrames crea le immagini del reel. Di solito tiene i fotogrammi sul disco e poi li unisce; prima di partire
+# controlla di avere larghezza x altezza x 4 byte liberi per ogni fotogramma (8,3 MB in verticale, anche se poi ne usa
+# molto meno) e se non li ha si ferma. Con poco disco si va "in streaming": ogni fotogramma finisce subito nel video.
+STREAMING = {"PRODUCER_ENABLE_STREAMING_ENCODE": "true", "PRODUCER_STREAMING_ENCODE_MAX_DURATION_SECONDS": "900"}
+NORMALE = [("4 browser", ["-w", "4"], {}),
+           ("2 browser", ["-w", "2"], {})]   # a volte un browser si inceppa: si riprova con meno lavoro in parallelo
+# Con poco disco. Il modo "un fotogramma alla volta" (1 browser, cattura a schermate) su alcuni Mac si blocca sempre
+# sullo stesso fotogramma pesante, per esempio la scritta dietro la testa: il browser non restituisce più l'immagine
+# e dopo 60 s HyperFrames si ferma ("Sequential screenshot capture stalled"). Rifarlo uguale non serve: si passa a un
+# altro modo di catturare. Si parte dallo streaming con più browser, che cattura come il render normale (quello che
+# sullo stesso reel funziona) ma senza fotogrammi sul disco.
+POCO_SPAZIO = [("streaming con 4 browser", ["-w", "4", "--no-low-memory-mode"], STREAMING | {"HF_DE_PARALLEL_STREAM": "true"}),
+               ("un fotogramma alla volta", ["-w", "1"], STREAMING),
+               ("streaming con 2 browser", ["-w", "2", "--no-low-memory-mode"], STREAMING | {"HF_DE_PARALLEL_STREAM": "true"})]
+
+
+def serve_disco(reel):
+    """Byte liberi che HyperFrames vuole per tenere i fotogrammi sul disco (lo stesso calcolo che fa lui)."""
+    import re
+    pagina = open(os.path.join(reel, "index.html"), encoding="utf-8").read()
+    radice = re.search(r'<div id="root"[^>]*>', pagina)
+    att = dict(re.findall(r'([\w-]+)="([^"]*)"', radice.group(0))) if radice else {}
+    secondi = float(att.get("data-duration") or 0)
+    if not secondi and os.path.exists(os.path.join(reel, "assets", "tagliato.mp4")):
+        secondi = durata(os.path.join(reel, "assets", "tagliato.mp4"))
+    return secondi * 30 * int(att.get("data-width") or 1080) * int(att.get("data-height") or 1920) * 4
+
+
+FERMO = 300  # secondi senza nessun passo avanti: il render è appeso e si chiude (HyperFrames si arrende già dopo 60 s)
+
+
+def render_sorvegliato(cmd, ambiente):
+    """Lancia HyperFrames e lo guarda: se per FERMO secondi non fa nessun passo avanti lo chiude (browser compresi).
+    Serve perché a volte, dopo un blocco, HyperFrames resta appeso per sempre invece di fermarsi con un errore.
+    I suoi messaggi "stage still running" arrivano anche da fermo: contano solo se il numero di fotogrammi è cambiato."""
+    import re
+    import signal
+    import threading
+    import time
+    windows = sys.platform == "win32"
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace", env=ambiente,
+                         **({} if windows else {"start_new_session": True}))
+    righe, stato = [], {"ultimo": time.time(), "fatti": -1}
+
+    def leggi_righe():
+        for riga in p.stdout:
+            righe.append(riga)
+            fatti = re.search(r'"framesCompleted":(\d+)', riga)
+            if "still running" not in riga or (fatti and int(fatti.group(1)) != stato["fatti"]):
+                stato["ultimo"] = time.time()
+            if fatti:
+                stato["fatti"] = int(fatti.group(1))
+
+    lettore = threading.Thread(target=leggi_righe, daemon=True)
+    lettore.start()
+    while p.poll() is None:
+        time.sleep(2)
+        if time.time() - stato["ultimo"] > FERMO:
+            if windows:
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)], capture_output=True)
+            else:
+                try:
+                    os.killpg(p.pid, signal.SIGKILL)
+                except OSError:
+                    p.kill()
+            p.wait()
+            righe.append(f"\n[Studio] render appeso: nessun passo avanti per {FERMO} s, chiuso (stalled).\n")
+            break
+    lettore.join(timeout=10)
+    return subprocess.CompletedProcess(cmd, p.returncode, "".join(righe), "")
+
+
+def crea_immagini(reel, fin, grezzo, qualita):
+    """Crea il video (solo immagini) provando i modi uno dopo l'altro: se uno si blocca si passa al successivo,
+    senza mai rifare lo stesso tentativo. Restituisce l'ultimo risultato di HyperFrames."""
+    import shutil
+    # come HyperFrames: deve bastare il 90% dello spazio libero; 1 GB in più per i fotogrammi dei video e il file finito
+    poco_spazio = shutil.disk_usage(fin).free * 0.9 < serve_disco(reel) + 1e9
+    if poco_spazio:
+        print("Poco spazio libero sul disco: creo il video senza tenere i fotogrammi sul disco.")
+    modi = POCO_SPAZIO if poco_spazio else NORMALE
+    i = 0
+    while i < len(modi):
+        nome, opzioni, ambiente = modi[i]
+        prima = set(os.listdir(fin))
+        r = render_sorvegliato([NPX, "--yes", HYPERFRAMES, "render", reel, "-o", grezzo, "-q", qualita, "-f", "30",
+                                "--sdr",   # i video HDR dell'iPhone chiederebbero 20+ GB di disco; Instagram è comunque SDR
+                                *opzioni], env_node() | ambiente)
+        if r.returncode == 0 and os.path.exists(grezzo):
+            return r
+        # i pezzi lasciati dal tentativo fallito (il video a metà, la cartella di lavoro) occupano disco: via
+        for f in set(os.listdir(fin)) - prima:
+            p = os.path.join(fin, f)
+            try:
+                shutil.rmtree(p, ignore_errors=True) if os.path.isdir(p) else os.remove(p)
+            except OSError:
+                pass
+        uscita = r.stderr + r.stdout
+        if not poco_spazio and "temporary frame storage" in uscita:
+            poco_spazio, modi, i = True, POCO_SPAZIO, 0   # la stima era bassa: senza fotogrammi sul disco
+            print("Poco spazio libero sul disco: creo il video senza tenere i fotogrammi sul disco.")
+            continue
+        i += 1
+        if i < len(modi):
+            bloccato = "stalled" in uscita
+            print(f"Il video si è {'bloccato' if bloccato else 'fermato'} ({nome}): riprovo in un altro modo "
+                  f"({modi[i][0]})...")
+    return r
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if not args:
@@ -152,26 +262,7 @@ def main():
 
     qualita = "draft" if "--bozza" in sys.argv else "high"
     print(f"Creo il video (qualità {qualita}): qualche minuto...")
-    # i fotogrammi in attesa occupano circa 8.5 MB l'uno sul disco: se lo spazio è poco, li manda via uno alla volta
-    import shutil
-    fotogrammi = durata(os.path.join(reel, "assets", "tagliato.mp4")) * 30 if os.path.exists(os.path.join(reel, "assets", "tagliato.mp4")) else 0
-    poco_spazio = shutil.disk_usage(fin).free < fotogrammi * 8.5e6 * 1.3
-    if poco_spazio:
-        print("Poco spazio libero sul disco: creo il video un fotogramma alla volta (un po' più lento).")
-    # a volte il browser che crea i fotogrammi si inceppa: si riprova una volta, con meno lavoro in parallelo
-    for workers in ("4", "2"):
-        r = subprocess.run([NPX, "--yes", HYPERFRAMES, "render", reel, "-o", grezzo, "-q", qualita, "-f", "30",
-                            "--sdr",   # i video HDR dell'iPhone chiederebbero 20+ GB di disco; Instagram è comunque SDR
-                            "-w", "1" if poco_spazio else workers], capture_output=True, text=True,
-                           env=env_node() | ({"PRODUCER_ENABLE_STREAMING_ENCODE": "true",
-                                             "PRODUCER_STREAMING_ENCODE_MAX_DURATION_SECONDS": "900"} if poco_spazio else {}))
-        if r.returncode != 0 and "temporary frame storage" in (r.stderr or r.stdout) and not poco_spazio:
-            poco_spazio = True  # la stima era bassa: si riprova senza tenere i fotogrammi sul disco
-            print("Poco spazio libero sul disco: creo il video un fotogramma alla volta (un po' più lento).")
-            continue
-        if r.returncode == 0 and os.path.exists(grezzo):
-            break
-        print("Il video si è bloccato a metà: riprovo...")
+    r = crea_immagini(reel, fin, grezzo, qualita)
     if r.returncode != 0 or not os.path.exists(grezzo):
         sys.exit("Errore nella creazione del video:\n" + (r.stderr or r.stdout)[-2500:])
     # l'audio lo rifacciamo noi (serve per il ducking della musica): del video creato si tengono solo le immagini
