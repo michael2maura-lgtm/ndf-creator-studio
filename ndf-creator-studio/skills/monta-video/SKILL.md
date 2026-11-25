@@ -91,6 +91,10 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
    si dice. Dai alla clip il nome dell'oggetto quando c'è (soldi, porta, festa, sveglia, ufficio, fabbrica,
    bollette...): così prende da sola il suo suono. Foto a tutto schermo (scena `immagine`, es. un corpo, un
    prodotto, un luogo): stesso modo, con un link pexels.com/photo/...; finiscono in `DATI/immagini/`.
+   Una cosa PRECISA che su Pexels non c'è (una pianta, un luogo, un oggetto con il suo nome): Wikimedia Commons,
+   `PY STUDIO/strumenti/foto_wiki.py cerca "<cosa in inglese>" <nome>`, guarda il foglio delle candidate e
+   `foto_wiki.py prendi <nome> <numero>`. Tiene solo licenze sicure; se la foto chiede di citare l'autore,
+   didascalia.py ti dice la riga da aggiungere. Mai loghi o marchi di altre aziende.
    Clip e foto stanno di serie in una finestra arrotondata su fondo scuro (i sottotitoli continuano sopra, se la scena
    non ha "grande"); "finestra": false solo se serve il tutto schermo.
    Entrate delle scene, campo "entrata": `lampo` (flash bianco all'entrata e al ritorno sulla persona: per clip e

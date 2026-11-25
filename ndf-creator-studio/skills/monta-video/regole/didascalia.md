@@ -15,6 +15,8 @@ Con ogni reel si consegna anche la didascalia: la scrivi tu in `finale/NOME-dida
 4. **Hashtag**: da 0 a 5, specifici, in fondo su una riga a parte. Mai #viral #fyp #explorepage.
 5. **Niente link** (non si cliccano): il link va nella bio o in DM.
 6. Emoji poche, come punteggiatura. Lunghezza: di solito 400-900 caratteri; massimo 2.200.
+7. **Crediti delle foto**: se nel video c'è una foto di Wikimedia con licenza CC BY, in fondo (dopo gli hashtag)
+   va la riga «Foto: autore, licenza, Wikimedia Commons». `didascalia.py` te la scrive se manca.
 
 ## Network marketing: le frasi che non si scrivono (né nel video, né qui)
 - **Soldi**: niente guadagni promessi o garantiti, cifre di guadagno, "soldi facili", "rendita passiva",

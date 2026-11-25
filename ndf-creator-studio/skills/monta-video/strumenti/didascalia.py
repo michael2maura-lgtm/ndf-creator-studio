@@ -13,7 +13,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import cartella_lavoro  # noqa: E402
+from comune import DATI, cartella_lavoro, leggi  # noqa: E402
 
 # frasi che nel network marketing possono creare problemi (promesse di soldi o di salute)
 RISCHIO = [
@@ -27,6 +27,32 @@ RISCHIO = [
 ]
 RICHIESTE = r"\b(commenta|scrivimi|scrivi\s+in\s+dm|mandami|seguimi|segui\s+per|salva(lo|la)?\b|condividi|clicca|tagga)"
 BANALI = {"#viral", "#fyp", "#foryou", "#foryoupage", "#explorepage", "#explore", "#reels", "#instagram"}
+
+
+def crediti_da_citare(nome):
+    """Le righe di credito delle foto usate nel piano che lo chiedono (DATI/immagini/<foto>.crediti.json)."""
+    try:
+        piano = leggi(os.path.join(cartella_lavoro(nome), "piano.json"))
+    except (OSError, ValueError):
+        return []
+    trovate = []
+
+    def giro(x):
+        if isinstance(x, dict):
+            for v in x.values():
+                giro(v)
+        elif isinstance(x, list):
+            for v in x:
+                giro(v)
+        elif isinstance(x, str):
+            base = os.path.splitext(os.path.basename(x))[0]
+            c = os.path.join(DATI, "immagini", base + ".crediti.json")
+            if base and os.path.exists(c):
+                testo = leggi(c).get("testo")
+                if testo and testo not in trovate:
+                    trovate.append(testo)
+    giro(piano)
+    return trovate
 
 
 def main():
@@ -61,6 +87,9 @@ def main():
     for schema, cosa in RISCHIO:
         for m in re.finditer(schema, testo, re.I):
             problemi.append(f"frase rischiosa per il network ({cosa}): «{m.group(0)}»")
+    for cred in crediti_da_citare(nome):   # foto di Wikimedia con licenza CC BY: l'autore va citato
+        if cred.split(",")[0].replace("Foto: ", "").strip().lower() not in testo.lower():
+            problemi.append(f"manca il credito di una foto: aggiungi in fondo la riga «{cred}»")
     if problemi:
         for x in problemi:
             print("DA SISTEMARE: " + x)
