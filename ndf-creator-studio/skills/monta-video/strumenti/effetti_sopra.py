@@ -219,14 +219,41 @@ def fondo(r, e, faccia):
     r.su_fondo = getattr(r, "su_fondo", []) + [(da, a)]
 
 
+def _noto3d(emoji, dest):
+    """L'emoji Noto 3D di Google (licenza Apache 2.0, nessuna citazione): scaricata una volta in DATI/emoji/noto3d.
+    True se c'è. Si usa dove non ci sono le emoji di Apple (Windows): così sono uguali per tutti, non quelle di Microsoft."""
+    import os
+    import shutil
+    import urllib.request
+    from comune import DATI
+    codici = "_".join(f"{ord(c):x}" for c in emoji if ord(c) != 0xFE0F)
+    cache = os.path.join(DATI, "emoji", "noto3d", f"emoji_u{codici}.png")
+    if not os.path.exists(cache):
+        try:
+            os.makedirs(os.path.dirname(cache), exist_ok=True)
+            url = f"https://raw.githubusercontent.com/googlefonts/noto-emoji/main/3D/png/512/emoji_u{codici}.png"
+            with urllib.request.urlopen(url, timeout=30) as risposta, open(cache + ".tmp", "wb") as f:
+                shutil.copyfileobj(risposta, f)
+            os.replace(cache + ".tmp", cache)
+        except Exception:
+            return False
+    from PIL import Image
+    im = Image.open(cache).convert("RGBA")
+    im.crop(im.getbbox()).save(dest)
+    return True
+
+
 def _emoji_png(r, emoji):
     """L'emoji disegnata una volta come immagine (come lettera nella pagina rallenta il montaggio e blocca le foto).
-    Mac: Apple Color Emoji; Windows: Segoe UI Emoji. None se il computer non sa disegnarla."""
+    Mac: Apple Color Emoji (le più belle, scelta di Michael 25/11/2026); altrove: Noto 3D di Google; ultima riserva
+    Segoe UI Emoji di Windows. None se non si riesce a disegnarla."""
     import os
     from PIL import Image, ImageDraw, ImageFont
     nome = "emoji-" + "-".join(f"{ord(c):x}" for c in emoji) + ".png"
     dest = os.path.join(r.assets, nome)
     if os.path.exists(dest):
+        return nome
+    if not os.path.exists("/System/Library/Fonts/Apple Color Emoji.ttc") and _noto3d(emoji, dest):
         return nome
     for font, misura in (("/System/Library/Fonts/Apple Color Emoji.ttc", 160), ("C:/Windows/Fonts/seguiemj.ttf", 160)):
         if not os.path.exists(font):
