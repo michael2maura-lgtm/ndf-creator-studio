@@ -75,7 +75,7 @@ jobs:
       - name: La versione dei clienti (main) installata, con un reel
         env:
           PROVA_USCITA: ${{ github.workspace }}/ci/uscita-vecchia
-        run: /usr/bin/python3 ci/prova.py --studio vecchia/ndf-creator-studio --solo-reel
+        run: /usr/bin/python3 ci/prova.py --studio vecchia/ndf-creator-studio --solo-reel --tollera-mancanze
       - name: La versione nuova, senza reinstallare, con un reel
         env:
           PROVA_USCITA: ${{ github.workspace }}/ci/uscita-nuova

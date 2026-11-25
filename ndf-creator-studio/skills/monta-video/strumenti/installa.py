@@ -189,7 +189,7 @@ def suoni():
 
 def musiche_libere():
     """Le musiche di pubblico dominio (musica/libere.json): dalla loro fonte, in DATI/suoni/musiche-libere."""
-    r = gira([PY, os.path.join(QUI, "musiche.py"), "scarica"], timeout=1800)
+    r = gira([PY, os.path.join(QUI, "strumenti", "musiche.py"), "scarica"], timeout=1800)
     righe = [x for x in (r.stdout or "").splitlines() if x.startswith("MUSICHE PRONTE")]
     n = int(righe[-1].split()[-1]) if righe else 0
     stato("musiche libere", n > 0, f"{n} brani")
@@ -215,7 +215,7 @@ def main():
     with open(os.path.join(CASA, "pronto.json"), "w", encoding="utf-8") as f:
         json.dump({"versione": json.load(open(plugin))["version"], "dati": DATI}, f)
     try:   # l'icona "NDF Creator Studio" sulla scrivania: doppio clic e si apre la pagina
-        subprocess.run([percorsi.get("python") or sys.executable, os.path.join(QUI, "icona.py")], check=False)
+        subprocess.run([percorsi.get("python") or sys.executable, os.path.join(QUI, "strumenti", "icona.py")], check=False)
     except Exception:
         pass
     print("FINE: lo studio è pronto.")

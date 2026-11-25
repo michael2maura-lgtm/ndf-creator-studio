@@ -140,8 +140,10 @@ def uv():
     trovato = next((p for p in posti if p and os.path.exists(p)), None)
     if not trovato:   # come dice il passo 0 di SKILL.md al cliente
         if WIN:
+            # su GitHub il PowerShell 7 passa i suoi moduli al PowerShell di Windows, che non li carica: si tolgono
+            amb = {k: v for k, v in AMBIENTE.items() if k.upper() != "PSMODULEPATH"}
             passo("installa uv", ["powershell", "-ExecutionPolicy", "ByPass", "-c",
-                                  "irm https://astral.sh/uv/install.ps1 | iex"])
+                                  "irm https://astral.sh/uv/install.ps1 | iex"], ambiente=amb)
         else:
             passo("installa uv", ["sh", "-c", "curl -LsSf https://astral.sh/uv/install.sh | sh"])
         trovato = next((p for p in posti[1:] if p and os.path.exists(p)), None)
@@ -153,7 +155,10 @@ def installa():
     uscita = passo("installazione da zero", [uv(), "run", "--python", "3.12", "--no-project",
                                             os.path.join(STR, "installa.py")], deve="FINE", tempo=5400)
     mancano = [r for r in uscita.splitlines() if r.startswith("STATO") and ": MANCA" in r]
-    controlla("ogni pezzo installato", not mancano, "; ".join(mancano))
+    if mancano and "--tollera-mancanze" in sys.argv:   # la versione dei clienti, con i suoi difetti già noti
+        scrivi_riga("AVVISO (versione vecchia): " + "; ".join(mancano))
+    else:
+        controlla("ogni pezzo installato", not mancano, "; ".join(mancano))
 
 
 def reel_pulito(nome):
