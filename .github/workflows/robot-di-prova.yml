@@ -1,0 +1,91 @@
+# Il robot di prova dello studio (ci/prova.py) su computer veri di GitHub: Mac Apple Silicon e Windows.
+# Gira a ogni invio su un ramo che NON è main, o a mano. Mai su main: i clienti prendono gli aggiornamenti da main,
+# e questa è la prova da fare prima. Una versione esce (va su main) solo se tutte le prove qui sono verdi.
+name: robot-di-prova
+
+on:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+jobs:
+  cliente-nuovo:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            nome: mac-apple-silicon
+          - os: windows-latest
+            nome: windows
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      # Il computer di un cliente non ha quello che GitHub mette di serie: si tolgono Python, Node e ffmpeg dal PATH,
+      # così lo studio deve trovarli o scaricarli da solo, come su un computer appena comprato.
+      - name: Nascondi i programmi di GitHub (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $resta = ($env:PATH -split ';') | Where-Object { $_ -notmatch 'python|Python|hostedtoolcache|nodejs|ffmpeg|Strawberry' }
+          "PATH=$($resta -join ';')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Nascondi i programmi di GitHub (Mac)
+        if: runner.os == 'macOS'
+        run: echo "PATH=/usr/bin:/bin:/usr/sbin:/sbin" >> "$GITHUB_ENV"
+
+      - name: Installazione da zero, reel Pulito, reel Chiaro, disco quasi pieno (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $py = Get-ChildItem 'C:\hostedtoolcache\windows\Python\3.12*\x64\python.exe' | Select-Object -First 1
+          & $py.FullName ci/prova.py
+          exit $LASTEXITCODE
+      - name: Installazione da zero, reel Pulito, reel Chiaro, disco quasi pieno (Mac)
+        if: runner.os == 'macOS'
+        run: /usr/bin/python3 ci/prova.py
+
+      - name: Tieni i risultati (video, log)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-${{ matrix.nome }}
+          path: |
+            ci/uscita/log
+            ci/uscita/dati/lavori/*/finale
+            ci/uscita/dati/lavori/*/controllo
+          if-no-files-found: warn
+
+  # Un cliente che ha la versione di oggi (main) e riceve quella nuova: l'aggiornamento cambia solo il plugin, non
+  # rilancia l'installazione. La versione nuova deve montare con quello che la vecchia aveva installato.
+  aggiornamento:
+    runs-on: macos-latest
+    timeout-minutes: 120
+    env:
+      NDF_STUDIO_DATI: ${{ github.workspace }}/dati-cliente
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: vecchia
+      - name: Nascondi i programmi di GitHub
+        run: echo "PATH=/usr/bin:/bin:/usr/sbin:/sbin" >> "$GITHUB_ENV"
+      - name: La versione dei clienti (main) installata, con un reel
+        env:
+          PROVA_USCITA: ${{ github.workspace }}/ci/uscita-vecchia
+        run: /usr/bin/python3 ci/prova.py --studio vecchia/ndf-creator-studio --solo-reel
+      - name: La versione nuova, senza reinstallare, con un reel
+        env:
+          PROVA_USCITA: ${{ github.workspace }}/ci/uscita-nuova
+        run: /usr/bin/python3 ci/prova.py --senza-installa --solo-reel
+      - name: Tieni i risultati
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-aggiornamento
+          path: |
+            ci/uscita-vecchia/log
+            ci/uscita-nuova/log
+          if-no-files-found: warn

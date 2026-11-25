@@ -201,6 +201,8 @@ def crea_immagini(reel, fin, grezzo, qualita):
     import shutil
     # come HyperFrames: deve bastare il 90% dello spazio libero; 1 GB in più per i fotogrammi dei video e il file finito
     poco_spazio = shutil.disk_usage(fin).free * 0.9 < serve_disco(reel) + 1e9
+    if os.environ.get("NDF_STUDIO_PROVA_POCO_SPAZIO") == "1":   # il robot di prova (ci/prova.py): disco quasi pieno finto
+        poco_spazio = True
     if poco_spazio:
         print("Poco spazio libero sul disco: creo il video senza tenere i fotogrammi sul disco.")
     modi = POCO_SPAZIO if poco_spazio else NORMALE
