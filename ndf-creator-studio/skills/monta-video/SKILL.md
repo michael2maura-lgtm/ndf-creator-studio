@@ -33,8 +33,13 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
   questa chat. `RIAVVIA` (la versione nuova è già scaricata) → di' subito la frase della riga `DI':`, senza lanciare altro.
   Su Mac lo stesso programma (e ogni strumento) riprende da iCloud i file dello studio che il Mac ha spostato lì col
   disco pieno. Righe: `ICLOUD OK` → niente da dire; `ICLOUD BLOCCATO` → di' in parole semplici di aprire il Finder,
-  Documenti, clic destro su NDFCreatorStudio, "Mantieni scaricato", e controlla internet; `DISCO PIENO` → dillo in una
-  riga (con il disco pieno i video vanno più lenti e il Mac sposta i file su iCloud). Una pagina o un montaggio che resta
+  Documenti, clic destro su NDFCreatorStudio, "Mantieni scaricato", e controlla internet; `DISCO PIENO` (meno di
+  8 GB liberi: il video può non riuscire a uscire) → `PY STUDIO/strumenti/pulisci.py controlla`; se dice SI POSSONO
+  LIBERARE, chiedi UNA volta: "Il disco è quasi pieno: posso liberare <GB> GB togliendo i file di lavoro dei video già
+  finiti? I video finiti, le copertine e le didascalie restano." Con un sì `pulisci.py libera` e di' quanto hai
+  liberato; con un no vai avanti. Se lo spazio resta sotto 8 GB (o NIENTE DA LIBERARE), di' in parole semplici di
+  liberarne: svuotare il Cestino, togliere video vecchi da Download; su Mac  › Impostazioni di Sistema › Generali ›
+  Spazio. Mai cancellare niente senza il sì. Una pagina o un montaggio che resta
   fermo senza motivo: rilancia `aggiornamenti.py` prima di tutto.
 - Manca il colore in `DATI/profilo.json` (brand mai fatto): prima di montare fai il brand in chat (sezione "Il brand",
   qui sotto), poi monta. L'intervista `crea-stile` si fa solo se l'utente la chiede.
