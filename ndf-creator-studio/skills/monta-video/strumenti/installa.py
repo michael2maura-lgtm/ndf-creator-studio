@@ -45,8 +45,10 @@ def stato(cosa, ok, nota=""):
 
 
 def gira(cmd, **kw):
+    # utf-8 per tutti: su Windows la lettura in cp1252 si rompeva sulle lettere accentate e l'uscita andava persa
+    kw.setdefault("env", dict(os.environ, PYTHONIOENCODING="utf-8"))
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, **kw)
+        return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", **kw)
     except (FileNotFoundError, OSError) as e:
         return subprocess.CompletedProcess(cmd, 1, "", str(e))
 
@@ -195,6 +197,13 @@ def musiche_libere():
     stato("musiche libere", n > 0, f"{n} brani")
 
 
+def salva_percorsi():
+    """percorsi.json lo leggono gli strumenti (comune.py): va scritto PRIMA dei passi che li usano (musiche.py
+    converte con ffmpeg), non solo alla fine, se no su un computer senza ffmpeg di sistema quei passi falliscono."""
+    with open(os.path.join(CASA, "percorsi.json"), "w", encoding="utf-8") as f:
+        json.dump(percorsi, f, indent=1, ensure_ascii=False)
+
+
 def main():
     if platform.system() not in ("Darwin", "Windows"):
         sys.exit("Lo studio funziona su Mac e su Windows.")
@@ -205,12 +214,12 @@ def main():
     ffmpeg()
     node()
     hyperframes()
+    salva_percorsi()
     modelli()
     pulitore_voce()
     suoni()
+    salva_percorsi()
     musiche_libere()
-    with open(os.path.join(CASA, "percorsi.json"), "w", encoding="utf-8") as f:
-        json.dump(percorsi, f, indent=1, ensure_ascii=False)
     plugin = os.path.join(os.path.dirname(os.path.dirname(QUI)), ".claude-plugin", "plugin.json")
     with open(os.path.join(CASA, "pronto.json"), "w", encoding="utf-8") as f:
         json.dump({"versione": json.load(open(plugin))["version"], "dati": DATI}, f)

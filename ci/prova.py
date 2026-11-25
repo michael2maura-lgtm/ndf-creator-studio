@@ -163,6 +163,7 @@ def installa():
 
 def reel_pulito(nome):
     os.makedirs(LAVORI, exist_ok=True)
+    os.makedirs(USCITA, exist_ok=True)
     clip = os.path.join(USCITA, "girato-di-prova.mp4")
     shutil.copyfile(os.path.join(STUDIO, "pagina", "telefono.mp4"), clip)
     strumento("prepara", clip, nome, deve="SCELTE DEL CLIENTE", tempo=1800)
