@@ -59,6 +59,12 @@ PACCHETTI = ["faster-whisper==1.2.1", "ctranslate2==4.8.3", "mediapipe==1.1.1", 
              "Pillow==13.0.0", "numpy==2.5.4", "scipy==1.18.1", "av==16.1.0", "onnxruntime==1.31.0",
              "static-ffmpeg==3.0", "yt-dlp>=2026.11.23"]   # yt-dlp si aggiorna da solo (prendi_esempio.py)
 
+# I Mac Intel: mediapipe e onnxruntime non escono più per loro, le ultime versioni che ci sono (trovato dal robot sul
+# Mac Intel di GitHub, 27/11/2026: con le versioni di sopra l'installazione si fermava)
+if cartelle.MAC and platform.machine().lower() in ("x86_64", "amd64"):
+    PACCHETTI = [{"mediapipe": "mediapipe==0.10.14", "onnxruntime": "onnxruntime==1.23.2"}.get(p.split("=")[0], p)
+                 for p in PACCHETTI]
+
 NODE = "v22.11.0"
 NODE_IMPRONTE = {
     "darwin-arm64.tar.gz": "2e89afe6f4e3aa6c7e21c560d8a0453d84807e97850bbb819b998531a22bdfde",
