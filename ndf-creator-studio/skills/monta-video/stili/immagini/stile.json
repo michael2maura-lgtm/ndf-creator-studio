@@ -10,27 +10,27 @@
  },
  "font": {
   "titoli": {
-   "file": "font/InstrumentSerif-Italic.ttf",
+   "file": "../../font/InstrumentSerif-Italic.ttf",
    "famiglia": "Instrument Serif",
    "peso": 400,
    "larghezza": 100
   },
   "mono": {
-   "file": "font/JetBrainsMono.ttf",
+   "file": "../../font/JetBrainsMono.ttf",
    "famiglia": "JetBrains Mono"
   }
  },
  "finale": false,
  "suoni": {
-  "transizione": "suoni/transizione.mp3",
-  "impatto": "suoni/impatto.mp3",
-  "glitch": "suoni/glitch.mp3",
-  "pop": "suoni/pop.mp3",
-  "tastiera": "suoni/tastiera.mp3",
-  "ding": "suoni/ding.mp3",
-  "livello": "suoni/livello.mp3",
-  "click": "suoni/click.mp3",
-  "sfumatura": "suoni/sfumatura.mp3"
+  "transizione": "../../suoni/stili/transizione.mp3",
+  "impatto": "../../suoni/stili/impatto.mp3",
+  "glitch": "../../suoni/stili/glitch.mp3",
+  "pop": "../../suoni/stili/pop.mp3",
+  "tastiera": "../../suoni/stili/tastiera.mp3",
+  "ding": "../../suoni/stili/ding.mp3",
+  "livello": "../../suoni/stili/livello.mp3",
+  "click": "../../suoni/stili/click.mp3",
+  "sfumatura": "../../suoni/stili/sfumatura.mp3"
  },
  "descrizione": "Tu al centro e, mentre racconti, il video stacca: un po' sulle immagini di quello che dici, un po' su una frase che si compone a tutto schermo. Spunte nel tuo colore sui punti di forza.",
  "sottotitoli_nome": "b-parola",

@@ -158,6 +158,25 @@ def con_le_scelte(nome_stile, stile):
     return nuovo
 
 
+def stile_autonomo(cart):
+    """Uno stile copiato fuori da STUDIO/stili (in DATI/stili): i file che lo stile pronto prende dalla copia unica
+    ("../../font/X.ttf", "../../suoni/stili/x.mp3", ci/una_copia.py) si copiano dentro lo stile, e stile.json punta
+    lì. Così lo stile del cliente funziona da solo, anche dopo un aggiornamento."""
+    import re
+    p = os.path.join(cart, "stile.json")
+    with open(p, encoding="utf-8") as f:
+        testo = f.read()
+    for rel in set(re.findall(r'"(\.\./\.\./[^"]+)"', testo)):
+        sotto = "font" if "/font/" in rel else "suoni"
+        sorgente = os.path.normpath(os.path.join(STUDIO, "stili", "x", rel))
+        if os.path.exists(sorgente):
+            os.makedirs(os.path.join(cart, sotto), exist_ok=True)
+            shutil.copy2(sorgente, os.path.join(cart, sotto, os.path.basename(rel)))
+            testo = testo.replace(f'"{rel}"', f'"{sotto}/{os.path.basename(rel)}"')
+    with open(p, "w", encoding="utf-8") as f:
+        f.write(testo)
+
+
 def girato(cart):
     """Il video su cui si monta: quello con il colore (colore.py) se c'è, se no il tagliato."""
     c = os.path.join(cart, "tagliato-colore.mp4")

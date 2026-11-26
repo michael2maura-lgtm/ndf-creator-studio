@@ -10,13 +10,13 @@
   },
   "font": {
     "titoli": {
-      "file": "font/Archivo.ttf",
+      "file": "../../font/Archivo.ttf",
       "famiglia": "Archivo",
       "peso": 900,
       "larghezza": 125
     },
     "mono": {
-      "file": "font/JetBrainsMono.ttf",
+      "file": "../../font/JetBrainsMono.ttf",
       "famiglia": "JetBrains Mono"
     }
   },
@@ -26,15 +26,15 @@
     "sopra": "TE LO INVIO IN DIRECT"
   },
   "suoni": {
-    "transizione": "suoni/transizione.mp3",
-    "impatto": "suoni/impatto.mp3",
-    "glitch": "suoni/glitch.mp3",
-    "pop": "suoni/pop.mp3",
-    "tastiera": "suoni/tastiera.mp3",
-    "ding": "suoni/ding.mp3",
-    "livello": "suoni/livello.mp3",
-    "click": "suoni/click.mp3",
-    "musica": "suoni/musica.wav"
+    "transizione": "../../suoni/stili/transizione.mp3",
+    "impatto": "../../suoni/stili/impatto.mp3",
+    "glitch": "../../suoni/stili/glitch.mp3",
+    "pop": "../../suoni/stili/pop.mp3",
+    "tastiera": "../../suoni/stili/tastiera.mp3",
+    "ding": "../../suoni/stili/ding.mp3",
+    "livello": "../../suoni/stili/livello.mp3",
+    "click": "../../suoni/stili/click.mp3",
+    "musica": "../../suoni/stili/musica.wav"
   },
   "descrizione": "Grafiche animate sopra di te: poche per un video semplice, tante per un video d'impatto.",
   "sottotitoli_nome": "ndf-targhetta",

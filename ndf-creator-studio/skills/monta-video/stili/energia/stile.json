@@ -11,27 +11,27 @@
  },
  "font": {
   "titoli": {
-   "file": "font/Poppins-Bold.ttf",
+   "file": "../../font/Poppins-Bold.ttf",
    "famiglia": "Poppins",
    "peso": 700,
    "larghezza": 100
   },
   "mono": {
-   "file": "font/JetBrainsMono.ttf",
+   "file": "../../font/JetBrainsMono.ttf",
    "famiglia": "JetBrains Mono"
   }
  },
  "finale": false,
  "suoni": {
-  "transizione": "suoni/transizione.mp3",
-  "impatto": "suoni/impatto.mp3",
-  "glitch": "suoni/glitch.mp3",
-  "pop": "suoni/pop.mp3",
-  "tastiera": "suoni/tastiera.mp3",
-  "ding": "suoni/ding.mp3",
-  "livello": "suoni/livello.mp3",
-  "click": "suoni/click.mp3",
-  "sfumatura": "suoni/sfumatura.mp3"
+  "transizione": "../../suoni/stili/transizione.mp3",
+  "impatto": "../../suoni/stili/impatto.mp3",
+  "glitch": "../../suoni/stili/glitch.mp3",
+  "pop": "../../suoni/stili/pop.mp3",
+  "tastiera": "../../suoni/stili/tastiera.mp3",
+  "ding": "../../suoni/stili/ding.mp3",
+  "livello": "../../suoni/stili/livello.mp3",
+  "click": "../../suoni/stili/click.mp3",
+  "sfumatura": "../../suoni/stili/sfumatura.mp3"
  },
  "descrizione": "Tutto sopra la testa: una riga con quello che dici e, sulle parole importanti, una parola enorme o una targa colorata. Elenchi che si costruiscono, schermate a colore per le frasi secche. Ritmo vivo.",
  "sottotitoli_nome": "sopra",

@@ -23,6 +23,20 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comune import DATI, SCELTE, STUDIO, leggi, scrivi  # noqa: E402
 import libreria_suoni  # noqa: E402
+import anteprime  # noqa: E402
+
+
+def video_anteprima(file, chiave, p):
+    """Un'anteprima video: nel programma, nella copia del progetto o da GitHub (anteprime.py). True se la pagina
+    può mostrarla. Il file vero si cerca (e se serve si scarica) solo quando la pagina lo chiede."""
+    if os.path.exists(p) and not p.startswith(STUDIO):   # quelle degli stili del cliente, in DATI
+        file[chiave] = p
+        return True
+    rel = os.path.relpath(p, STUDIO).replace(os.sep, "/")
+    if anteprime.c_e(rel):
+        file[chiave] = "anteprima:" + rel
+        return True
+    return False
 import colore  # noqa: E402
 import effetti  # noqa: E402
 import sottotitoli  # noqa: E402
@@ -81,13 +95,11 @@ def raccogli():
                     suoni.append({"id": h, "nome": os.path.splitext(os.path.basename(rel))[0], "da": st.get("nome", k), "cat": cat})
                 di_serie[mom] = h
             anteprima = os.path.join(cart, k, "anteprima.mp4")
-            if os.path.exists(anteprima):
-                file["anteprima-" + k] = anteprima
+            video_anteprima(file, "anteprima-" + k, anteprima)
             if os.path.exists(anteprima[:-4] + ".jpg"):  # la copertina: il browser non salta a un secondo preciso
                 file["anteprima-" + k + "-jpg"] = anteprima[:-4] + ".jpg"
             tel_m = os.path.join(cart, k, "telefono.mp4")   # il reel montato del modello senza sottotitoli (la pagina li disegna)
-            if os.path.exists(tel_m):
-                file["telefono-" + k] = tel_m
+            video_anteprima(file, "telefono-" + k, tel_m)
             if st.get("sottotitoli_nome") in sottotitoli.CATALOGO:
                 di_serie["sottotitoli"] = st["sottotitoli_nome"]
             momenti = [m for m in MOMENTI_MOTORE.get(motore, MOMENTI_MOTORE[""])]
@@ -99,7 +111,9 @@ def raccogli():
                           "momenti": [{"chiave": m, "titolo": MOMENTI[m][0], "quando": MOMENTI[m][1],
                                        "categorie": MOMENTI[m][2]} for m in momenti]})
             font = os.path.join(cart, k, "font", "Archivo.ttf")
-            if os.path.exists(font):
+            if not os.path.exists(font):   # gli stili pronti usano la copia unica in STUDIO/font (ci/una_copia.py)
+                font = os.path.join(STUDIO, "font", "Archivo.ttf") if "font/Archivo.ttf" in json.dumps(st) else ""
+            if font and os.path.exists(font):
                 file.setdefault("font-titoli", font)
 
     # i sottotitoli a tempo con la voce del video di esempio (pagina/telefono.json: parole dette e parole chiave).
@@ -159,12 +173,11 @@ def raccogli():
         except Exception:   # uno stile che non si disegna: resta solo l'anteprima video
             vivo = None
         p = os.path.join(STUDIO, "sottotitoli", "anteprime", k + ".mp4")
-        if os.path.exists(p):
-            file["sott-" + k] = p
+        c_e = video_anteprima(file, "sott-" + k, p)
         if os.path.exists(p[:-4] + ".jpg"):
             file["sott-" + k + "-jpg"] = p[:-4] + ".jpg"
         sott.append({"chiave": k, "nome": s["nome"], "per": s["per"], "descrizione": s["descrizione"],
-                     "anteprima": os.path.exists(p), "vivo": vivo, "maiuscolo": bool(s.get("maiuscolo")), "modo": s["modo"],
+                     "anteprima": c_e, "vivo": vivo, "maiuscolo": bool(s.get("maiuscolo")), "modo": s["modo"],
                      "riquadro": "background:rgba(10,10,12" in s["css"] or "/*riq*/" in s["css"],
                      "base": bool(s.get("base")), "due": s.get("due_righe") == "sotto",
                      "k_fondo": bool(re.search(r"\.st \.k\{[^}]*background", s["css"]))})
@@ -181,11 +194,10 @@ def raccogli():
         if k in effetti.NASCOSTI:   # doppioni: nella pagina c'è solo la versione uguale al Creator Studio
             continue
         p = os.path.join(STUDIO, "effetti", "anteprime", k + ".mp4")
-        if os.path.exists(p):
-            file["eff-" + k] = p
+        c_e = video_anteprima(file, "eff-" + k, p)
         if os.path.exists(p[:-4] + ".jpg"):
             file["eff-" + k + "-jpg"] = p[:-4] + ".jpg"
-        eff.append(dict(e, chiave=k, anteprima=os.path.exists(p)))
+        eff.append(dict(e, chiave=k, anteprima=c_e))
 
     looks = []
     for k, (nome, per, _, _, _) in colore.LOOK.items():
@@ -213,11 +225,9 @@ def raccogli():
     transizioni = {}
     for k in ("sfumatura", "bande", "taglio"):
         p = os.path.join(STUDIO, "transizioni", "anteprime", k + ".mp4")
-        if os.path.exists(p):
-            file["tr-" + k] = p
-            if os.path.exists(p[:-4] + ".jpg"):
-                file["tr-" + k + "-jpg"] = p[:-4] + ".jpg"
-        transizioni[k] = os.path.exists(p)
+        transizioni[k] = video_anteprima(file, "tr-" + k, p)
+        if transizioni[k] and os.path.exists(p[:-4] + ".jpg"):
+            file["tr-" + k + "-jpg"] = p[:-4] + ".jpg"
     stili.sort(key=lambda x: x.get("ordine", 50))   # i modelli dal più semplice al più movimentato
     tel = os.path.join(STUDIO, "pagina", "telefono.mp4")   # il video di esempio del telefono, uguale per tutti
     if os.path.exists(tel):
@@ -382,6 +392,10 @@ class Pagina(BaseHTTPRequestHandler):
             return self._manda(200, json.dumps(Pagina.dati, ensure_ascii=False).encode())
         if percorso.startswith("/file/") and percorso[6:] in Pagina.file:
             p = Pagina.file[percorso[6:]]
+            if p.startswith("anteprima:"):   # un'anteprima video: si cerca (o si scarica) solo adesso
+                p = anteprime.dove(p[len("anteprima:"):])
+                if not p:
+                    return self._manda(404, b"{}")
             with open(p, "rb") as f:
                 return self._manda(200, f.read(), TIPI.get(os.path.splitext(p)[1].lower(), "application/octet-stream"))
         self._manda(404, b"{}")

@@ -11,23 +11,23 @@
   },
   "font": {
     "titoli": {
-      "file": "font/PlusJakartaSans.ttf",
+      "file": "../../font/PlusJakartaSans.ttf",
       "famiglia": "Plus Jakarta Sans",
       "peso": 800,
       "larghezza": 100
     },
     "mono": {
-      "file": "font/JetBrainsMono.ttf",
+      "file": "../../font/JetBrainsMono.ttf",
       "famiglia": "JetBrains Mono"
     }
   },
   "suoni": {
-    "transizione": "suoni/transizione.mp3",
-    "musica": "suoni/musica.wav",
-    "pop": "suoni/pop.mp3",
-    "click": "suoni/click.mp3",
-    "ding": "suoni/ding.mp3",
-    "livello": "suoni/livello.mp3"
+    "transizione": "../../suoni/stili/transizione.mp3",
+    "musica": "../../suoni/stili/musica.wav",
+    "pop": "../../suoni/stili/pop.mp3",
+    "click": "../../suoni/stili/click.mp3",
+    "ding": "../../suoni/stili/ding.mp3",
+    "livello": "../../suoni/stili/livello.mp3"
   },
   "sottotitoli_nome": "due-righe",
   "transizione": "taglio",

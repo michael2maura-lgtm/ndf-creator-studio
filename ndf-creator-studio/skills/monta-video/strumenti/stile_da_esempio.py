@@ -18,7 +18,7 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import DATI, cartella_stile, leggi, scrivi  # noqa: E402
+from comune import DATI, cartella_stile, leggi, scrivi, stile_autonomo  # noqa: E402
 
 SCHEDA = """# {titolo}
 
@@ -53,6 +53,7 @@ def main():
     if os.path.exists(dest):
         sys.exit(f"Lo stile '{nome}' c'è già: scegli un altro nome.")
     shutil.copytree(cartella_stile(a.base), dest, ignore=shutil.ignore_patterns("anteprima.*", "telefono.mp4", "registro.md", "stile.md"))
+    stile_autonomo(dest)   # i suoni e i font presi dalla copia unica dello studio, dentro lo stile del cliente
     st = leggi(os.path.join(dest, "stile.json"))
     st["nome"] = "Stile " + a.nome.strip().title()
     esempi = [e.strip() for e in a.esempio.split(",") if e.strip()]

@@ -11,23 +11,23 @@
   },
   "font": {
     "titoli": {
-      "file": "font/Archivo.ttf",
+      "file": "../../font/Archivo.ttf",
       "famiglia": "Archivo",
       "peso": 900,
       "larghezza": 125
     },
     "mono": {
-      "file": "font/JetBrainsMono.ttf",
+      "file": "../../font/JetBrainsMono.ttf",
       "famiglia": "JetBrains Mono"
     }
   },
   "suoni": {
-    "transizione": "suoni/transizione.mp3",
-    "impatto": "suoni/impatto.mp3",
-    "pop": "suoni/pop.mp3",
-    "ding": "suoni/ding.mp3",
-    "livello": "suoni/livello.mp3",
-    "musica": "suoni/musica.wav"
+    "transizione": "../../suoni/stili/transizione.mp3",
+    "impatto": "../../suoni/stili/impatto.mp3",
+    "pop": "../../suoni/stili/pop.mp3",
+    "ding": "../../suoni/stili/ding.mp3",
+    "livello": "../../suoni/stili/livello.mp3",
+    "musica": "../../suoni/stili/musica.wav"
   },
   "sottotitoli_nome": "targhetta-piccola",
   "transizione": "taglio",

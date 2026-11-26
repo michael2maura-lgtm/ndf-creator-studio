@@ -31,7 +31,15 @@ PLUGINS = os.path.join(CONFIG, "plugins")
 NOME = "ndf-creator-studio"
 ID = f"{NOME}@{NOME}"
 GITHUB = "michael2maura-lgtm/ndf-creator-studio"
-ULTIMA_URL = f"https://raw.githubusercontent.com/{GITHUB}/main/{NOME}/.claude-plugin/plugin.json"
+def ramo():
+    """Il ramo che segue questo computer: main per i clienti; un ramo di prova se il marketplace è stato aggiunto
+    con "...#<ramo>" (le prove dell'aggiornamento, senza toccare i clienti)."""
+    m = leggi(os.path.join(PLUGINS, "known_marketplaces.json")).get(NOME) or {}
+    return (m.get("source") or {}).get("ref") or "main"
+
+
+def url(percorso):
+    return f"https://raw.githubusercontent.com/{GITHUB}/{ramo()}/{percorso}"
 
 if sys.platform == "win32":
     CHIUDI = ("chiudi del tutto l'app Claude (tasto destro sull'icona di Claude vicino all'orologio, poi Esci), "
@@ -68,7 +76,7 @@ def scaricata():
 def ultima():
     """La versione su GitHub, o None se non c'è internet."""
     try:
-        with urllib.request.urlopen(ULTIMA_URL, timeout=8) as r:
+        with urllib.request.urlopen(url(f"{NOME}/.claude-plugin/plugin.json"), timeout=8) as r:
             return json.loads(r.read().decode("utf-8"))["version"]
     except Exception:
         pass
@@ -129,14 +137,13 @@ def lancia(cmd, *args):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cartelle  # noqa: E402
 
-NOVITA_URL = f"https://raw.githubusercontent.com/{GITHUB}/main/novita.json"
 RICORDO = os.path.join(cartelle.CASA, "aggiornamento.json")
 
 
 def novita(versione):
     """La riga di novità della versione nuova (novita.json nella cartella principale del progetto su GitHub)."""
     try:
-        with urllib.request.urlopen(NOVITA_URL, timeout=8) as r:
+        with urllib.request.urlopen(url("novita.json"), timeout=8) as r:
             return json.loads(r.read().decode("utf-8")).get(versione, "")
     except Exception:
         return ""
