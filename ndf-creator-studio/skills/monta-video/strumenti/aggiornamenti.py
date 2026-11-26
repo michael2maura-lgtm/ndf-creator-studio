@@ -171,12 +171,12 @@ def una_volta_al_giorno():
     import datetime
     oggi = datetime.date.today().isoformat()
     r = cartelle.leggi(RICORDO)
-    if r.get("giorno") == oggi and r.get("versione") == mia():
+    if r.get("giorno") == oggi and r.get("versione") == mia() and r.get("scaricata") == scaricata():
         detta = r.get("riga") or ""
         return None if "NESSUNO" in detta else (detta or None)
     detta = riga()
     if detta is not None:
-        cartelle.scrivi(RICORDO, {"giorno": oggi, "versione": mia(), "riga": detta})
+        cartelle.scrivi(RICORDO, {"giorno": oggi, "versione": mia(), "scaricata": scaricata(), "riga": detta})
     return detta
 
 
