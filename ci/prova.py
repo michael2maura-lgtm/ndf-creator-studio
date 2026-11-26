@@ -97,7 +97,8 @@ def passo(nome, cmd, deve=None, ambiente=None, tempo=3600):
     except OSError as e:
         uscita, codice = f"NON PARTE: {e}", 127
     os.makedirs(os.path.join(USCITA, "log"), exist_ok=True)
-    with open(os.path.join(USCITA, "log", f"{len(ESITI) + 1:02d}-{nome.replace(' ', '-')}.txt"), "w", encoding="utf-8") as f:
+    pulito = "".join(c if c.isalnum() or c in "-_" else "-" for c in nome.replace(" ", "-"))   # Windows: niente : ( ) ecc.
+    with open(os.path.join(USCITA, "log", f"{len(ESITI) + 1:02d}-{pulito}.txt"), "w", encoding="utf-8") as f:
         f.write(" ".join(str(c) for c in cmd) + "\n\n" + uscita)
     ok = codice == 0 and (deve is None or deve in uscita)
     scrivi_riga("\n".join(uscita.strip().splitlines()[-15:]))
