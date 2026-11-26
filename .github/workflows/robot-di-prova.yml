@@ -1,4 +1,4 @@
-# Il robot di prova dello studio (ci/prova.py) su computer veri di GitHub: Mac Apple Silicon e Windows.
+# Il robot di prova dello studio (ci/prova.py) su computer veri di GitHub: Mac Apple Silicon, Mac Intel e Windows.
 # Gira a ogni invio su un ramo che NON è main, o a mano. Mai su main: i clienti prendono gli aggiornamenti da main,
 # e questa è la prova da fare prima. Una versione esce (va su main) solo se tutte le prove qui sono verdi.
 name: robot-di-prova
@@ -16,6 +16,8 @@ jobs:
         include:
           - os: macos-latest
             nome: mac-apple-silicon
+          - os: macos-15-intel
+            nome: mac-intel
           - os: windows-latest
             nome: windows
     runs-on: ${{ matrix.os }}
