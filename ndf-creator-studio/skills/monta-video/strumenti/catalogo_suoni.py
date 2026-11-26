@@ -1,6 +1,6 @@
 """Crea un video da guardare per scegliere i suoni: ogni suono con numero, nome e provenienza, uno dopo l'altro.
 
-Uso:  ~/.studio-video/venv/bin/python strumenti/catalogo_suoni.py [cartella-esempi]
+Uso:  PY strumenti/catalogo_suoni.py [cartella-esempi]
 
 Legge suoni/kit, suoni/mixkit, suoni/hyperframes (e, se indicata, una cartella di esempi da mettere per primi).
 Scrive suoni/catalogo-suoni.mp4 e suoni/catalogo-suoni.txt (l'elenco numerato, per ritrovare i nomi).

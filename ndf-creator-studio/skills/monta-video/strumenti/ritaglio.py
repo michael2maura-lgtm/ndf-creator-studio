@@ -7,7 +7,7 @@ Legge lavori/<lavoro>/tagliato.mp4 e scrive lavori/<lavoro>/<nome>.webm (1080x19
 fotogrammi del tagliato a partire da --da) e controllo/<nome>.jpg (tre momenti ritagliati su un fondo a scacchi).
 --duro  bordi pieni, senza mezze trasparenze (per mettere la persona su uno sfondo nuovo).
 
-Modello: RobustVideoMatting resnet50 (pubblico, ~107 MB in ~/.studio-video/modelli). Lento: circa un secondo per
+Modello: RobustVideoMatting resnet50 (pubblico, ~107 MB nella casa dello studio, modelli/). Lento: circa un secondo per
 fotogramma, quindi mezzo minuto per ogni secondo di video. Va lanciato in sottofondo, e solo sui pezzi che servono.
 La memoria del modello si riparte a ogni taglio (segmenti.json), così un taglio non si porta dietro il ritaglio di prima.
 """

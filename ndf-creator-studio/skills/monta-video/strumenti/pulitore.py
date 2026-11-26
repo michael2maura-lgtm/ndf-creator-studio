@@ -8,7 +8,9 @@ import subprocess
 import urllib.request
 
 VERSIONE = "0.5.6"
-_BIN = os.path.join(os.path.expanduser("~"), ".studio-video", "bin")
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from cartelle import BIN as _BIN  # noqa: E402
 _FILE = {("Darwin", "arm64"): "aarch64-apple-darwin", ("Darwin", "x86_64"): "x86_64-apple-darwin",
          ("Windows", "AMD64"): "x86_64-pc-windows-msvc.exe", ("Windows", "x86_64"): "x86_64-pc-windows-msvc.exe"}
 

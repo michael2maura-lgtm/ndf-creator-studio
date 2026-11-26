@@ -3,7 +3,7 @@ senza chiederlo a Claude. Apre sempre la versione più nuova dello studio instal
 
     PY icona.py        crea (o rifà) l'icona sulla scrivania, su Mac e su Windows
 
-Come funziona: l'icona lancia ~/.studio-video/apri_pagina.py con il Python dello studio; quello cerca l'ultima
+Come funziona: l'icona lancia apri_pagina.py (nella casa dello studio, vedi cartelle.py) con il Python dello studio; quello cerca l'ultima
 versione dello studio tra i plugin installati e accende la sua pagina (che si spegne da sola quando la chiudi).
 """
 import os
@@ -12,8 +12,9 @@ import shutil
 import subprocess
 import sys
 
-CASA = os.path.join(os.path.expanduser("~"), ".studio-video")
 QUI = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, QUI)
+from cartelle import CASA, PY  # noqa: E402
 NOME = "NDF Creator Studio"
 
 APRI = r'''# Scritto da icona.py: apre la pagina dello studio dalla versione più nuova installata.
@@ -73,14 +74,25 @@ def scrivania():
     return casa
 
 
+def dove_sta():
+    """Il percorso dell'icona sulla scrivania, se c'è (None se manca)."""
+    dove = scrivania()
+    for est in (".app", ".lnk", ".bat"):
+        if os.path.exists(os.path.join(dove, NOME + est)):
+            return os.path.join(dove, NOME + est)
+    return None
+
+
 def main():
+    if "--c-e" in sys.argv:   # solo il controllo: esce con 0 se l'icona c'è
+        sys.exit(0 if dove_sta() else 1)
     os.makedirs(CASA, exist_ok=True)
     apri = os.path.join(CASA, "apri_pagina.py")
     with open(apri, "w", encoding="utf-8") as f:
         f.write(APRI % os.path.dirname(QUI))
     dove = scrivania()
     if platform.system() == "Darwin":
-        py = os.path.join(CASA, "venv", "bin", "python")
+        py = PY
         app = os.path.join(dove, NOME + ".app")
         if os.path.exists(app):
             shutil.rmtree(app)
@@ -90,7 +102,7 @@ def main():
         icona_mac(app)
         print("ICONA", app)
     elif platform.system() == "Windows":
-        pyw = os.path.join(CASA, "venv", "Scripts", "pythonw.exe")
+        pyw = os.path.join(os.path.dirname(PY), "pythonw.exe")
         ico = os.path.join(CASA, "icona.ico")
         try:
             from PIL import Image

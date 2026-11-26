@@ -55,15 +55,16 @@ jobs:
             ci/uscita/log
             ci/uscita/dati/lavori/*/finale
             ci/uscita/dati/lavori/*/controllo
+            ~/Library/Application Support/NDFCreatorStudio/dati/lavori/*/finale
+            ~/Library/Application Support/NDFCreatorStudio/*.log
           if-no-files-found: warn
 
-  # Un cliente che ha la versione di oggi (main) e riceve quella nuova: l'aggiornamento cambia solo il plugin, non
-  # rilancia l'installazione. La versione nuova deve montare con quello che la vecchia aveva installato.
+  # Una cliente che ha la versione di oggi (main) e riceve quella nuova: l'aggiornamento cambia solo il plugin.
+  # Al primo controllo la versione nuova sposta lavori e modelli nella casa nuova, aggiunge quello che manca e monta.
+  # Si usano le cartelle vere di un cliente (--dati-veri): ~/.studio-video e Documenti prima, la casa nuova dopo.
   aggiornamento:
     runs-on: macos-latest
     timeout-minutes: 120
-    env:
-      NDF_STUDIO_DATI: ${{ github.workspace }}/dati-cliente
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -75,11 +76,11 @@ jobs:
       - name: La versione dei clienti (main) installata, con un reel
         env:
           PROVA_USCITA: ${{ github.workspace }}/ci/uscita-vecchia
-        run: /usr/bin/python3 ci/prova.py --studio vecchia/ndf-creator-studio --solo-reel --tollera-mancanze
-      - name: La versione nuova, senza reinstallare (completa da sola i pezzi nuovi), con un reel
+        run: /usr/bin/python3 ci/prova.py --studio vecchia/ndf-creator-studio --solo-reel --tollera-mancanze --dati-veri
+      - name: La versione nuova, senza reinstallare (passaggio alla casa nuova e riparazione da soli), con un reel
         env:
           PROVA_USCITA: ${{ github.workspace }}/ci/uscita-nuova
-        run: /usr/bin/python3 ci/prova.py --senza-installa --completa --solo-reel
+        run: /usr/bin/python3 ci/prova.py --senza-installa --dati-veri --passaggio prova-pulito --solo-reel
       - name: Tieni i risultati
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,6 +1,6 @@
 """Passo 1: prepara un lavoro. L'originale si legge soltanto, non si copia e non si tocca.
 
-Uso:  ~/.studio-video/venv/bin/python strumenti/prepara.py "<video>" <nome-lavoro> [--nomi "Claude, NDF"]
+Uso:  PY strumenti/prepara.py "<video>" <nome-lavoro> [--nomi "Claude, NDF"]
 
 Scrive in lavori/<nome>/:
   sorgente.json      il percorso dell'originale, durata, misure

@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 """Il robot di prova dello studio: fa da solo, senza Claude, quello che fa un cliente nuovo.
 
-  1. installa lo studio da zero (installa.py, come con "installa lo studio")
+  1. installa lo studio da zero con il programma di avvio (avvio.sh / avvio.ps1), poi i pezzi grandi (scarica.py)
+     e il primo avvio (le due cartelle); poi il controllo silenzioso (veloce, niente da scaricare) e la riparazione
+     di pezzi tolti apposta (musiche, icona, modello della faccia)
   2. prepara, taglia, trascrive e trova la faccia sul video di prova (la clip del telefono della pagina, già nello studio)
   3. monta un reel in Pulito e uno in Chiaro con la scritta dietro la testa
   4. rifà il reel Chiaro come su un computer con il disco quasi pieno (il modo "poco spazio" di rendi.py)
-  5. copertina, controllo del video finito, controllo degli aggiornamenti
+  5. copertina, consegna in "2 - Video finiti", controllo del video finito, controllo degli aggiornamenti
 Ogni passo stampa una riga; alla fine RIUSCITO o FALLITO. Esce con 1 al primo passo che fallisce.
 Solo libreria standard: gira con qualsiasi Python 3.
 
 Uso:
   python3 ci/prova.py                       tutto, come un cliente nuovo (su GitHub o su un computer di prova)
-  python3 ci/prova.py --senza-installa      salta l'installazione (usa lo studio già installato in ~/.studio-video)
+  python3 ci/prova.py --senza-installa      niente installazione da zero: solo il controllo (che ripara e, per chi
+                                            viene dalla versione di prima, fa il passaggio alla casa nuova)
   python3 ci/prova.py --studio <cartella>   prova un'altra copia dello studio (la cartella con .claude-plugin)
   python3 ci/prova.py --solo-reel           installazione e un solo reel Pulito (con --senza-installa: solo il reel)
-  python3 ci/prova.py --completa ...        prima del reel, aggiornamenti.py deve completare l'installazione (dopo un
-                                            aggiornamento: la versione nuova aggiunge da sola i pezzi che mancano)
-Il robot lavora in una cartella dati sua (NDF_STUDIO_DATI, di serie una cartella nuova accanto a ci/): i lavori e le
-scelte del cliente di questo computer non si toccano. Se NDF_STUDIO_DATI è già impostata, usa quella (serve alla
-prova dell'aggiornamento: stessa cartella dati con la versione vecchia e poi con quella nuova).
+  python3 ci/prova.py --dati-veri           usa le cartelle vere di un cliente (su GitHub: per la prova del passaggio
+                                            dalla versione dei clienti, che teneva tutto in ~/.studio-video e Documenti)
+  python3 ci/prova.py --passaggio <lavoro>  dopo il controllo, il lavoro fatto con la versione di prima deve esserci
+Su GitHub (GITHUB_ACTIONS) la casa dello studio è quella vera, come per un cliente. Sul computer di Michael il robot
+usa una casa e una cartella dati sue dentro ci/uscita (NDF_STUDIO_CASA, NDF_STUDIO_DATI): lo studio vero non si tocca.
 """
 import json
 import os
@@ -42,11 +45,32 @@ def opzione(nome, ripiego=None):
 PLUGIN = os.path.abspath(opzione("--studio", os.path.join(QUI, "ndf-creator-studio")))
 STUDIO = os.path.join(PLUGIN, "skills", "monta-video")
 STR = os.path.join(STUDIO, "strumenti")
-CASA = os.path.join(os.path.expanduser("~"), ".studio-video")
-PY = os.path.join(CASA, "venv", "Scripts", "python.exe") if WIN else os.path.join(CASA, "venv", "bin", "python")
+NUOVO = os.path.exists(os.path.join(STR, "avvio.sh"))   # dalla 0.2: programma di avvio e casa nuova
 USCITA = os.path.abspath(os.environ.get("PROVA_USCITA") or os.path.join(QUI, "ci", "uscita"))
-DATI = os.path.abspath(os.environ.get("NDF_STUDIO_DATI") or os.path.join(USCITA, "dati"))
-AMBIENTE = dict(os.environ, NDF_STUDIO_DATI=DATI, PYTHONIOENCODING="utf-8", NDF_STUDIO_ICLOUD_FATTO="1")
+SU_GITHUB = bool(os.environ.get("GITHUB_ACTIONS"))
+AMBIENTE = dict(os.environ, PYTHONIOENCODING="utf-8", NDF_STUDIO_ICLOUD_FATTO="1")
+if not SU_GITHUB:   # sul computer di Michael: mai la casa vera
+    AMBIENTE.setdefault("NDF_STUDIO_CASA", os.path.join(os.path.dirname(USCITA), "casa-robot"))
+    AMBIENTE["NDF_STUDIO_PROVA_SENZA_ICONA"] = "1"
+
+
+def casa_nuova():
+    if AMBIENTE.get("NDF_STUDIO_CASA"):
+        return AMBIENTE["NDF_STUDIO_CASA"]
+    if WIN:
+        return os.path.join(os.environ.get("LOCALAPPDATA") or os.path.join(os.path.expanduser("~"), "AppData", "Local"),
+                            "NDFCreatorStudio")
+    return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "NDFCreatorStudio")
+
+
+CASA = casa_nuova() if NUOVO else os.path.join(os.path.expanduser("~"), ".studio-video")
+PY = os.path.join(CASA, "venv", "Scripts", "python.exe") if WIN else os.path.join(CASA, "venv", "bin", "python")
+if "--dati-veri" in sys.argv:
+    DATI = os.path.join(CASA, "dati") if NUOVO else os.path.join(os.path.expanduser("~"), "Documents", "NDFCreatorStudio")
+    AMBIENTE.pop("NDF_STUDIO_DATI", None)
+else:
+    DATI = os.path.abspath(os.environ.get("NDF_STUDIO_DATI") or os.path.join(USCITA, "dati"))
+    AMBIENTE["NDF_STUDIO_DATI"] = DATI
 LAVORI = os.path.join(DATI, "lavori")
 
 for _s in (sys.stdout, sys.stderr):   # la console di Windows non è utf-8
@@ -153,9 +177,18 @@ def uv():
     return trovato
 
 
-def installa():
-    uscita = passo("installazione da zero", [uv(), "run", "--python", "3.12", "--no-project",
-                                            os.path.join(STR, "installa.py")], deve="FINE", tempo=5400)
+def avvio(titolo, deve="PRONTO", tempo=5400):
+    """Il programma di avvio, come lo lancia Claude nel Passo 0 di SKILL.md."""
+    if WIN:
+        # su GitHub il PowerShell 7 passa i suoi moduli al PowerShell di Windows, che non li carica: si tolgono
+        amb = {k: v for k, v in AMBIENTE.items() if k.upper() != "PSMODULEPATH"}
+        cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", os.path.join(STR, "avvio.ps1")]
+    else:
+        amb, cmd = AMBIENTE, ["sh", os.path.join(STR, "avvio.sh")]
+    return passo(titolo, cmd + ["--senza-aggiornamenti"], deve=deve, ambiente=amb, tempo=tempo)
+
+
+def mancanze(uscita):
     mancano = [r for r in uscita.splitlines() if r.startswith("STATO") and ": MANCA" in r]
     if mancano and "--tollera-mancanze" in sys.argv:   # la versione dei clienti, con i suoi difetti già noti
         scrivi_riga("AVVISO (versione vecchia): " + "; ".join(mancano))
@@ -163,11 +196,76 @@ def installa():
         controlla("ogni pezzo installato", not mancano, "; ".join(mancano))
 
 
+def installa():
+    if not NUOVO:   # la versione dei clienti di prima (0.1.x): uv e installa.py
+        mancanze(passo("installazione da zero (versione di prima)", [uv(), "run", "--python", "3.12", "--no-project",
+                                                                     os.path.join(STR, "installa.py")],
+                       deve="FINE", tempo=5400))
+        return
+    u = avvio("installazione da zero (programma di avvio)")
+    mancanze(u)
+    controlla("Python proprio dello studio (mai quello del computer)",
+              os.path.exists(os.path.join(CASA, "python")), os.path.join(CASA, "python"))
+    controlla("chiede il primo avvio", "primo avvio: DA FARE" in u)
+    controlla("dice quanti GB scaricare", "pezzi grandi: DA SCARICARE" in u and "GB" in u)
+    strumento("scarica", titolo="pezzi grandi (in sottofondo per il cliente)", deve="STATO scarica: FATTO", tempo=5400)
+    primo_avvio()
+    t = time.time()
+    u = avvio("controllo silenzioso (seconda chat)", tempo=600)
+    secondi = time.time() - t
+    controlla("controllo silenzioso veloce, niente da scaricare",
+              secondi < 120 and "scarico" not in u and "primo avvio" not in u and "pezzi grandi: OK" in u,
+              f"{secondi:.0f} s")
+    mancanze(u)
+    ripara()
+
+
+def primo_avvio():
+    cartelle = [] if SU_GITHUB else ["--clip", os.path.join(USCITA, "1 - Clip da montare"),
+                                     "--finiti", os.path.join(USCITA, "2 - Video finiti")]
+    strumento("primo_avvio", "--senza-aprire", *cartelle, titolo="primo avvio: le due cartelle", deve="CARTELLE")
+    conf = leggi(os.path.join(CASA, "config.json"))
+    controlla("cartelle del cliente create", all(os.path.isdir(conf.get(k, "")) for k in ("clip", "finiti")),
+              f"{conf.get('clip')} | {conf.get('finiti')}")
+
+
+def ripara():
+    """Toglie apposta tre pezzi (una musica, l'icona, il modello della faccia): il controllo li deve rimettere."""
+    musiche = os.path.join(DATI, "suoni", "musiche-libere")
+    tolta = sorted(f for f in os.listdir(musiche) if f.endswith(".mp3"))[0] if os.path.isdir(musiche) else None
+    if tolta:
+        os.remove(os.path.join(musiche, tolta))
+    faccia = os.path.join(CASA, "modelli", "face_detector.tflite")
+    if os.path.exists(faccia):
+        os.remove(faccia)
+    icona = subprocess.run([PY, os.path.join(STR, "icona.py"), "--c-e"], env=AMBIENTE).returncode == 0 and SU_GITHUB
+    if icona:   # solo su GitHub: sul computer di Michael l'icona vera non si tocca
+        r = subprocess.run([PY, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import icona; print(icona.dove_sta())",
+                            STR], capture_output=True, text=True, env=AMBIENTE)
+        dove = r.stdout.strip()
+        if dove and os.path.isdir(dove):
+            shutil.rmtree(dove)
+        elif dove and os.path.exists(dove):
+            os.remove(dove)
+    u = avvio("riparazione: tolti una musica, l'icona e il modello della faccia", tempo=1800)
+    controlla("la musica tolta è tornata", bool(tolta) and os.path.exists(os.path.join(musiche, tolta)), tolta or "")
+    if icona:
+        controlla("l'icona tolta è tornata",
+                  subprocess.run([PY, os.path.join(STR, "icona.py"), "--c-e"], env=AMBIENTE).returncode == 0)
+    controlla("il controllo vede che manca un pezzo grande", "pezzi grandi: DA SCARICARE" in u)
+    strumento("scarica", titolo="riscarica il pezzo grande tolto", deve="STATO scarica: FATTO", tempo=1800)
+    controlla("il modello della faccia è tornato", os.path.exists(faccia))
+
+
 def reel_pulito(nome):
     os.makedirs(LAVORI, exist_ok=True)
     os.makedirs(USCITA, exist_ok=True)
     clip = os.path.join(USCITA, "girato-di-prova.mp4")
     shutil.copyfile(os.path.join(STUDIO, "pagina", "telefono.mp4"), clip)
+    if NUOVO:   # come un video allegato in chat: prima nella cartella delle clip
+        u = strumento("clip_cliente", "metti", clip, titolo="video allegato messo tra le clip da montare", deve="MESSA")
+        clip = [r for r in u.splitlines() if r.startswith("MESSA ")][-1][6:].strip()
+        strumento("clip_cliente", "elenco", titolo="le clip da montare", deve=os.path.basename(clip))
     strumento("prepara", clip, nome, deve="SCELTE DEL CLIENTE", tempo=1800)
     cart = os.path.join(LAVORI, nome)
     frasi = leggi(os.path.join(cart, "parole_grezze.json"))
@@ -230,16 +328,28 @@ def reel_chiaro(nome, poco_spazio):
     return video
 
 
+def dopo_aggiornamento():
+    """La versione nuova su un computer che aveva quella di prima: il controllo fa il passaggio e ripara."""
+    u = avvio("controllo dopo l'aggiornamento (passaggio alla casa nuova)", tempo=5400)
+    mancanze(u)
+    lavoro = opzione("--passaggio")
+    if lavoro:
+        controlla("i lavori di prima ci sono ancora", os.path.isdir(os.path.join(LAVORI, lavoro)),
+                  os.path.join(LAVORI, lavoro))
+        controlla("i modelli di prima spostati, non riscaricati", os.path.isdir(os.path.join(CASA, "modelli")))
+    if "primo avvio: DA FARE" in u:
+        primo_avvio()
+    if "pezzi grandi: OK" not in u:
+        strumento("scarica", titolo="pezzi grandi che mancano", deve="STATO scarica: FATTO", tempo=5400)
+
+
 def main():
-    scrivi_riga(f"Robot di prova · studio {versione()} · {PLUGIN}\nDati di prova: {DATI}")
+    scrivi_riga(f"Robot di prova · studio {versione()} · {PLUGIN}\nCasa: {CASA}\nDati di prova: {DATI}")
     if "--senza-installa" not in sys.argv:
         installa()
+    elif NUOVO:
+        dopo_aggiornamento()
     controlla("Python dello studio c'è", os.path.exists(PY), PY)
-    if "--completa" in sys.argv:
-        strumento("aggiornamenti", titolo="l'aggiornamento completa l'installazione", deve="INSTALLAZIONE COMPLETATA",
-                  tempo=3600)
-        pronto = leggi(os.path.join(CASA, "pronto.json"))
-        controlla("pezzi nuovi installati", not pronto.get("mancanti"), f"requisiti {pronto.get('requisiti')}")
     reel_pulito("prova-pulito")
     if "--solo-reel" not in sys.argv:
         reel_chiaro("prova-chiaro", poco_spazio=False)
@@ -249,9 +359,25 @@ def main():
         ultimo = sorted(x for x in os.listdir(os.path.join(LAVORI, "prova-chiaro", "finale")) if x.endswith(".mp4"))[-1]
         strumento("controlla_tagli", "prova-chiaro", os.path.join(LAVORI, "prova-chiaro", "finale", ultimo), "--telefono",
                   titolo="controllo del video finito")
-        u = strumento("aggiornamenti", titolo="controllo aggiornamenti (non deve rompersi)", tempo=300)
-        controlla("dopo un'installazione nuova non serve completare", "COMPLETO" not in u)
+        if NUOVO:
+            consegna()
+        strumento("aggiornamenti", titolo="controllo aggiornamenti (non deve rompersi)", tempo=300)
     fine()
+
+
+def consegna():
+    conf = leggi(os.path.join(CASA, "config.json"))
+    for giro in (1, 2):   # la seconda volta la versione di prima va in "Versioni vecchie"
+        strumento("clip_cliente", "consegna", "prova-pulito", titolo=f"consegna in 2 - Video finiti ({giro})",
+                  deve="CONSEGNATO")
+    finiti = conf["finiti"]
+    controlla("video e copertina insieme nei video finiti",
+              all(os.path.exists(os.path.join(finiti, f)) for f in ("prova-pulito.mp4", "prova-pulito - copertina.jpg")))
+    controlla("la versione di prima in Versioni vecchie",
+              len(os.listdir(os.path.join(finiti, "Versioni vecchie"))) >= 1)
+    controlla("la clip montata spostata in Già montate",
+              os.path.isdir(os.path.join(conf["clip"], "Già montate")) and
+              not [f for f in os.listdir(conf["clip"]) if f.endswith(".mp4")])
 
 
 if __name__ == "__main__":

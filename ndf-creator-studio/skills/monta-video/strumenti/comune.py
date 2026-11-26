@@ -8,18 +8,18 @@ import sys
 # Il MOTORE (questa cartella) è uguale per tutti e si aggiorna. I DATI di chi lo usa (lavori, stili, suoni e clip
 # scaricati) stanno in una cartella sua, che gli aggiornamenti non toccano mai.
 STUDIO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATI = os.path.expanduser(os.environ.get("NDF_STUDIO_DATI", os.path.join("~", "Documents", "NDFCreatorStudio")))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from cartelle import CASA, DATI, MODELLI, PERCORSI, cartella_clip, cartella_finiti  # noqa: E402,F401
 VELOCITA = 1.05  # il reel finito va il 5% più veloce del girato (era 12%: clienti e Michael, 23/11/2026, "troppo veloce, sembra che tagli")
 LAVORI = os.path.join(DATI, "lavori")
-STRUMENTI_UTENTE = os.path.join(os.path.expanduser("~"), ".studio-video")
-MODELLI = os.path.join(STRUMENTI_UTENTE, "modelli")
+STRUMENTI_UTENTE = CASA
 MODELLO_VOCE = "large-v3-turbo"   # trascrizione: il più preciso in italiano, veloce come il medium (dal 14/11/2026)
 _BIN = os.path.join(STRUMENTI_UTENTE, "bin")
 HYPERFRAMES = "hyperframes@0.8.34"
 
 # dove stanno i programmi: li scrive installa.py (Mac e Windows); se manca il file, si cercano nel sistema
 try:
-    with open(os.path.join(STRUMENTI_UTENTE, "percorsi.json"), encoding="utf-8") as _f:
+    with open(PERCORSI, encoding="utf-8") as _f:
         _P = json.load(_f)
 except (OSError, ValueError):
     _P = {}
@@ -30,7 +30,10 @@ def tieni_sul_mac(attesa=240):
     solo un segnaposto ("dataless"). Lo studio, leggendoli, resterebbe fermo ad aspettare (pagina che non si apre,
     montaggio bloccato). Qui li riprendiamo tutti prima di cominciare: un controllo di un decimo di secondo.
     Stampa ICLOUD ... solo se c'era qualcosa da fare; DISCO PIENO se lo spazio libero è sotto 8 GB."""
-    if sys.platform != "darwin" or not os.path.isdir(DATI) or os.environ.get("NDF_STUDIO_ICLOUD_FATTO"):
+    # dalla 0.2 i dati stanno in Library/Application Support, che iCloud non tocca: serve solo a chi li ha ancora
+    # in Documenti o sulla Scrivania (prima del passaggio)
+    dentro_icloud = any(f"{os.sep}{c}{os.sep}" in DATI + os.sep for c in ("Documents", "Desktop"))
+    if sys.platform != "darwin" or not dentro_icloud or not os.path.isdir(DATI) or os.environ.get("NDF_STUDIO_ICLOUD_FATTO"):
         return
     os.environ["NDF_STUDIO_ICLOUD_FATTO"] = "1"   # una volta sola per comando (anche per i pezzi che lancia)
     try:

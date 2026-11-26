@@ -1,7 +1,7 @@
 """Passo 4: trascrive il video TAGLIATO. Serve a due cose: controllare che il taglio non abbia
 mangiato una parola, e dare i tempi giusti ai sottotitoli.
 
-Uso:  ~/.studio-video/venv/bin/python strumenti/parole.py <nome-lavoro> [--nomi "Claude, NDF"]
+Uso:  PY strumenti/parole.py <nome-lavoro> [--nomi "Claude, NDF"]
 
 Scrive in lavori/<nome>/:
   parole.json        [{"testo": "Sento", "da": 0.06, "a": 0.24}, ...]  (da correggere a mano: nomi, errori di ascolto)

@@ -1,7 +1,7 @@
 """VSL: la cartella dei materiali del cliente. All'installazione non si crea niente: nasce quando il cliente scrive
 "monta la mia VSL".
 
-Uso:  PY strumenti/vsl_materiali.py "<nome VSL>"           crea DATI/<nome VSL> - materiali e la apre sullo schermo
+Uso:  PY strumenti/vsl_materiali.py "<nome VSL>"           crea ~/NDF Creator Studio/<nome VSL> - materiali e la apre sullo schermo
       PY strumenti/vsl_materiali.py "<nome VSL>" --guarda  (dopo "fatto") elenca cosa c'è dentro, diviso per tipo
 
 Stampa la riga da dire al cliente, con dove si trova in parole semplici.
@@ -13,14 +13,14 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import DATI  # noqa: E402
+from cartelle import CARTELLA_CLIENTE  # noqa: E402
 
 TIPI = {"foto": (".jpg", ".jpeg", ".png", ".heic", ".webp"), "video": (".mp4", ".mov", ".m4v"),
         "musica": (".mp3", ".wav", ".m4a"), "documenti": (".pdf", ".txt", ".docx")}
 
 
 def cartella(nome):
-    return os.path.join(DATI, f"{nome} - materiali")
+    return os.path.join(CARTELLA_CLIENTE, f"{nome} - materiali")   # dove il cliente la vede (non nella casa nascosta)
 
 
 def apri(percorso):
@@ -41,7 +41,7 @@ def main():
         sys.exit(__doc__)
     nome = sys.argv[1].strip()
     c = cartella(nome)
-    dove = f"Documenti → {os.path.basename(DATI)} → {nome} - materiali"
+    dove = f"la tua cartella utente → NDF Creator Studio → {nome} - materiali"
     if "--guarda" in sys.argv:
         if not os.path.isdir(c):
             sys.exit(f"La cartella non c'è ancora: {c}")

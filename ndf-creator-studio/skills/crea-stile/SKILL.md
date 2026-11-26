@@ -12,7 +12,8 @@ così si può rispondere in fretta; accetta anche risposte con parole sue. Se un
 alternative ricavate da quello che ha già detto, e sceglie lui. Mai decidere al posto suo con gusti tuoi.
 
 STUDIO = la cartella `../monta-video` accanto a questa. Lancia i comandi fuori dalla sandbox. PY = il Python dello
-studio (su Mac `~/.studio-video/venv/bin/python`, su Windows `~/.studio-video/venv/Scripts/python.exe -X utf8`).
+studio: lancia prima il controllo del Passo 0 di monta-video e usa il percorso della riga `STATO PY:` (su Windows
+con `-X utf8`).
 
 ## Le domande, in quest'ordine
 1. **Il nome** del brand o del profilo (diventa il nome dello stile, in minuscolo e senza spazi).

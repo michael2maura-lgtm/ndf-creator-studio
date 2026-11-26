@@ -1,6 +1,6 @@
 """Passo 5: trova dove sta la faccia nel video tagliato, per non coprirla mai con le scritte.
 
-Uso:  ~/.studio-video/venv/bin/python strumenti/faccia.py <nome-lavoro>
+Uso:  PY strumenti/faccia.py <nome-lavoro>
 
 Guarda 2 fotogrammi al secondo e scrive lavori/<nome>/faccia.json, in pixel del video 1080x1920:
   {"occhi": 640, "mento": 980, "sinistra": 330, "destra": 760, "trovata": 0.97, "campioni": [...]}

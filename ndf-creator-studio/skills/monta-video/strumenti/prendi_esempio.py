@@ -21,20 +21,15 @@ import sys
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from comune import DATI, FFMPEG, codec_video  # noqa: E402
+from comune import CASA, DATI, FFMPEG, codec_video  # noqa: E402
 
 ESEMPI = os.path.join(DATI, "esempi")
 
 
 def installa(aggiorna=False):
     """Installa (o aggiorna all'ultima versione) il programma che scarica. True se è andato."""
-    # il Python dello studio è fatto con uv (niente pip dentro): si usa uv, se no pip
-    uv = next((u for u in (shutil.which("uv"), os.path.expanduser("~/.local/bin/uv"), "/opt/homebrew/bin/uv",
-                           os.path.expanduser("~/.cargo/bin/uv"), os.path.expanduser("~/.local/bin/uv.exe"))
-               if u and os.path.exists(u)), None)
     su = ["-U"] if aggiorna else []
-    cmd = [uv, "pip", "install", "-q", *su, "--python", sys.executable, "yt-dlp"] if uv else \
-          [sys.executable, "-m", "pip", "install", "-q", *su, "yt-dlp"]
+    cmd = [sys.executable, "-m", "pip", "install", "-q", "--disable-pip-version-check", *su, "yt-dlp"]
     return subprocess.run(cmd, capture_output=True).returncode == 0
 
 
@@ -43,7 +38,7 @@ def da_aggiornare(giorni=21):
     Si guarda la data della versione senza aprirlo, e si prova ad aggiornare al massimo una volta al giorno."""
     import datetime
     import importlib.metadata
-    segno = os.path.join(os.path.expanduser("~"), ".studio-video", "scaricatore-controllato.txt")
+    segno = os.path.join(CASA, "scaricatore-controllato.txt")
     oggi = datetime.date.today().isoformat()
     try:
         if open(segno, encoding="utf-8").read().strip() == oggi:

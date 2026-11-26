@@ -1,6 +1,6 @@
 """Passo 3: controlla un video tagliato o finito. Si guardano i fotogrammi veri, non ci si fida del codice.
 
-Uso:  ~/.studio-video/venv/bin/python strumenti/controlla_tagli.py <nome-lavoro> [video.mp4] [--telefono]
+Uso:  PY strumenti/controlla_tagli.py <nome-lavoro> [video.mp4] [--telefono]
 
 Scrive in lavori/<nome>/controllo/:
   tagli.jpg        per ogni taglio: l'ultimo fotogramma prima e il primo dopo, affiancati

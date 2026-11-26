@@ -14,13 +14,13 @@ Com'è la versione semplice: la persona quasi sempre in video, sottotitoli in ba
 sulla faccia ai tagli, scritte in un riquadro sopra la persona sulle frasi chiave, grafiche a schermo pieno solo nei
 momenti decisivi (con la persona in un riquadro piccolo a destra). Durata tipica: 10, al massimo 15 minuti.
 
-## Passi (PY = ~/.studio-video/venv/bin/python)
+## Passi (PY = il Python dello studio, riga `STATO PY:` del controllo nel Passo 0)
 
 0. **Cartella dei materiali** (decisa da Michael). All'installazione non si crea niente. Quando il cliente scrive
-   "monta la mia VSL": `PY strumenti/vsl_materiali.py "<nome VSL>"` crea `DATI/<nome VSL> - materiali`, la APRE da
+   "monta la mia VSL": `PY strumenti/vsl_materiali.py "<nome VSL>"` crea `<cartella utente>/NDF Creator Studio/<nome VSL> - materiali`, la APRE da
    sola sullo schermo (Finder sul Mac, Esplora file su Windows) e stampa la riga da dire al cliente: cosa trascinarci
    (foto delle clienti, chat, foto o video del prodotto, la sua musica se ne ha una) e dove si trova, in parole
-   semplici: "La trovi in Documenti → NDFCreatorStudio → <nome VSL> - materiali".
+   semplici: "La trovi nella cartella NDF Creator Studio → <nome VSL> - materiali".
    Quando scrive "fatto": `PY strumenti/vsl_materiali.py "<nome VSL>" --guarda` elenca cosa c'è. Guarda i file
    (le foto e un fotogramma dei video) e chiedi SOLO quello che manca, legato a quello che dice nel video, una
    domanda per messaggio: "Parli di Paola al minuto 4: hai la sua foto?". Il materiale del cliente viene prima

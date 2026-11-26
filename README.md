@@ -7,36 +7,40 @@ riprese sbagliate e pause tolte, sottotitoli in italiano, titoli, scene, suoni e
 - Un computer **Mac** (macOS 13 o più recente) oppure **Windows** (10 o 11).
 - **Claude Code**, dall'app Claude, scheda Code, con un piano **Pro o Max** (con il piano gratuito non funziona).
   L'app si scarica da claude.com/download.
-- **Almeno 10 GB liberi** e internet per la prima installazione.
+- **Almeno 10 GB liberi** e internet per la prima installazione. Non serve installare nient'altro.
 
-## Installazione (una volta sola, 3 passi)
-
-**Passo 0, solo se hai Windows:** scarica **Git** da [git-scm.com](https://git-scm.com/download/win) (solo da
-questo sito), aprilo e premi sempre **Avanti** fino a **Installa**. Poi chiudi e riapri l'app Claude.
-Sul Mac non serve.
-
-**Passo 1.** Apri l'app Claude, clicca in alto su **Code** e incolla questo messaggio:
+## Installazione nell'app Claude (una volta sola)
+1. Apri l'app Claude e vai nella scheda **Code**.
+2. Clicca il **+** accanto alla casella dei messaggi, poi **Plugins**, poi **Browse plugins**.
+3. In alto a destra clicca **Add**, poi **Add marketplace**, poi **Add from a repository**.
+4. Incolla questo indirizzo e clicca **Sync**:
 
 ```
-Installa per me lo studio video "NDF Creator Studio". Si trova su GitHub: michael2maura-lgtm/ndf-creator-studio. Aggiungi questo marketplace e installa il plugin ndf-creator-studio (se il comando claude non c'è, scrivili tu nelle impostazioni di Claude Code). Quando hai finito, dimmi solo questo: "Chiudi e riapri l'app, apri una nuova sessione e scrivi: installa lo studio".
+https://github.com/michael2maura-lgtm/ndf-creator-studio
 ```
 
-Quando Claude chiede il permesso, clicca **Consenti**.
+5. Nella lista installa **NDF Creator Studio**.
+6. Apri una **chat nuova** in Code e scrivi:
 
-**Passo 2.** Chiudi e riapri l'app Claude. Apri una nuova sessione in **Code** e scrivi: **installa lo studio**.
-Claude installa tutto da solo (10-20 minuti la prima volta): a ogni richiesta rispondi sì.
-- Su **Mac**, se compare la richiesta di installare gli "strumenti per sviluppatori", clicca Installa.
-- Su **Windows**, se compare la richiesta di Windows (Controllo account o firewall), clicca Sì / Consenti.
+```
+installa lo studio
+```
 
-**Passo 3.** Sulla scrivania trovi l'icona **NDF Creator Studio**: doppio clic e si apre la pagina dove scegli il
-tuo stile (modello, colore, sottotitoli) e premi **Salva**. Non vedi l'icona? Scrivi a Claude **apri la pagina**
-(o **rifai l'icona sul desktop**).
+Lo studio si prepara da solo: si scarica i suoi programmi (Python, Node e ffmpeg) in una cartella sua, senza
+password e senza toccare il resto del computer. Poi ti fa due domande, dove metti le clip da montare e dove vuoi i
+video finiti, e intanto scarica in sottofondo gli strumenti di montaggio (circa 2 GB, una volta sola). Quando Claude
+chiede il permesso per i comandi dello studio, clicca **Consenti**.
+
+Sulla Scrivania trovi l'icona **NDF Creator Studio**: doppio clic e si apre la pagina dove scegli il tuo stile.
 
 ## Il tuo primo reel
-1. Metti il video nella cartella **Documenti\\NDFCreatorStudio** (si crea da sola durante l'installazione).
-2. In Claude Code scrivi: **monta questo video: <nome del file>**.
+1. Metti il video nella cartella **NDF Creator Studio › 1 - Clip da montare** (nella tua cartella utente), oppure
+   trascinalo direttamente nella chat.
+2. Scrivi: **monta il video**.
 3. In circa 10 minuti ricevi il reel. **Ascoltalo tu**: Claude non sente l'audio, e ti dice cosa controllare.
 4. Vuoi cambiare qualcosa? Dillo con il secondo: "a 0:12 cambia la scritta", "togli la musica", "più veloce".
+5. Quando lo approvi, il video, la copertina e la didascalia sono insieme in **NDF Creator Studio › 2 - Video
+   finiti**.
 
 ## Per registrare bene
 - **Spegni l'HDR** (iPhone: Impostazioni › Fotocamera › Registra video › Video HDR spento; Android: nelle
@@ -46,14 +50,29 @@ tuo stile (modello, colore, sottotitoli) e premi **Salva**. Non vedi l'icona? Sc
 - In verticale, con una luce costante. Se puoi, usa un microfono: la voce pulita fa metà della qualità.
 
 ## Se qualcosa non va
-- **Claude chiede tanti permessi la prima volta**: è normale, sta installando. Rispondi sì ai comandi dello studio.
+- **Qualcosa non funziona come prima**: scrivi **ripara lo studio**. Controlla tutto e rimette da solo quello che
+  manca, senza toccare il tuo stile e i tuoi video.
 - **Hai raggiunto il limite di utilizzo**: aspetta che si azzeri (l'app ti dice quando) e scrivi "continua".
 - **Una frase è stata tagliata male**: dillo con il minuto, per esempio "a 0:05 manca 'e lo rifaccio'".
 
 ## Aggiornamenti
-Quando esce una versione nuova (modelli nuovi, effetti, correzioni), Claude te lo dice da solo all'inizio di un
-montaggio. Per aggiornare subito scrivi a Claude: **aggiorna lo studio**, poi chiudi e riapri l'app.
-Il tuo stile e i tuoi video restano dove sono.
+Quando esce una versione nuova, all'inizio di una chat Claude ti dice in una riga cosa cambia e ti chiede se
+installarla. Rispondi sì, poi fai come ti dice Claude (chiudere e riaprire l'app). Puoi anche scrivere in qualsiasi
+momento: **aggiorna lo studio**. Il tuo stile e i tuoi video restano dove sono.
+
+## Installare dal Terminale (solo se usi Claude Code nel Terminale)
+Incolla queste due righe nel Terminale (Mac) o in PowerShell (Windows), una alla volta, non dentro Claude. Su
+Windows questa strada vuole prima [Git per Windows](https://git-scm.com/download/win).
+
+```
+claude plugin marketplace add michael2maura-lgtm/ndf-creator-studio
+```
+
+```
+claude plugin install ndf-creator-studio@ndf-creator-studio
+```
+
+Poi apri Claude Code e scrivi **installa lo studio**.
 
 ---
 NDF Creator Studio · Michael Maura, Networker del Futuro. Font inclusi con licenza SIL Open Font License.
