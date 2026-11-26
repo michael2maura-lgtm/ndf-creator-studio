@@ -14,6 +14,8 @@ Uso:
   python3 ci/prova.py --senza-installa      salta l'installazione (usa lo studio già installato in ~/.studio-video)
   python3 ci/prova.py --studio <cartella>   prova un'altra copia dello studio (la cartella con .claude-plugin)
   python3 ci/prova.py --solo-reel           installazione e un solo reel Pulito (con --senza-installa: solo il reel)
+  python3 ci/prova.py --completa ...        prima del reel, aggiornamenti.py deve completare l'installazione (dopo un
+                                            aggiornamento: la versione nuova aggiunge da sola i pezzi che mancano)
 Il robot lavora in una cartella dati sua (NDF_STUDIO_DATI, di serie una cartella nuova accanto a ci/): i lavori e le
 scelte del cliente di questo computer non si toccano. Se NDF_STUDIO_DATI è già impostata, usa quella (serve alla
 prova dell'aggiornamento: stessa cartella dati con la versione vecchia e poi con quella nuova).
@@ -233,6 +235,11 @@ def main():
     if "--senza-installa" not in sys.argv:
         installa()
     controlla("Python dello studio c'è", os.path.exists(PY), PY)
+    if "--completa" in sys.argv:
+        strumento("aggiornamenti", titolo="l'aggiornamento completa l'installazione", deve="INSTALLAZIONE COMPLETATA",
+                  tempo=3600)
+        pronto = leggi(os.path.join(CASA, "pronto.json"))
+        controlla("pezzi nuovi installati", not pronto.get("mancanti"), f"requisiti {pronto.get('requisiti')}")
     reel_pulito("prova-pulito")
     if "--solo-reel" not in sys.argv:
         reel_chiaro("prova-chiaro", poco_spazio=False)
@@ -242,7 +249,8 @@ def main():
         ultimo = sorted(x for x in os.listdir(os.path.join(LAVORI, "prova-chiaro", "finale")) if x.endswith(".mp4"))[-1]
         strumento("controlla_tagli", "prova-chiaro", os.path.join(LAVORI, "prova-chiaro", "finale", ultimo), "--telefono",
                   titolo="controllo del video finito")
-        strumento("aggiornamenti", titolo="controllo aggiornamenti (non deve rompersi)", tempo=300)
+        u = strumento("aggiornamenti", titolo="controllo aggiornamenti (non deve rompersi)", tempo=300)
+        controlla("dopo un'installazione nuova non serve completare", "COMPLETO" not in u)
     fine()
 
 

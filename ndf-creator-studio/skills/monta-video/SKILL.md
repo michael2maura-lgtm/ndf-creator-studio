@@ -24,6 +24,12 @@ NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/l
   Se una riga dice MANCA, rilancialo una volta; se resta, di' in una riga cosa manca.
 - **Aggiornamenti:** `PY STUDIO/strumenti/aggiornamenti.py`, fuori dalla sandbox, con un tempo lungo (mai interromperlo).
   Fa tutto il programma: tu non lanci mai comandi `claude plugin` a mano e non scegli le parole. Righe:
+  Prima di controllare, il programma completa da solo l'installazione se questa versione ha bisogno di pezzi nuovi
+  (succede dopo un aggiornamento; non serve più dire "installa lo studio"). Righe: `COMPLETO L'INSTALLAZIONE` → di'
+  in una riga "Aggiungo allo studio i pezzi nuovi di questa versione, un paio di minuti" e aspetta;
+  `INSTALLAZIONE COMPLETATA` → niente da dire; `INSTALLAZIONE INCOMPLETA <pezzi>` → lo studio funziona lo stesso
+  (riprova da solo domani): di' in una riga cosa manca in parole semplici solo se serve a questo video (per esempio
+  "musiche libere" quando la musica la scegli tu dal tono), poi vai avanti.
   `AGGIORNATO` o nessuna riga → niente da dire. `NUOVA VERSIONE` → una riga sola: "C'è una versione nuova dello studio,
   la installo? Ci vuole un minuto." `DA CARTELLA` → niente domanda, vai avanti come con un sì.
   Con un sì, o quando l'utente dice "aggiorna lo studio", "installa l'aggiornamento", "aggiorna il plugin" o simili

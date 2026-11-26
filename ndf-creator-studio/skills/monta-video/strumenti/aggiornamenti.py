@@ -12,6 +12,12 @@ Righe del controllo (una sola; nessuna riga = niente internet, si va avanti):
     NUOVA VERSIONE 0.1.66 (hai 0.1.65)      chiedi se aggiornare; con un sì rilancia con --installa
     RIAVVIA 0.1.66 (stai usando 0.1.65)     la versione nuova è già scaricata: di' la frase della riga DI'
     DA CARTELLA                             installato da una cartella: con --installa si ripara da solo
+Prima del controllo, se questa versione ha bisogno di programmi o file che l'installazione di questo computer non ha
+(REQUISITI di installa.py più alto di quello in ~/.studio-video/pronto.json, o pezzi mancati l'ultima volta e non
+riprovati oggi), rilancia da sola l'installazione, che aggiunge solo quello che manca. Righe:
+    COMPLETO L'INSTALLAZIONE                 è partita (di solito 1-3 minuti)
+    INSTALLAZIONE COMPLETATA                 tutto a posto
+    INSTALLAZIONE INCOMPLETA <pezzi>         lo studio funziona lo stesso; riprova da solo domani
 Righe di --installa (l'ultima è sempre DI': la frase da dire al cliente, parola per parola):
     FATTO 0.1.65 -> 0.1.66  /  GIA SCARICATO 0.1.66  /  RIPARATO 0.1.66  /  SENZA COMANDO  /  NON RIUSCITO <perché>
 Su Mac ogni strumento riprende anche da iCloud i file dello studio (righe ICLOUD OK / ICLOUD BLOCCATO / DISCO PIENO).
@@ -127,6 +133,70 @@ def lancia(cmd, *args):
         return False, [str(e)]
 
 
+CASA = os.path.join(os.path.expanduser("~"), ".studio-video")
+PRONTO = os.path.join(CASA, "pronto.json")
+INSTALLA = os.path.join(QUI, "strumenti", "installa.py")
+
+
+def requisiti_qui():
+    """Il numero REQUISITI di questa versione (letto dal testo di installa.py, senza eseguirlo)."""
+    try:
+        with open(INSTALLA, encoding="utf-8") as f:
+            return int(re.search(r"^REQUISITI = (\d+)", f.read(), re.M).group(1))
+    except (OSError, AttributeError, ValueError):
+        return 0
+
+
+def uv_bin():
+    nome = "uv.exe" if sys.platform == "win32" else "uv"
+    casa = os.path.expanduser("~")
+    for p in (shutil.which("uv"), os.path.join(casa, ".local", "bin", nome), os.path.join(casa, ".cargo", "bin", nome),
+              "/opt/homebrew/bin/uv"):
+        if p and os.path.exists(p):
+            return p
+    return None
+
+
+def completa():
+    """Chi aggiorna riceve anche i pezzi nuovi: l'aggiornamento del plugin cambia solo i programmi dello studio, non
+    rilancia l'installazione. Qui si rilancia quando serve (installa.py rifà solo quello che manca)."""
+    import datetime
+    pronto = leggi(PRONTO)
+    if not pronto:
+        return   # studio mai installato: lo fa il Passo 0, con il permesso del cliente
+    oggi = datetime.date.today().isoformat()
+    vecchi = int(pronto.get("requisiti") or 0) < requisiti_qui()
+    riprova = bool(pronto.get("mancanti")) and pronto.get("tentativo") != oggi
+    if not (vecchi or riprova):
+        return
+    uv = uv_bin()
+    if not uv:
+        print("INSTALLAZIONE INCOMPLETA uv")
+        return
+    print("COMPLETO L'INSTALLAZIONE", flush=True)
+    try:
+        r = subprocess.run([uv, "run", "--python", "3.12", "--no-project", INSTALLA], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=3600,
+                           env=dict(os.environ, PYTHONIOENCODING="utf-8"))
+        uscita = r.stdout + r.stderr
+    except Exception as e:
+        uscita = str(e)
+    pronto = leggi(PRONTO)
+    if "FINE" not in uscita or int(pronto.get("requisiti") or 0) < requisiti_qui():
+        mancano = ", ".join(x.split(":")[0][6:] for x in uscita.splitlines() if x.startswith("STATO") and "MANCA" in x)
+        print(f"INSTALLAZIONE INCOMPLETA {mancano or 'non finita'}")
+    elif pronto.get("mancanti"):
+        print(f"INSTALLAZIONE INCOMPLETA {', '.join(pronto['mancanti'])}")
+    else:
+        print("INSTALLAZIONE COMPLETATA")
+    pronto["tentativo"] = oggi
+    try:
+        with open(PRONTO, "w", encoding="utf-8") as f:
+            json.dump(pronto, f, ensure_ascii=False)
+    except OSError:
+        pass
+
+
 def controlla():
     if da_cartella():
         print("DA CARTELLA")
@@ -189,7 +259,14 @@ def main():
         import comune  # noqa: F401  (all'avvio riprende dal cloud i file dello studio, se il Mac li ha spostati su iCloud)
     except Exception:
         pass
-    installa() if "--installa" in sys.argv else controlla()
+    if "--installa" in sys.argv:
+        installa()
+    else:
+        try:
+            completa()
+        except Exception as e:   # completare non deve mai fermare lo studio
+            print(f"INSTALLAZIONE INCOMPLETA {type(e).__name__}")
+        controlla()
 
 
 if __name__ == "__main__":

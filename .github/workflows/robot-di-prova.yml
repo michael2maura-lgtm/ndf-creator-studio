@@ -76,10 +76,10 @@ jobs:
         env:
           PROVA_USCITA: ${{ github.workspace }}/ci/uscita-vecchia
         run: /usr/bin/python3 ci/prova.py --studio vecchia/ndf-creator-studio --solo-reel --tollera-mancanze
-      - name: La versione nuova, senza reinstallare, con un reel
+      - name: La versione nuova, senza reinstallare (completa da sola i pezzi nuovi), con un reel
         env:
           PROVA_USCITA: ${{ github.workspace }}/ci/uscita-nuova
-        run: /usr/bin/python3 ci/prova.py --senza-installa --solo-reel
+        run: /usr/bin/python3 ci/prova.py --senza-installa --completa --solo-reel
       - name: Tieni i risultati
         if: always()
         uses: actions/upload-artifact@v4

@@ -33,14 +33,22 @@ PY = os.path.join(VENV, "Scripts", "python.exe") if WIN else os.path.join(VENV, 
 MODELLI = os.path.join(CASA, "modelli")
 DATI = os.path.expanduser(os.environ.get("NDF_STUDIO_DATI", os.path.join("~", "Documents", "NDFCreatorStudio")))
 HYPERFRAMES = "hyperframes@0.8.34"
+# I REQUISITI: il numero si alza di 1 ogni volta che questo programma installa qualcosa di nuovo o di diverso
+# (un pacchetto, un modello, i suoni, le musiche, l'icona). aggiornamenti.py lo confronta con quello scritto in
+# pronto.json e, se è più alto, rilancia da solo questo programma: così chi aggiorna riceve anche i pezzi nuovi,
+# senza dover dire "installa lo studio". Storia: 1 = tutto fino alla 0.1.80 (musiche, mani, DeepFilterNet, icona).
+REQUISITI = 1
 NODE = "v22.11.0"
 PACCHETTI = ["faster-whisper", "mediapipe", "opencv-python-headless", "Pillow", "numpy", "scipy", "av>=12,<17", "static-ffmpeg"]
 FACCIA = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
 MANI = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"  # Apache 2.0, ~8 MB
 percorsi = {"python": PY}
+MANCANTI = []   # i pezzi che non si sono installati (righe STATO ... MANCA)
 
 
 def stato(cosa, ok, nota=""):
+    if not ok:
+        MANCANTI.append(cosa)
     print(f"STATO {cosa}: {'OK' if ok else 'MANCA'}{' · ' + nota if nota else ''}", flush=True)
 
 
@@ -222,7 +230,8 @@ def main():
     musiche_libere()
     plugin = os.path.join(os.path.dirname(os.path.dirname(QUI)), ".claude-plugin", "plugin.json")
     with open(os.path.join(CASA, "pronto.json"), "w", encoding="utf-8") as f:
-        json.dump({"versione": json.load(open(plugin))["version"], "dati": DATI}, f)
+        json.dump({"versione": json.load(open(plugin))["version"], "dati": DATI, "requisiti": REQUISITI,
+                   "mancanti": MANCANTI}, f, ensure_ascii=False)
     try:   # l'icona "NDF Creator Studio" sulla scrivania: doppio clic e si apre la pagina
         subprocess.run([percorsi.get("python") or sys.executable, os.path.join(QUI, "strumenti", "icona.py")], check=False)
     except Exception:
