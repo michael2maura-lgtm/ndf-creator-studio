@@ -234,10 +234,26 @@ def scrivi(percorso, dati):
         json.dump(dati, f, ensure_ascii=False, indent=1)
 
 
+_CHIP_VIDEO = None
+
+
 def codec_video():
-    """Sul Mac usa il chip video (veloce), altrimenti il codificatore standard."""
-    enc = subprocess.run([FFMPEG, "-hide_banner", "-encoders"], capture_output=True, text=True).stdout
-    if "h264_videotoolbox" in enc:
+    """Sul Mac usa il chip video (veloce), altrimenti il codificatore standard. Il chip si prova davvero, una volta per
+    comando, con un fotogramma: su alcuni Mac (Intel senza chip adatto, macchine virtuali, chip occupato) c'è ma non
+    parte, e il video non usciva ("cannot create compression session"; trovato dal robot sul Mac Intel, 27/11/2026)."""
+    global _CHIP_VIDEO
+    if _CHIP_VIDEO is None:
+        _CHIP_VIDEO = False
+        try:
+            enc = subprocess.run([FFMPEG, "-hide_banner", "-encoders"], capture_output=True, text=True).stdout
+            if "h264_videotoolbox" in enc:
+                prova = subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=640x360:r=30:d=0.2",
+                                        "-c:v", "h264_videotoolbox", "-b:v", "2M", "-f", "null", "-"],
+                                       capture_output=True, timeout=30)
+                _CHIP_VIDEO = prova.returncode == 0
+        except Exception:
+            _CHIP_VIDEO = False
+    if _CHIP_VIDEO:
         return ["-c:v", "h264_videotoolbox", "-b:v", "16M", "-pix_fmt", "yuv420p"]
     return ["-c:v", "libx264", "-crf", "18", "-preset", "fast", "-pix_fmt", "yuv420p"]
 
