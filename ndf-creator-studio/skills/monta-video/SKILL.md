@@ -45,8 +45,8 @@ sola, e ci vogliono alcuni minuti"). Righe:
   --stato`. IN CORSO: di' che sta finendo di scaricare e aspetta che finisca. NON RIUSCITO o FERMATO: vai avanti,
   il montaggio scarica da solo quello che manca.
 - `STATO aggiornamento: DISPONIBILE <da> -> <a> · novità: <riga>` → viene prima di tutto il resto (primo avvio,
-  pagina, montaggio). Una domanda sola: "C'è una versione nuova dello studio: <la riga di novità>. La installo? Ci
-  vuole un minuto." Con un sì, o quando il cliente dice "aggiorna lo studio", "installa l'aggiornamento", "aggiorna
+  pagina, montaggio). Una domanda sola, corta, senza spiegazioni: "C'è una versione nuova dello studio, la installo?"
+  La riga di novità dilla solo se il cliente chiede cosa cambia. Con un sì, o quando il cliente dice "aggiorna lo studio", "installa l'aggiornamento", "aggiorna
   il plugin" (vuole la versione nuova, NON cambiare lo studio: non toccare nessun file):
   `PY "STUDIO/strumenti/aggiornamenti.py" --installa`, fuori dalla sandbox, con un tempo lungo (mai interromperlo).
   Tu non lanci mai comandi `claude plugin` a mano. Di' la frase della riga `DI':` parola per parola e fermati: il
