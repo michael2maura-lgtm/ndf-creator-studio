@@ -14,12 +14,12 @@ riprese sbagliate e pause tolte, sottotitoli in italiano, titoli, scene, suoni e
 **Il modo più semplice:** apri l'app Claude, scheda **Code**, apri una chat nuova e incolla questo messaggio:
 
 ```
-Installa per me lo studio video "NDF Creator Studio". Si trova su GitHub: michael2maura-lgtm/ndf-creator-studio. Se sul computer manca Git (succede su Windows), installalo prima tu con winget. Poi aggiungi il marketplace da GitHub (mai da un file ZIP) e installa il plugin ndf-creator-studio@ndf-creator-studio. Quando hai finito, dimmi solo: "Chiudi del tutto l'app Claude, riaprila, apri una chat nuova e scrivi: installa NDF Creator Studio".
+Installa per me lo studio video "NDF Creator Studio". Si trova su GitHub: michael2maura-lgtm/ndf-creator-studio. Se sul computer manca Git (succede su Windows), installalo prima tu con winget. Poi aggiungi il marketplace da GitHub (mai da un file ZIP) e installa il plugin ndf-creator-studio@ndf-creator-studio. Quando hai finito, dimmi solo: "Chiudi del tutto l'app Claude, riaprila, apri una chat nuova e scrivi: /monta-video installa NDF Creator Studio".
 ```
 
 Clicca **Consenti** quando Claude chiede il permesso (su Windows, se compare "Vuoi consentire a questa app di
 apportare modifiche?", clicca **Sì**). Poi chiudi del tutto l'app, riaprila, apri una chat nuova e scrivi
-**installa NDF Creator Studio**. Se Claude chiede "quale studio?", lo studio non è ancora caricato: chiudi del tutto
+**/monta-video installa NDF Creator Studio**. Se Claude chiede "quale studio?", lo studio non è ancora caricato: chiudi del tutto
 l'app (Esci, non solo la finestra), riaprila e riscrivilo in una chat nuova.
 
 **Oppure con i pulsanti** (su Windows serve prima [Git](https://git-scm.com/download/win)):
@@ -36,7 +36,7 @@ https://github.com/michael2maura-lgtm/ndf-creator-studio
 6. Apri una **chat nuova** in Code e scrivi:
 
 ```
-installa NDF Creator Studio
+/monta-video installa NDF Creator Studio
 ```
 
 Lo studio si prepara da solo: si scarica i suoi programmi (Python, Node e ffmpeg) in una cartella sua, senza
@@ -85,7 +85,7 @@ claude plugin marketplace add michael2maura-lgtm/ndf-creator-studio
 claude plugin install ndf-creator-studio@ndf-creator-studio
 ```
 
-Poi apri Claude Code e scrivi **installa NDF Creator Studio**.
+Poi apri Claude Code e scrivi **/monta-video installa NDF Creator Studio**.
 
 ---
 NDF Creator Studio · Michael Maura, Networker del Futuro. Font inclusi con licenza SIL Open Font License.

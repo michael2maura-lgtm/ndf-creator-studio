@@ -3,7 +3,8 @@
 #   powershell -NoProfile -ExecutionPolicy Bypass -File "<studio>\strumenti\avvio.ps1" [opzioni di controllo.py]
 #
 # Usa solo quello che c'è su ogni Windows 10 e 11 (PowerShell, tar). Lo studio ha il SUO Python 3.12, nella sua
-# casa (%LOCALAPPDATA%\NDFCreatorStudio\python): se non c'è lo scarica (circa 45 MB, una volta sola) e lo controlla
+# casa (%USERPROFILE%\.NDFCreatorStudio\python: fuori da AppData, che l'app Claude di Windows chiude in una sua
+# cartella nascosta): se non c'è lo scarica (circa 45 MB, una volta sola) e lo controlla
 # con l'impronta SHA-256 scritta qui sotto. Non usa il Python del computer (spesso è il finto Python dello Store).
 # Sempre la versione x64: gira anche sui Windows ARM. Niente amministratore, niente installato nel sistema.
 # Poi passa la mano a controllo.py, che stampa le righe STATO e alla fine PRONTO o NON PRONTO.
@@ -19,9 +20,25 @@ $PyUrl      = "https://github.com/astral-sh/python-build-standalone/releases/dow
 $Qui = Split-Path -Parent $MyInvocation.MyCommand.Path
 if ($env:NDF_STUDIO_CASA) { $Casa = $env:NDF_STUDIO_CASA }
 else {
+    $Casa = Join-Path $HOME '.NDFCreatorStudio'
+    # Fino alla 0.2.5 la casa stava in AppData\Local: dentro l'app Claude di Windows quella cartella finisce in una
+    # copia nascosta dell'app, e l'icona sul desktop non la trovava. Si sposta qui una volta sola (stessa unità: un
+    # attimo, niente da riscaricare). L'ambiente Python va rifatto (conosce il percorso vecchio): lo rifà controllo.py.
     $Locale = $env:LOCALAPPDATA
     if (-not $Locale) { $Locale = Join-Path $HOME 'AppData\Local' }
-    $Casa = Join-Path $Locale 'NDFCreatorStudio'
+    $Vecchia = Join-Path $Locale 'NDFCreatorStudio'
+    if (-not (Test-Path -LiteralPath $Casa) -and (Test-Path -LiteralPath (Join-Path $Vecchia 'python\python.exe'))) {
+        Write-Output 'STATO passaggio alla casa nuova: sposto lo studio fuori da AppData (una volta sola)'
+        try {
+            Move-Item -LiteralPath $Vecchia -Destination $Casa -ErrorAction Stop
+        } catch {
+            New-Item -ItemType Directory -Force -Path $Casa | Out-Null
+            Copy-Item -Recurse -Force -Path (Join-Path $Vecchia '*') -Destination $Casa
+        }
+        Remove-Item -Recurse -Force -LiteralPath (Join-Path $Casa 'venv') -ErrorAction SilentlyContinue
+        Remove-Item -Force -LiteralPath (Join-Path $Casa 'percorsi.json') -ErrorAction SilentlyContinue
+        Remove-Item -Force -LiteralPath (Join-Path $Casa 'icona-fatta.txt') -ErrorAction SilentlyContinue
+    }
 }
 
 function Va([string]$Py) {

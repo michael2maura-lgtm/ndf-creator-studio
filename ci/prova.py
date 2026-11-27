@@ -58,8 +58,7 @@ def casa_nuova():
     if AMBIENTE.get("NDF_STUDIO_CASA"):
         return AMBIENTE["NDF_STUDIO_CASA"]
     if WIN:
-        return os.path.join(os.environ.get("LOCALAPPDATA") or os.path.join(os.path.expanduser("~"), "AppData", "Local"),
-                            "NDFCreatorStudio")
+        return os.path.join(os.path.expanduser("~"), ".NDFCreatorStudio")
     return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "NDFCreatorStudio")
 
 
@@ -371,7 +370,24 @@ def main():
         if NUOVO:
             consegna()
         strumento("aggiornamenti", titolo="controllo aggiornamenti (non deve rompersi)", tempo=300)
+        if WIN and SU_GITHUB:
+            spostamento_windows()
     fine()
+
+
+def spostamento_windows():
+    """Chi aveva la 0.2.0-0.2.5 su Windows ha la casa in AppData\\Local: avvio.ps1 la deve spostare nella cartella
+    utente (.NDFCreatorStudio), rifare l'ambiente e lasciare lavori, modelli e scelte dove sono."""
+    vecchia = os.path.join(os.environ.get("LOCALAPPDATA") or os.path.join(os.path.expanduser("~"), "AppData", "Local"),
+                           "NDFCreatorStudio")
+    shutil.move(CASA, vecchia)
+    u = avvio("casa vecchia in AppData spostata da sola", tempo=3600)
+    controlla("la casa è nella cartella utente", os.path.isdir(os.path.join(CASA, "python")) and not os.path.exists(vecchia),
+              CASA)
+    controlla("i lavori sono rimasti", os.path.isdir(os.path.join(DATI, "lavori", "prova-pulito")) if DATI.startswith(CASA)
+              else True)
+    controlla("il passaggio non riscarica i pezzi grandi", "pezzi grandi: OK" in u)
+    mancanze(u)
 
 
 def consegna():

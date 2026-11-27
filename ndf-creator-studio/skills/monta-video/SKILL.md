@@ -12,7 +12,7 @@ Parla semplice, frasi corte, niente nomi di file o errori tecnici.
 STUDIO = la cartella di questo file (il programma: qui non si scrive mai). Lancia tutto fuori dalla sandbox.
 PY, DATI e CASA te li dice il programma di avvio (Passo 0), nelle righe `STATO PY:`, `STATO DATI:` e
 `STATO casa dello studio:`. CASA è la casa dello studio (sul Mac in Library/Application Support/NDFCreatorStudio, su
-Windows in AppData/Local/NDFCreatorStudio): il suo Python, Node, ffmpeg, i modelli. DATI (dentro CASA) ha i lavori,
+Windows nella cartella utente, .NDFCreatorStudio): il suo Python, Node, ffmpeg, i modelli. DATI (dentro CASA) ha i lavori,
 gli stili, i suoni e le scelte di chi usa lo studio. Gli aggiornamenti non toccano né l'una né gli altri.
 Tutti i comandi qui sotto usano PY (su Windows `PY -X utf8`), mai `python3` o `python`.
 NOME = nome breve del lavoro (es. `video-lunedi`); i suoi file stanno in `DATI/lavori/NOME/`.

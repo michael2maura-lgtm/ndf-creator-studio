@@ -6,7 +6,9 @@ Due posti, e basta:
 - la CASA dello studio: tutto quello che è di chi lo usa e tutto quello che lo studio si scarica (il suo Python,
   Node, ffmpeg, i modelli, le musiche, i suoni, i lavori, gli stili, le scelte). Un aggiornamento non la tocca.
   Mac:     ~/Library/Application Support/NDFCreatorStudio   (fuori da Documenti, quindi fuori da iCloud)
-  Windows: %LOCALAPPDATA%\\NDFCreatorStudio                  (fuori da OneDrive)
+  Windows: %USERPROFILE%\\.NDFCreatorStudio                  (fuori da OneDrive e fuori da AppData: l'app Claude di
+           Windows chiude in una sua cartella nascosta quello che i suoi comandi scrivono in AppData, e l'icona sul
+           desktop, che parte fuori dall'app, non lo trovava; fino alla 0.2.5 era in %LOCALAPPDATA%\\NDFCreatorStudio)
   Il robot di prova la sposta con NDF_STUDIO_CASA (e i soli dati con NDF_STUDIO_DATI).
 Le cartelle che il cliente vede (dove arrivano le clip e dove vanno i video finiti) sono scritte in CASA/config.json,
 scelte al primo avvio: di serie "1 - Clip da montare" e "2 - Video finiti" in ~/NDF Creator Studio.
@@ -26,8 +28,7 @@ def _casa():
     if MAC:
         return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "NDFCreatorStudio")
     if WIN:
-        base = os.environ.get("LOCALAPPDATA") or os.path.join(os.path.expanduser("~"), "AppData", "Local")
-        return os.path.join(base, "NDFCreatorStudio")
+        return os.path.join(os.path.expanduser("~"), ".NDFCreatorStudio")
     return os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share"),
                         "NDFCreatorStudio")
 
@@ -45,6 +46,9 @@ CONFIG = os.path.join(CASA, "config.json")
 # dove stava tutto fino alla 0.1.81: il passaggio (controllo.py) sposta da qui alla CASA
 VECCHIA_CASA = os.path.join(os.path.expanduser("~"), ".studio-video")
 VECCHI_DATI = os.path.join(os.path.expanduser("~"), "Documents", "NDFCreatorStudio")
+# Windows, 0.2.0-0.2.5: la casa in AppData (vista dai comandi dell'app Claude; avvio.ps1 la sposta)
+VECCHIA_CASA_WIN = os.path.join(os.environ.get("LOCALAPPDATA") or os.path.join(os.path.expanduser("~"), "AppData", "Local"),
+                                "NDFCreatorStudio")
 
 CARTELLA_CLIENTE = os.path.join(os.path.expanduser("~"), "NDF Creator Studio")
 CLIP_DI_SERIE = os.path.join(CARTELLA_CLIENTE, "1 - Clip da montare")
