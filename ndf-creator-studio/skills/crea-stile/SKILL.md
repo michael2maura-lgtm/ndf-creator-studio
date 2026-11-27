@@ -1,6 +1,6 @@
 ---
 name: crea-stile
-description: Crea lo stile di montaggio personale (colori, font, chiamata all'azione) con un'intervista breve, una domanda alla volta, e mostra un'anteprima. Usala la prima volta che si usa NDF Creator Studio, quando l'utente dice "crea il mio stile", "cambia i miei colori", "voglio un altro stile", o quando "monta questo video" non trova nessuno stile.
+description: Crea uno stile di montaggio personale nuovo (colori, font, chiamata all'azione) con un'intervista breve, una domanda alla volta, e mostra un'anteprima. Usala SOLO quando l'utente chiede un'intervista per uno stile nuovo ("crea il mio stile con un'intervista", "voglio uno stile nuovo tutto mio"). NON usarla per installare, riparare, aggiornare o il primo avvio ("installa lo studio", "ripara lo studio", "aggiorna lo studio": sono della skill monta-video, Passo 0), né per il brand ("facciamo il mio brand", "cambia i miei colori": monta-video).
 ---
 
 # Crea il mio stile
