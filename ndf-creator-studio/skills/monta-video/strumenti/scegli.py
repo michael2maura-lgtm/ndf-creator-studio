@@ -95,17 +95,17 @@ def raccogli():
                     suoni.append({"id": h, "nome": os.path.splitext(os.path.basename(rel))[0], "da": st.get("nome", k), "cat": cat})
                 di_serie[mom] = h
             anteprima = os.path.join(cart, k, "anteprima.mp4")
-            video_anteprima(file, "anteprima-" + k, anteprima)
+            ha_anteprima = video_anteprima(file, "anteprima-" + k, anteprima)
             if os.path.exists(anteprima[:-4] + ".jpg"):  # la copertina: il browser non salta a un secondo preciso
                 file["anteprima-" + k + "-jpg"] = anteprima[:-4] + ".jpg"
             tel_m = os.path.join(cart, k, "telefono.mp4")   # il reel montato del modello senza sottotitoli (la pagina li disegna)
-            video_anteprima(file, "telefono-" + k, tel_m)
+            ha_telefono = video_anteprima(file, "telefono-" + k, tel_m)
             if st.get("sottotitoli_nome") in sottotitoli.CATALOGO:
                 di_serie["sottotitoli"] = st["sottotitoli_nome"]
             momenti = [m for m in MOMENTI_MOTORE.get(motore, MOMENTI_MOTORE[""])]
             stili.append({"chiave": k, "modello": bool(st.get("modello")), "nome": st.get("nome", k), "descrizione": st.get("descrizione", ""), "mio": base == DATI and not os.path.isdir(os.path.join(STUDIO, "stili", k)),   # una copia di uno stile pronto non è "tuo"
                           "effetti": st.get("effetti"), "transizione": st.get("transizione", "bande" if motore == "grafica" else None),
-                          "grafiche": motore == "grafica", "anteprima": os.path.exists(anteprima), "telefono": os.path.exists(tel_m), "ordine": st.get("ordine", 50),
+                          "grafiche": motore == "grafica", "anteprima": ha_anteprima, "telefono": ha_telefono, "ordine": st.get("ordine", 50),
                           "diviso": st.get("layout") == "diviso",
                           "di_serie": di_serie,
                           "momenti": [{"chiave": m, "titolo": MOMENTI[m][0], "quando": MOMENTI[m][1],

@@ -370,6 +370,8 @@ def main():
         if NUOVO:
             consegna()
         strumento("aggiornamenti", titolo="controllo aggiornamenti (non deve rompersi)", tempo=300)
+        if NUOVO:
+            pagina_stili()
         if WIN and SU_GITHUB:
             spostamento_windows()
     fine()
@@ -388,6 +390,39 @@ def spostamento_windows():
               else True)
     controlla("il passaggio non riscarica i pezzi grandi", "pezzi grandi: OK" in u)
     mancanze(u)
+
+
+def pagina_stili():
+    """La pagina degli stili come la apre il cliente: ogni stile pronto deve avere la sua anteprima video, e il video
+    deve arrivare davvero (dalla 0.2.2 le anteprime non stanno nel programma: la pagina le cerca o le scarica)."""
+    import urllib.request
+    scrivi_riga(f"\n##### pagina degli stili  [dopo {time.time() - T0:.0f} s]")
+    p = subprocess.Popen([PY, *(["-X", "utf8"] if WIN else []), os.path.join(STR, "scegli.py"), "--non-aprire", "--resta"],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
+                         errors="replace", env=AMBIENTE)
+    try:
+        url, fino = "", time.time() + 120
+        while time.time() < fino and not url:
+            riga = p.stdout.readline()
+            if not riga and p.poll() is not None:
+                break
+            if "PAGINA PRONTA" in riga:
+                url = riga.split("PAGINA PRONTA", 1)[1].strip()
+        controlla("la pagina degli stili parte", bool(url), url)
+        if not url:
+            return
+        with urllib.request.urlopen(url + "dati", timeout=120) as r:
+            dati = json.load(r)
+        pronti = [st for st in dati.get("stili", []) if not st.get("mio")]
+        senza = [st["chiave"] for st in pronti if not st.get("anteprima")]
+        controlla("ogni stile pronto ha l'anteprima", bool(pronti) and not senza,
+                  f"{len(pronti)} stili" + (", senza: " + ", ".join(senza) if senza else ""))
+        for st in pronti[:2]:
+            with urllib.request.urlopen(url + "file/anteprima-" + st["chiave"], timeout=300) as r:
+                byte = len(r.read())
+            controlla(f"il video dell'anteprima {st['chiave']} arriva", byte > 100000, f"{byte // 1000} KB")
+    finally:
+        p.kill()
 
 
 def consegna():
