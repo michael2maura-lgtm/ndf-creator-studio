@@ -253,6 +253,14 @@ def ripara():
     if icona:
         controlla("l'icona tolta è tornata",
                   subprocess.run([PY, os.path.join(STR, "icona.py"), "--c-e"], env=AMBIENTE).returncode == 0)
+        if WIN:   # l'icona deve puntare a un programma che c'è davvero (su un PC vero mancava pythonw.exe)
+            r = subprocess.run([PY, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import icona; print(icona.dove_sta())",
+                                STR], capture_output=True, text=True, env=AMBIENTE)
+            lnk = r.stdout.strip()
+            t = subprocess.run(["powershell", "-NoProfile", "-Command",
+                                f"(New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}').TargetPath"],
+                               capture_output=True, text=True).stdout.strip() if lnk.endswith(".lnk") else ""
+            controlla("l'icona apre un programma che c'è", bool(t) and os.path.exists(t), t or lnk)
     controlla("il controllo vede che manca un pezzo grande", "pezzi grandi: DA SCARICARE" in u)
     strumento("scarica", titolo="riscarica il pezzo grande tolto", deve="STATO scarica: FATTO", tempo=1800)
     controlla("il modello della faccia è tornato", os.path.exists(faccia))

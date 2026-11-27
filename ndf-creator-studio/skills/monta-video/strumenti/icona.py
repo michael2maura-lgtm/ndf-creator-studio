@@ -16,6 +16,7 @@ QUI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, QUI)
 from cartelle import CASA, PY  # noqa: E402
 NOME = "NDF Creator Studio"
+VERSIONE_ICONA = "2"   # si alza quando cambia il modo di fare l'icona: il controllo la rifà da solo (2 = senza pythonw.exe se manca)
 
 APRI = r'''# Scritto da icona.py: apre la pagina dello studio dalla versione più nuova installata.
 import glob, os, re, subprocess, sys
@@ -84,8 +85,10 @@ def dove_sta():
 
 
 def main():
-    if "--c-e" in sys.argv:   # solo il controllo: esce con 0 se l'icona c'è
-        sys.exit(0 if dove_sta() else 1)
+    segno = os.path.join(CASA, "icona-fatta.txt")
+    if "--c-e" in sys.argv:   # solo il controllo: esce con 0 se l'icona c'è ed è fatta da questa versione dell'icona
+        fatta = os.path.exists(segno) and open(segno, encoding="utf-8").read().strip() == VERSIONE_ICONA
+        sys.exit(0 if dove_sta() and fatta else 1)
     os.makedirs(CASA, exist_ok=True)
     apri = os.path.join(CASA, "apri_pagina.py")
     with open(apri, "w", encoding="utf-8") as f:
@@ -102,7 +105,13 @@ def main():
         icona_mac(app)
         print("ICONA", app)
     elif platform.system() == "Windows":
+        # pythonw.exe (senza finestra) va solo se c'è anche nel Python dello studio: su un PC l'antivirus l'aveva tolto e
+        # l'icona dava "No Python at ...pythonw.exe" (27/11/2026). Senza, si usa python.exe con la finestra ridotta a icona.
         pyw = os.path.join(os.path.dirname(PY), "pythonw.exe")
+        base_w = os.path.join(CASA, "python", "pythonw.exe")
+        stile = ""
+        if not (os.path.exists(pyw) and os.path.exists(base_w)):
+            pyw, stile = PY, "$s.WindowStyle=7;"
         ico = os.path.join(CASA, "icona.ico")
         try:
             from PIL import Image
@@ -111,13 +120,16 @@ def main():
             ico = ""
         lnk = os.path.join(dove, NOME + ".lnk")   # collegamento con il logo (un .bat non può avere un'icona)
         ps = (f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}');$s.TargetPath='{pyw}';"
-              f"$s.Arguments='\"{apri}\"';" + (f"$s.IconLocation='{ico}';" if ico else "") + "$s.Save()")
+              f"$s.Arguments='\"{apri}\"';" + stile + (f"$s.IconLocation='{ico}';" if ico else "") + "$s.Save()")
         r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], check=False)
         if r.returncode != 0 or not os.path.exists(lnk):   # ripiego: il .bat, senza logo
             lnk = os.path.join(dove, NOME + ".bat")
             with open(lnk, "w", encoding="utf-8") as f:
                 f.write(f'@echo off\r\nstart "" "{pyw}" "{apri}"\r\n')
         print("ICONA", lnk)
+    if platform.system() in ("Darwin", "Windows"):
+        with open(segno, "w", encoding="utf-8") as f:
+            f.write(VERSIONE_ICONA)
     else:
         sys.exit("Lo studio funziona su Mac e su Windows.")
 

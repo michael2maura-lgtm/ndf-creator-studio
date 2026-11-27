@@ -1,5 +1,5 @@
 {
  "0.2.2": "Lo studio ora si installa, si controlla e si ripara da solo, pesa molto meno e ti mette le clip e i video finiti in due cartelle: 1 - Clip da montare e 2 - Video finiti.",
  "0.2.4": "Corregge l'installazione e il montaggio sui Mac con processore Intel.",
- "0.2.5": "\"Installa lo studio\" porta sempre all'installazione e al primo avvio."
+ "0.2.5": "\"Installa lo studio\" porta sempre all'installazione e al primo avvio; l'icona sul desktop si apre anche sui PC Windows dove prima dava errore."
 }
