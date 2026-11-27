@@ -32,14 +32,15 @@ sviluppatori):
 - Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File "STUDIO/strumenti/avvio.ps1"`
 Il cliente non ha bisogno di niente sul computer: la prima volta lo studio si scarica il suo Python, Node e ffmpeg,
 controllati con l'impronta, nella sua casa; niente password, niente installato nel sistema. La prima volta ci vogliono
-alcuni minuti (dillo solo quella volta: "Preparo lo studio, la prima volta ci vogliono alcuni minuti"). Righe:
+alcuni minuti (dillo solo quella volta: "Preparo lo studio: la prima volta scarico circa 3 GB in tutto, una volta
+sola, e ci vogliono alcuni minuti"). Righe:
 - `STATO <pezzo>: OK` → niente da dire. `STATO <pezzo>: MANCA · <cosa fare>`: lo studio ha già riprovato da solo.
   Se l'ultima riga è `NON PRONTO`, rilancia il comando una volta; se resta, di' al cliente in parole semplici la
   parte dopo `·` e fermati lì. Se l'ultima riga è `PRONTO` (mancano solo suoni, musiche o icona), vai avanti: riprova
   da solo la volta dopo. "Installa lo studio" o "ripara lo studio" = questo stesso comando.
 - `STATO pezzi grandi: DA SCARICARE · circa N GB` → lancia SUBITO in sottofondo `PY "STUDIO/strumenti/scarica.py"`
-  (voce, resa, ritaglio: una volta sola) e di' una volta: "Scarico in sottofondo gli strumenti di montaggio (circa
-  N GB, una volta sola), così il primo video è veloce. Intanto andiamo avanti." `IN CORSO` → sta già scaricando.
+  (voce, resa, ritaglio: una volta sola) e di' una volta: "Adesso scarico in sottofondo il resto degli strumenti di
+  montaggio (circa N GB, fanno parte dei 3 GB), così il primo video è veloce. Intanto andiamo avanti." `IN CORSO` → sta già scaricando.
   Prima del passo 1 di un montaggio, se non ha ancora detto `STATO scarica: FATTO`: `PY "STUDIO/strumenti/scarica.py"
   --stato`. IN CORSO: di' che sta finendo di scaricare e aspetta che finisca. NON RIUSCITO o FERMATO: vai avanti,
   il montaggio scarica da solo quello che manca.

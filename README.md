@@ -41,7 +41,7 @@ https://github.com/michael2maura-lgtm/ndf-creator-studio
 
 Lo studio si prepara da solo: si scarica i suoi programmi (Python, Node e ffmpeg) in una cartella sua, senza
 password e senza toccare il resto del computer. Poi ti fa due domande, dove metti le clip da montare e dove vuoi i
-video finiti, e intanto scarica in sottofondo gli strumenti di montaggio (circa 2 GB, una volta sola). Quando Claude
+video finiti, e intanto scarica in sottofondo gli strumenti di montaggio (lo studio scarica circa 3 GB in tutto, una volta sola). Quando Claude
 chiede il permesso per i comandi dello studio, clicca **Consenti**.
 
 Sulla Scrivania trovi l'icona **NDF Creator Studio**: doppio clic e si apre la pagina dove scegli il tuo stile.
