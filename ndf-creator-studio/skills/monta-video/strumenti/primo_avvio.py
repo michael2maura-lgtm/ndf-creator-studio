@@ -6,7 +6,7 @@ Uso:  PY strumenti/primo_avvio.py                                    le cartelle
 
 Di serie, nella cartella utente:  NDF Creator Studio/1 - Clip da montare  e  NDF Creator Studio/2 - Video finiti
 (fuori da Documenti e Scrivania, quindi fuori da iCloud). Le scrive in <casa>/config.json (tiene le altre voci),
-le crea e apre la cartella delle clip. Righe:  CARTELLE <clip> | <finiti>   e   APERTA <clip>
+le crea, mette il loro collegamento sulla Scrivania (collegamento.py) e apre la cartella delle clip. Righe:  CARTELLE <clip> | <finiti>   e   APERTA <clip>
 """
 import os
 import subprocess
@@ -35,6 +35,7 @@ def apri(cart):
 
 def main():
     conf = cartelle.config()
+    prima = (conf.get("clip"), conf.get("finiti"))
     clip = os.path.abspath(os.path.expanduser(opzione("--clip") or conf.get("clip") or cartelle.CLIP_DI_SERIE))
     finiti = os.path.abspath(os.path.expanduser(opzione("--finiti") or conf.get("finiti") or cartelle.FINITI_DI_SERIE))
     for c in (clip, finiti):
@@ -43,6 +44,12 @@ def main():
     conf.setdefault("primo_avvio", time.strftime("%Y-%m-%d"))
     cartelle.scrivi(cartelle.CONFIG, conf)
     print(f"CARTELLE {clip} | {finiti}")
+    if not os.environ.get("NDF_STUDIO_PROVA_SENZA_ICONA"):   # prova sul Mac di Michael: la sua Scrivania non si tocca
+        try:
+            import collegamento
+            collegamento.main(rifai=bool(prima[0]) and prima != (clip, finiti))   # il collegamento alle cartelle sulla Scrivania, perché il cliente le trovi
+        except Exception:
+            pass
     if "--senza-aprire" not in sys.argv:
         apri(clip)
 

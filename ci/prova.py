@@ -2,7 +2,7 @@
 """Il robot di prova dello studio: fa da solo, senza Claude, quello che fa un cliente nuovo.
 
   1. installa lo studio da zero con il programma di avvio (avvio.sh / avvio.ps1), poi i pezzi grandi (scarica.py)
-     e il primo avvio (le due cartelle); poi il controllo silenzioso (veloce, niente da scaricare) e la riparazione
+     e il primo avvio (le due cartelle e il loro collegamento sulla Scrivania); poi il controllo silenzioso (veloce, niente da scaricare) e la riparazione
      di pezzi tolti apposta (musiche, icona, modello della faccia)
   2. prepara, taglia, trascrive e trova la faccia sul video di prova (la clip del telefono della pagina, già nello studio)
   3. monta un reel in Pulito e uno in Chiaro con la scritta dietro la testa
@@ -227,6 +227,26 @@ def primo_avvio():
     conf = leggi(os.path.join(CASA, "config.json"))
     controlla("cartelle del cliente create", all(os.path.isdir(conf.get(k, "")) for k in ("clip", "finiti")),
               f"{conf.get('clip')} | {conf.get('finiti')}")
+    if SU_GITHUB and os.path.exists(os.path.join(STR, "collegamento.py")):   # dalla 0.2.8; sul Mac di Michael no
+        collegamento_scrivania(conf)
+
+
+def collegamento_scrivania(conf):
+    """Sulla Scrivania c'è il collegamento alle cartelle, e porta alla cartella vera che le contiene."""
+    r = subprocess.run([PY, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import icona; print(icona.scrivania())",
+                        STR], capture_output=True, text=True, env=AMBIENTE)
+    link = os.path.join(r.stdout.strip(), "NDF Creator Studio - Video")
+    sopra = os.path.dirname(conf.get("clip", ""))
+    if WIN:
+        link += ".lnk"
+        t = subprocess.run(["powershell", "-NoProfile", "-Command",
+                            f"(New-Object -ComObject WScript.Shell).CreateShortcut('{link}').TargetPath"],
+                           capture_output=True, text=True).stdout.strip() if os.path.exists(link) else ""
+    else:
+        t = os.path.realpath(link) if os.path.islink(link) else ""
+    controlla("collegamento alle cartelle sulla Scrivania", bool(t) and os.path.isdir(t)
+              and os.path.normcase(os.path.realpath(t)) == os.path.normcase(os.path.realpath(sopra))
+              and os.path.isdir(os.path.join(t, os.path.basename(conf.get("clip", "")))), f"{link} -> {t or 'manca'}")
 
 
 def ripara():
@@ -347,6 +367,8 @@ def dopo_aggiornamento():
         controlla("i modelli di prima spostati, non riscaricati", os.path.isdir(os.path.join(CASA, "modelli")))
     if "primo avvio: DA FARE" in u:
         primo_avvio()
+    elif SU_GITHUB and os.path.exists(os.path.join(STR, "collegamento.py")):   # chi aveva già le cartelle: lo fa il controllo
+        collegamento_scrivania(leggi(os.path.join(CASA, "config.json")))
     if "pezzi grandi: OK" not in u:
         strumento("scarica", titolo="pezzi grandi che mancano", deve="STATO scarica: FATTO", tempo=5400)
 

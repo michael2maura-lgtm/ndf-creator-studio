@@ -3,5 +3,6 @@
  "0.2.4": "Corregge l'installazione e il montaggio sui Mac con processore Intel.",
  "0.2.5": "\"Installa lo studio\" porta sempre all'installazione e al primo avvio; l'icona sul desktop si apre anche sui PC Windows dove prima dava errore.",
  "0.2.6": "Su Windows l'icona sul desktop si apre sempre (lo studio si sposta da solo in una cartella che l'app Claude non nasconde) e per installare basta scrivere: /monta-video installa NDF Creator Studio.",
- "0.2.7": "Nella pagina degli stili si vedono di nuovo i video di anteprima di ogni stile."
+ "0.2.7": "Nella pagina degli stili si vedono di nuovo i video di anteprima di ogni stile.",
+ "0.2.8": "Sulla Scrivania trovi la cartella NDF Creator Studio - Video: dentro ci sono le clip da montare e i video finiti."
 }

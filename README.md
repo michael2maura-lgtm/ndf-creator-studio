@@ -45,6 +45,7 @@ video finiti, e intanto scarica in sottofondo gli strumenti di montaggio (lo stu
 chiede il permesso per i comandi dello studio, clicca **Consenti**.
 
 Sulla Scrivania trovi l'icona **NDF Creator Studio**: doppio clic e si apre la pagina dove scegli il tuo stile.
+Accanto trovi la cartella **NDF Creator Studio - Video**: dentro ci sono "1 - Clip da montare" e "2 - Video finiti".
 
 ## Il tuo primo reel
 1. Metti il video nella cartella **NDF Creator Studio › 1 - Clip da montare** (nella tua cartella utente), oppure

@@ -322,6 +322,13 @@ def cartelle_cliente():
         except OSError:
             ok = False
     stato("cartelle", ok, "" if ok else "non riesco a creare le cartelle scelte al primo avvio", grave=False)
+    # chi aveva già fatto il primo avvio riceve il collegamento sulla Scrivania una volta (poi, se lo toglie, non torna)
+    if ok and not os.environ.get("NDF_STUDIO_PROVA_SENZA_ICONA"):
+        import collegamento
+        if not os.path.exists(collegamento.SEGNO):
+            r = gira([sys.executable, os.path.join(QUI, "collegamento.py")], timeout=90)
+            stato("collegamento alle cartelle sulla Scrivania", r.returncode == 0,
+                  "" if r.returncode == 0 else (r.stdout or r.stderr or "")[-120:].strip(), grave=False)
 
 
 def pezzi_grandi():

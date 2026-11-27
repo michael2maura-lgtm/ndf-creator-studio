@@ -65,7 +65,8 @@ sola, e ci vogliono alcuni minuti"). Righe:
    tutte e due nella cartella NDF Creator Studio della tua cartella utente. Va bene così, o preferisci altre
    cartelle?" Con un sì (o se non gli importa): `PY "STUDIO/strumenti/primo_avvio.py"`; con altre cartelle:
    `PY "STUDIO/strumenti/primo_avvio.py" --clip "<cartella>" --finiti "<cartella>"`. Crea le cartelle, le scrive in
-   `CASA/config.json` e apre la cartella delle clip.
+   `CASA/config.json`, mette sulla Scrivania il collegamento alle cartelle ("NDF Creator Studio - Video") e apre la
+   cartella delle clip. Di' in una riga che le cartelle le trova anche sulla Scrivania.
 4. Poi il brand in chat (sezione "Il brand"), poi chiedi il primo video: "Metti il video in 1 - Clip da montare (o
    trascinalo qui in chat) e dimmi: monta il video."
 Rifare il primo avvio ("cambia le cartelle"): mostra in due righe le cartelle di adesso e cambia solo quello che
@@ -233,6 +234,8 @@ L'utente dice "non vedo l'icona sul desktop" o "rifai l'icona": `PY STUDIO/strum
 (la riga ICONA); se ancora non la vede, la pagina si apre comunque con "apri la pagina".
 Icona sulla scrivania "NDF Creator Studio" (doppio clic, si apre la pagina dall'ultima versione): la crea l'installazione.
 Se l'utente chiede l'icona (il controllo la rimette già da sola se manca), lancia `PY STUDIO/strumenti/icona.py` in silenzio.
+"Non trovo le cartelle" o "rimettimi le cartelle sulla Scrivania": `PY STUDIO/strumenti/collegamento.py --rifai` e di' dove
+l'ha messo (la riga COLLEGAMENTO). Le cartelle vere restano in `CASA/config.json` (clip, finiti): non spostarle.
 Tre strade: stile pronto, replica un reel (l'utente ti manda il link in chat: lo studi con l'abilità `crea-stile`
 e ne fai uno stile nuovo, che poi compare nella pagina), crea il tuo (parte da uno stile e cambia suoni e musica).
 Quando scrive `SCELTE SALVATE`, di' in una riga cosa ha scelto.
