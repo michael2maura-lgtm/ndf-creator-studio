@@ -10,6 +10,18 @@ riprese sbagliate e pause tolte, sottotitoli in italiano, titoli, scene, suoni e
 - **Almeno 10 GB liberi** e internet per la prima installazione. Non serve installare nient'altro.
 
 ## Installazione nell'app Claude (una volta sola)
+
+**Il modo più semplice:** apri l'app Claude, scheda **Code**, apri una chat nuova e incolla questo messaggio:
+
+```
+Installa per me lo studio video "NDF Creator Studio". Si trova su GitHub: michael2maura-lgtm/ndf-creator-studio. Se sul computer manca Git (succede su Windows), installalo prima tu con winget. Poi aggiungi il marketplace da GitHub (mai da un file ZIP) e installa il plugin ndf-creator-studio@ndf-creator-studio. Quando hai finito, dimmi solo: "Chiudi del tutto l'app Claude, riaprila, apri una chat nuova e scrivi: installa lo studio".
+```
+
+Clicca **Consenti** quando Claude chiede il permesso (su Windows, se compare "Vuoi consentire a questa app di
+apportare modifiche?", clicca **Sì**). Poi chiudi del tutto l'app, riaprila, apri una chat nuova e scrivi
+**installa lo studio**.
+
+**Oppure con i pulsanti** (su Windows serve prima [Git](https://git-scm.com/download/win)):
 1. Apri l'app Claude e vai nella scheda **Code**.
 2. Clicca il **+** accanto alla casella dei messaggi, poi **Plugins**, poi **Browse plugins**.
 3. In alto a destra clicca **Add**, poi **Add marketplace**, poi **Add from a repository**.
